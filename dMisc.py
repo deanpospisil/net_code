@@ -5,6 +5,7 @@ Created on Thu Sep  3 10:06:16 2015
 @author: dean
 """
 import numpy as np
+import os
 pi = np.pi
 
 def circPoints(center, radius, theta):
@@ -45,6 +46,15 @@ def sectStrideInds(stackSize, length):
     stackInd = np.intp(np.vstack((a,b))).T
     
     return stackInd, remainder
+
+def ifNoDirMakeDir(dirname):
+    dirlist = dirname.split('/')
+    dname = ''
+    for d in dirlist:
+        dname = dname + '/' +d
+        if not os.path.exists(dname):
+            os.mkdir(dname)
+    
 
 ##lets just look at these gaussians
 #import matplotlib.pyplot as plt

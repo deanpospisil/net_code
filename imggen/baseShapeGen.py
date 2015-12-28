@@ -5,9 +5,6 @@ Created on Fri Oct 23 12:04:21 2015
 @author: dean
 """
 import sys
-
-
-
 import numpy as np
 import scipy.io as  l
 import scipy
@@ -16,10 +13,10 @@ import matplotlib.pyplot as plt
 import os
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
-cwd = os.getcwd()
-sys.path.append(cwd + '/Deans_Modules/')
+cwd = os.path.dirname(dname)
+sys.path.append( cwd)
 import dCurve as dc
-
+import dMisc as dm
 
 
 def boundaryToMat(boundary, nPixPerSide = 227, fill = True ):
@@ -113,14 +110,19 @@ def scaleBoundary(s, fracOfImage):
 #generate base images 
 
 saveDir = cwd + '/images/baseimgs/'
+
+dm.ifNoDirMakeDir(saveDir)
+
 baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
 baseImage = baseImageList[1] 
 fracOfImage = 1
+dm.ifNoDirMakeDir(saveDir + baseImage +'/')
+
 
 if baseImage is baseImageList[0]:
 
 #    os.chdir( saveDir + baseImageList[0])
-    mat = l.loadmat(saveDir + baseImage +'/'+ 'PC3702001ShapeVerts.mat')
+    mat = l.loadmat(cwd + '/imggen/'+ 'PC3702001ShapeVerts.mat')
     s = np.array(mat['shapes'][0])
 
 elif baseImage is baseImageList[1]:

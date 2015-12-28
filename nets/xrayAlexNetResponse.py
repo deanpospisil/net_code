@@ -24,20 +24,23 @@ import dMisc as misc
 import copy
 from sklearn.utils.extmath import cartesian
 
-transNames = ['shape', 'x' ]
+
+transNames = ['shape', 'x', 'scale' ]
 shape = np.arange(370, dtype =np.float64) 
 scale = np. linspace(0.1,1,21)
 theEnd = 70
-npts = 20
+npts = 10
 
 x = list(np.linspace(-theEnd,theEnd,npts))
 y = list(np.linspace(-theEnd,theEnd,npts))
-
+scale = list(np.linspace(0.1,1,5))
 param_v = []
+
 param_v.append(shape)
-#param_v.append(scale)
 param_v.append(x)
-param_v.append(y)
+param_v.append(scale)
+
+#param_v.append(y)
 params = collections.OrderedDict()
 for ind in range(len(param_v)):
     params[transNames[ind]] = param_v[ind]
@@ -77,7 +80,7 @@ stim = stimName= '370PC2001Scale'
 for ind in range(len(transNames)):
     stim = stim +'_'+ transNames[ind] + str(len(param_v[ind]))
 
-respDir= cwd +'/' + 'responses'
+respDir= cwd +'/' + 'responses/'
 responseFile = respDir + source  + '_'  + stim
 dm.ifNoDirMakeDir(respDir)
 

@@ -14,11 +14,9 @@ dname = os.path.dirname(abspath)
 cwd = os.path.dirname(dname)
 sys.path.append( cwd)
 
-
+import dMisc as dm
 import dImgProcess as imp
 import numpy as np
-
-
 import xray as xr
 import collections
 import itertools
@@ -74,13 +72,20 @@ nImgs = np.size(imgParam,0)
 ANNDir = '/home/dean/caffe/models/bvlc_reference_caffenet/'
 ANNFileName='bvlc_reference_caffenet.caffemodel'
 source='AlexNet'
-stim = stimName ='370PC2001Scale'
+stim = stimName= '370PC2001Scale'
+
 for ind in range(len(transNames)):
     stim = stim +'_'+ transNames[ind] + str(len(param_v[ind]))
 
-respDir= '/home/dean/Desktop/AlexNet_ReceptiveField/resp/'
-imageDir = '/home/dean/Desktop/AlexNet_ReceptiveField/PC370/'
+respDir= cwd +'/' + 'responses'
 responseFile = respDir + source  + '_'  + stim
+dm.ifNoDirMakeDir(respDir)
+
+
+baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
+baseImage = baseImageList[0] 
+imageDir = cwd +'/' + 'images/baseimgs/' + baseImage + '/'
+
 
 stackSize=200
 saveImgList = [False]* nImgs

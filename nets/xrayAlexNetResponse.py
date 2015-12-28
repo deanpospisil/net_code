@@ -24,11 +24,11 @@ import dMisc as misc
 import copy
 from sklearn.utils.extmath import cartesian
 
-transNames = ['shape', 'x','y' ]
+transNames = ['shape', 'x' ]
 shape = np.arange(370, dtype =np.float64) 
 scale = np. linspace(0.1,1,21)
 theEnd = 70
-npts = 1
+npts = 20
 
 x = list(np.linspace(-theEnd,theEnd,npts))
 y = list(np.linspace(-theEnd,theEnd,npts))

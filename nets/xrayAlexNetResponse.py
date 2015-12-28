@@ -5,12 +5,20 @@ Created on Sat Sep 19 16:10:23 2015
 @author: dean
 a"""
 
+import sys
+import os
+caffe_root = '/home/dean/caffe/'
+sys.path.insert(0, caffe_root + 'python')
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+cwd = os.path.dirname(dname)
+sys.path.append( cwd)
+
 
 import dImgProcess as imp
 import numpy as np
-caffe_root = '/home/dean/caffe/'
-import sys
-sys.path.insert(0, caffe_root + 'python')
+
+
 import xray as xr
 import collections
 import itertools
@@ -22,7 +30,7 @@ transNames = ['shape', 'x','y' ]
 shape = np.arange(370, dtype =np.float64) 
 scale = np. linspace(0.1,1,21)
 theEnd = 70
-npts = 21
+npts = 1
 
 x = list(np.linspace(-theEnd,theEnd,npts))
 y = list(np.linspace(-theEnd,theEnd,npts))
@@ -76,7 +84,7 @@ responseFile = respDir + source  + '_'  + stim
 
 stackSize=200
 saveImgList = [False]* nImgs
-saveImgList[0:200] =  [True]* 201
+saveImgList[0:stackSize] =  [True] * (stackSize+1)
 defaultStackSize = stackSize
 
 #these will be the indices for pulling out stacks

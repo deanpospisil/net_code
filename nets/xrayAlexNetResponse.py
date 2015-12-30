@@ -25,17 +25,20 @@ import copy
 from sklearn.utils.extmath import cartesian
 
 
+#parameters
 transNames = ['shape', 'x', 'scale' ]
-shape = np.arange(370, dtype =np.float64) 
+shape = np.arange( 370, dtype = np.float64 ) 
 scale = np. linspace(0.1,1,21)
 theEnd = 70
 npts = 10
 
-x = list(np.linspace(-theEnd,theEnd,npts))
-y = list(np.linspace(-theEnd,theEnd,npts))
+x = list( np.linspace(-theEnd, theEnd,npts))
+y = list( np.linspace(-theEnd, theEnd,npts))
 scale = list(np.linspace(0.1,1,5))
-param_v = []
 
+
+#organizing
+param_v = []
 param_v.append(shape)
 param_v.append(x)
 param_v.append(scale)
@@ -45,11 +48,19 @@ params = collections.OrderedDict()
 for ind in range(len(param_v)):
     params[transNames[ind]] = param_v[ind]
 
+#cart_prod_params = True
+#ann file name
+#stim name(s)
+#response file dir
+#save images
 
-l_params = tuple([len(value) for key, value in params.items()])
 
- 
-resp = xr.DataArray(np.empty(l_params), params)
+
+
+stim_param_dims_tup = tuple([len(value) for key, value in params.items()])
+
+#need to count up number of units, and assign layers, unit numbers within layer
+resp = xr.DataArray(np.empty(stim_param_dims_tup), params)
 
 #this will be used as a template for when it is expanded for all units
 resp.values[:] = np.nan
@@ -70,7 +81,6 @@ imgParam = np.array(list(itertools.product(*valList)))
 imgParamInd = np.array(list(itertools.product(*indList)))
 
 nImgs = np.size(imgParam,0)
-
 
 ANNDir = '/home/dean/caffe/models/bvlc_reference_caffenet/'
 ANNFileName='bvlc_reference_caffenet.caffemodel'
@@ -100,14 +110,6 @@ defaultStackSize = stackSize
 stackInd, remainder = misc.sectStrideInds(stackSize, nImgs)
 nPass = np.size(stackInd,0)
 
-import caffe
-
-caffe.set_mode_gpu()
-net = caffe.Net(
-    ANNDir+'deploy.prototxt',
-    ANNDir+ANNFileName, 
-    caffe.TEST)
-net.blobs['data'].reshape(defaultStackSize, 3, 227, 227)    
 
 # preload image directory
 imgIDs = resp.coords['shape'].values
@@ -119,6 +121,16 @@ for imgName in imgIDs :
     shapeSet[ imgInd, :, : ]  = np.load(fnm)
     imgInd+=1
 
+
+import caffe
+caffe.set_mode_gpu()
+
+net = caffe.Net(
+    ANNDir+'deploy.prototxt',
+    ANNDir+ANNFileName, 
+    caffe.TEST)
+net.blobs['data'].reshape(defaultStackSize, 3, 227, 227) 
+
 #get the layerNames, units for each layer, and how many layers
 layerNameList = [(k) for k, v in net.params.items()]
 nUnits = [(v[0].data.shape[0]) for k, v in net.params.items()]
@@ -129,7 +141,7 @@ netResp = []
 netRespArr = [ ]
 paramsWithUnits = copy.deepcopy(params)
 for ind in range(nLayers):
-    shapeWithUnits = l_params + (nUnits[ind],)
+    shapeWithUnits = stim_param_dims_tup + (nUnits[ind],)
     paramsWithUnits['unit'] = range(nUnits[ind])
     netRespArr.append(np.zeros(shapeWithUnits))
     netResp.append(xr.DataArray(np.empty(shapeWithUnits), paramsWithUnits))
@@ -145,12 +157,13 @@ stackSize = defaultStackSize
 #this is each time you pass a stack of images through the net
 for passInd in range(nPass):
         
-    beg = stackInd[passInd,0 ]
-    fin = stackInd[passInd,1 ]
+    beg = stackInd[ passInd, 0 ]
+    fin = stackInd[ passInd, 1 ]
     
     #load the ind Dict
     imgParam_sect = imgParam[ beg:fin , : ]
     imgParamInd_sect = imgParamInd[ beg:fin , : ]
+    
     for key, i in zip(keys, range(len(keys))):
         indDict[key] = imgParam_sect[ : , i ]    
     
@@ -161,10 +174,10 @@ for passInd in range(nPass):
     
     #transform the stack according to the stack of params in indDict
     trans_stack = imp.imgStackTransform( indDict, trans_stack )
-    stack = np.tile(trans_stack, (3,1,1,1))
+    stack = np.tile(trans_stack, (3,1,1,1)) #fill in rgb
     stack = np.swapaxes(stack, 0, 1)
     
-    #save all th images ofr testing 
+    #save all th images for testing 
     paramInd+=1
     if saveImgList[paramInd]:
         for saveInd in range(stackHeight):
@@ -179,7 +192,7 @@ for passInd in range(nPass):
     
     
     
-    for layerInd, layerName in zip( range(len(layerNameList)), layerNameList):
+    for layerInd, layerName in zip( range(len(layerNameList)), layerNameList ):
 
         print(layerName)
         #by image sequentially fill all units responses to that image

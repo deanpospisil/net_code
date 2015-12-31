@@ -114,7 +114,7 @@ saveDir = cwd + '/images/baseimgs/'
 dm.ifNoDirMakeDir(saveDir)
 
 baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
-baseImage = baseImageList[0] 
+baseImage = baseImageList[1] 
 fracOfImage = 1
 dm.ifNoDirMakeDir(saveDir + baseImage +'/')
 

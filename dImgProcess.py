@@ -97,10 +97,10 @@ def centeredPad( img, new_height, new_width):
    hDif = ( new_width - width)/2.
    vDif = ( new_height - height   )/2.
    
-   left = np.ceil(hDif)
-   top = np.ceil(vDif)
-   right = np.floor(hDif)
-   bottom = np.floor(vDif)
+   left = int(np.ceil(hDif))
+   top = int(np.ceil(vDif))
+   right = int(np.floor(hDif))
+   bottom = int(np.floor(vDif))
    
    
    pImg = np.pad(img, ( (left, right), (top, bottom) ) ,'constant')
@@ -156,8 +156,10 @@ def fftDilateImg(img, dilR ):
     
     if np.double(n[1]/nPix[0]) != n[0]/ np.double(nPix[0]):
         warnings.warn( 'There will be a small distortion, percent '+ str(100*(efRatioY/efRatioX) ))
+    if dilR<=0 or dilR>1:
+        warnings.warn('No dilationsless than or equal to 0, or dilations over 1.')
     
-    temp = fftResampleImg(img, n[0], stdCutOff = 4)
+    temp = fftResampleImg(img, n[0], stdCutOff = 8 )
     if (np.size(temp)>np.size(img)):  
     
         dilImg = centeredCrop(temp, nPix[0], nPix[1])
@@ -168,16 +170,19 @@ def fftDilateImg(img, dilR ):
     return dilImg
     
 
-def imgStackTransform(imgDict, trans_stack):
+def imgStackTransform(imgDict, shape_img):
     
-    for ind in range(np.size(trans_stack,0)):
-        trans_img = trans_stack[ind,:,:]
+    n_imgs = np.size( imgDict['shape'] , 0 )
+    trans_stack = []
+    for ind in range( n_imgs ):
+        
+        trans_img = shape_img[imgDict['shape'][ind]]
         
         if 'scale' in imgDict:
-            trans_img = fftDilateImg(trans_img, imgDict['scale'][ind] )
+            trans_img = fftDilateImg( trans_img, imgDict['scale'][ind] )
         
         if 'rot' in imgDict:
-            trans_img = scipy.misc.imrotate(trans_img, imgDict['rot'][ind], interp='bilinear')
+            trans_img = scipy.misc.imrotate( trans_img, imgDict['rot'][ind], interp='bilinear')
    
         if 'x' and 'y' in imgDict:
             x = imgDict['x'][ind] 
@@ -192,14 +197,15 @@ def imgStackTransform(imgDict, trans_stack):
             y = imgDict['y'][ind]
             trans_img = translateByPixels(trans_img, x, np.zeros(np.shape(x)))
             
-        trans_stack[ind,:,:] = trans_img
+        trans_stack.append(trans_img)
+    trans_stack = np.array(trans_stack)
     return trans_stack
 
 ##check the dilation function
 #import matplotlib.pyplot as plt
 #plt.close('all')
 #
-#img = np.load('/Users/dean/Desktop/AlexNet_APC_Analysis/stimSubset/2000.npy')
+#img = np.zeros(10,10)
 #img = img[0,:,:]
 #rImg = fftResampleImg(img, 222, 4 )
 #

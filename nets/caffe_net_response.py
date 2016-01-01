@@ -18,6 +18,8 @@ cwd = os.path.dirname(dname)
 sys.path.append( cwd)
 
 import dImgProcess as imp
+import dMisc as misc
+
 
 def  net_imgstack_response(net, stack):
     #stack is expected to be nImages x RGB x rows x cols
@@ -56,7 +58,7 @@ def identity_preserving_transform_resp( img_stack, stim_specs_dict, net, nimgs_p
     
     #now divide the dict up into sects.
     #order doesn't matter using normal dict
-    stim_specs_dict_sect[key] = {} 
+    stim_specs_dict_sect = {} 
     for stack_ind in stack_indices:
         
         #load up a chunk of images
@@ -143,17 +145,41 @@ def load_npy_img_dirs_into_stack( img_dir ):
     img_names = load_sorted_dir_numbered_fnms_with_particular_extension( img_dir , 'npy')
     
     #will need to check this for color images.
-    stack = np.array([ np.load( img_dir + img_name) for img_name in img_names ])
+    stack = np.array([ np.load( img_dir + img_name ) for img_name in img_names ], dtype = float)
     stack_descriptor_dict['img_paths'] = [ img_dir + img_name for img_name in img_names ]
     
     #to do, some descriptor of the images for provenance: commit and input params for base shape gen
     #stack_descriptor_dict['base_shape_gen_inputs'] = [ img_dir + img_name for img_name in img_names ]
 
     return stack, stack_descriptor_dict
-    
-stim_trans_dict = stim_idprestrans_generator(shape = [1,2,3], scale = (0,1,4), x = (-1,1,4), y = None, rotation = None)
-stack, stack_desc = load_npy_img_dirs_into_stack( '/Users/deanpospisil/Desktop/net_code/images/baseimgs/formlet/' )
+
+
+import matplotlib.pyplot as plt
+img_dir = '/Users/deanpospisil/Desktop/net_code/images/baseimgs/formlet/'  
+
+
+stim_trans_dict = stim_idprestrans_generator(shape = [1,2], scale = (1,1,1), x = (-20,20,4), y = None, rotation = None)
+
+stack, stack_desc = load_npy_img_dirs_into_stack( img_dir )
+
+trans_stack = imp.imgStackTransform( stim_trans_dict, stack )
+
+img_num = 7
+
+plt.subplot(1,3,1)
+plt.imshow( stack[stim_trans_dict['shape'][img_num]], interpolation = 'none', cmap = plt.cm.Greys_r  )
+plt.subplot(1,3,2)
+plt.imshow( trans_stack[img_num], interpolation = 'none', cmap = plt.cm.Greys_r  )
+
+plt.subplot(1,3,3)
+plt.plot(trans_stack[img_num, :, 100])
+print( str(stim_trans_dict['shape'][img_num]) + ' scale ' + str(stim_trans_dict['scale'][img_num]) + ' x ' + str(stim_trans_dict['x'][img_num]) )
 
 ANNDir = '/home/dean/caffe/models/bvlc_reference_caffenet/'
 ANNFileName='bvlc_reference_caffenet.caffemodel'
-net_resp = identity_preserving_transform_resp( stack, stim_trans_dict, ANNDir+ANNFileName)
+#net_resp = identity_preserving_transform_resp( stack, stim_trans_dict, ANNDir+ANNFileName)
+
+
+
+
+

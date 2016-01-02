@@ -163,7 +163,7 @@ def load_npy_img_dirs_into_stack( img_dir ):
 
 
 import matplotlib.pyplot as plt
-img_dir = '/Users/deanpospisil/Desktop/net_code/images/baseimgs/PC370/'  
+img_dir = cwd + '/images/baseimgs/PC370/'  
 
 
 stim_trans_dict = stim_idprestrans_generator(shape = [1,2], scale = (1,1,1), x = (-20,20,4), y = None, rotation = None)

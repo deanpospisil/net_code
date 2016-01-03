@@ -24,33 +24,56 @@ import dMisc as misc
 
 def  net_imgstack_response(net, stack):
     #stack is expected to be nImages x RGB x rows x cols
+        
+    if not net.blobs['data'].data.shape[1:] == stack.shape[1:]:
+        warnings.warn('Images are not the correct shape. Input shape: ' 
+        + str(stack.shape[1:]) + ' needed shape: ' + str(net.blobs['data'].data.shape[1:]) 
+        + '. Assuming you just put in grey scale' )
 
-    if len( stack.shape ) < 3: #in case the stack is greyscale
         stack = np.tile(stack, (3,1,1,1))
         stack = np.swapaxes(stack, 0, 1)
-        
+
+    layer_names = [ k for k in net.blobs.keys()]
     
-    stackHeight = np.size( stack, 0 )
-    layerNameList = [(k) for k, v in net.params.items()]
-    
-    #run the full stack through the net 
-    net.blobs['data'].reshape( stackHeight, 3, 227, 227 )
-    net.blobs['data'].data[...] = stack
+    #shape the data layer, (first layer) to the input
+    #net.blobs[ layer_names[0] ].reshape( stackHeight, 3, 227, 227 )
+    net.blobs[ layer_names[0] ].data[...] = stack
     net.forward()
     
-    #go through each layer getting unit respons
-    for layerInd, layerName in zip( range(len(layerNameList)), layerNameList ):
+    all_layer_resp = np.array()
+    layer_names_sans_data = layer_names[1:]
+    for layer_name in  layer_names_sans_data:
         
-        if layerName[0] == 'c':#if it is a convolutional layer
-            mid = round(np.shape(net.blobs[layerName].data)[3] / 2)
-            #get a list of responses from all unique units
-        else:
-            print('la')
+        layer_resp = net.blobs[layer_name].data
+        
+        if len(layer_resp.shape)>2:#ignore convolutional repetitions, just pulling center.
+            mid = [ round(m/2) for m in np.shape(net.blobs[layer_name].data)[2:]   ]
+            layer_resp = layer_resp[ :, :, mid[0], mid[1] ]
+            
+        all_layer_resp.append(layer_resp)
+    response = np.hstack( all_layer_resp )
     
     return response
             
             
-
+def get_indices_for_net_unit_vec(net, layer_names = None):
+    
+    if layer_names is None:
+        layer_names = [ k for k in net.blobs.keys()][1:]#not including first layer, (data)
+        
+    layer_nunits = np.hstack([ net.blobs[layer_name].data.shape[1] for layer_name in  layer_names])
+    
+    layer_unit_ind =  np.hstack([range(i) for i in layer_nunits ])
+    
+    layer_ind = np.hstack( [ np.ones( layer_nunits[ i ] )*i for i in range( len( layer_nunits ) ) ] )
+    resp_descriptor_dict = {}
+    resp_descriptor_dict['layer_names'] = layer_names
+    resp_descriptor_dict['layer_nunits'] = layer_nunits
+    resp_descriptor_dict['layer_unit_ind'] = layer_unit_ind  
+    resp_descriptor_dict['layer_ind'] = layer_ind
+    
+    return resp_descriptor_dict
+    
 def identity_preserving_transform_resp( img_stack, stim_specs_dict, net, nimgs_per_pass = 100 ):
     #takes stim specs, transforms images accordingly, gets their responses 
     
@@ -185,7 +208,15 @@ print( str(stim_trans_dict['shape'][img_num]) + ' scale ' + str(stim_trans_dict[
 
 ANNDir = '/home/dean/caffe/models/bvlc_reference_caffenet/'
 ANNFileName='bvlc_reference_caffenet.caffemodel'
-#net_resp = identity_preserving_transform_resp( stack, stim_trans_dict, ANNDir+ANNFileName)
+import caffe
+caffe.set_mode_gpu()
+
+net = caffe.Net(
+    ANNDir+'deploy.prototxt',
+    ANNDir+ANNFileName, 
+    caffe.TEST)
+
+net_resp = identity_preserving_transform_resp( stack, stim_trans_dict, net)
 
 
 

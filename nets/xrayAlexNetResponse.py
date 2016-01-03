@@ -30,7 +30,7 @@ transNames = ['shape', 'x', 'scale' ]
 shape = np.arange( 370, dtype = np.float64 ) 
 scale = np. linspace(0.1,1,21)
 theEnd = 70
-npts = 10
+npts = 2
 
 x = list( np.linspace(-theEnd, theEnd,npts))
 y = list( np.linspace(-theEnd, theEnd,npts))

@@ -36,11 +36,11 @@ def  net_imgstack_response(net, stack):
     layer_names = [ k for k in net.blobs.keys()]
     
     #shape the data layer, (first layer) to the input
-    #net.blobs[ layer_names[0] ].reshape( stackHeight, 3, 227, 227 )
-    net.blobs[ layer_names[0] ].data[...] = stack
+    net.blobs[ layer_names[0] ].reshape(*tuple([stack.shape[0],]) + net.blobs['data'].data.shape[1:])
+    net.blobs[ layer_names[0] ].data[... ]= stack
     net.forward()
     
-    all_layer_resp = np.array()
+    all_layer_resp = []
     layer_names_sans_data = layer_names[1:]
     for layer_name in  layer_names_sans_data:
         
@@ -74,26 +74,32 @@ def get_indices_for_net_unit_vec(net, layer_names = None):
     
     return resp_descriptor_dict
     
-def identity_preserving_transform_resp( img_stack, stim_specs_dict, net, nimgs_per_pass = 100 ):
+def identity_preserving_transform_resp( img_stack, stim_specs_dict, net, nimgs_per_pass = 10 ):
     #takes stim specs, transforms images accordingly, gets their responses 
     
-    n_imgs = len( stim_specs_dict[stim_specs_dict.keys[0]] )
+    n_imgs = len( stim_specs_dict[stim_specs_dict.keys()[0]] )
     stack_indices, remainder = misc.sectStrideInds( nimgs_per_pass, n_imgs )
     
     #now divide the dict up into sects.
     #order doesn't matter using normal dict
     stim_specs_dict_sect = {} 
+    all_net_resp = []
     for stack_ind in stack_indices:
         
         #load up a chunk of images
         for key in stim_specs_dict:
-            stim_specs_dict_sect[key] = stim_specs_dict[key][tuple(stack_ind)]
+            stim_specs_dict_sect[key] = stim_specs_dict[key][ stack_ind[0] : stack_ind[1] ]
         
         trans_stack = imp.imgStackTransform( stim_specs_dict_sect, img_stack )
         
         net_resp = net_imgstack_response( net, trans_stack )
+        all_net_resp.append(net_resp)
+        
+    response = np.vstack(all_net_resp)
     
-    return net_resp
+    resp_descriptor_dict = get_indices_for_net_unit_vec(net)    
+    
+    return response, resp_descriptor_dict
 
 def stim_idprestrans_generator(shape = None, scale = None, x = None, y = None, 
                         rotation = None):
@@ -189,7 +195,7 @@ import matplotlib.pyplot as plt
 img_dir = cwd + '/images/baseimgs/PC370/'  
 
 
-stim_trans_dict = stim_idprestrans_generator(shape = [1,2], scale = (1,1,1), x = (-20,20,4), y = None, rotation = None)
+stim_trans_dict = stim_idprestrans_generator(shape = [1,2,5], scale = (1,1,1), x = (-20,20,4), y = None, rotation = None)
 
 stack, stack_desc = load_npy_img_dirs_into_stack( img_dir )
 
@@ -216,8 +222,12 @@ net = caffe.Net(
     ANNDir+ANNFileName, 
     caffe.TEST)
 
-net_resp = identity_preserving_transform_resp( stack, stim_trans_dict, net)
+net_resp, resp_descriptor_dict = identity_preserving_transform_resp( stack, stim_trans_dict, net)
 
+import pickle
+responseFile = cwd + '/responses/testresp'
+with open( responseFile + '.pickle', 'w') as f:
+    pickle.dump( [ net_resp, resp_descriptor_dict ] , f )
 
 
 

@@ -103,11 +103,11 @@ def identity_preserving_transform_resp( img_stack, stim_specs_dict, net, nimgs_p
 
 def stim_idprestrans_generator(shapes = None, scale = None, x = None, y = None, 
                         rotation = None):
-# takes descrptions of ranges for different transformations (start, stop, npoints)
-#produces dictionary of those.
+#takes descrptions of ranges for different transformations (start, stop, npoints)
+#produces a cartesian dictionary of those.
                         
     stim_specs_dict = ordDict()  
-    stim_specs_dict_ind = ordDict()                 
+             
         
     if not shapes is None:
         stim_specs_dict[ 'shapes' ] = np.array( shapes, dtype = float)
@@ -124,24 +124,22 @@ def stim_idprestrans_generator(shapes = None, scale = None, x = None, y = None,
     if not rotation is None :
         stim_specs_dict[ 'rotation' ] = np.linspace( *rotation )
     
-
-
+    # get all dimensions, into a dict
     stim_trans_dict = cartesian_prod_dicts_lists( stim_specs_dict )
-    
-    for key in stim_specs_dict:
-        stim_specs_dict_ind[key] = range( len( stim_specs_dict[ key ] ) )
-    
-    stim_trans_dict_ind = cartesian_prod_dicts_lists( stim_specs_dict_ind )
-    
-    
+      
+#    this was code to get indices for the stim, unneccesary. I think...
+#    stim_specs_dict_ind = ordDict()  
+#    for key in stim_specs_dict:
+#        stim_specs_dict_ind[key] = range( len( stim_specs_dict[ key ] ) )
+#    stim_trans_dict_ind = cartesian_prod_dicts_lists( stim_specs_dict_ind )  
 #    if not shapes is None:
 #        stim_specs_dict[ 'shapes' ] = map(int, stim_specs_dict[ 'shapes' ])
  
-    return stim_trans_dict, stim_trans_dict_ind, stim_specs_dict
+    return stim_trans_dict, stim_specs_dict
          
 def cartesian_prod_dicts_lists( the_dict ) :
-    #takes a dictionary and produces a dictionary of the cartesian product of the input
     
+    #takes a dictionary and produces a dictionary of the cartesian product of the input
     if not type(the_dict) is type(ordDict()):
         warnings.warn('We were expecting an ordered dict for provenance concerns.')
         
@@ -154,10 +152,9 @@ def cartesian_prod_dicts_lists( the_dict ) :
     stim_cart_array = cartesian(stim_list)
     
     cart_dict = ordDict()
+    #load up the vectors assosciated with keys to cart_dict
     for key_name, key_num in zip( the_dict, range( len( the_dict ) ) ):
         cart_dict[key_name] = stim_cart_array[ :, key_num]
-    
-    
     
     return cart_dict
     
@@ -199,37 +196,41 @@ def load_npy_img_dirs_into_stack( img_dir ):
 
     return stack, stack_descriptor_dict
 
-def convert_resp_to_xray(net_resp, stack_desc, stim_specs_ind, stim_trans_dict_ind ):
+
+def net_resp_2d_to_xray_nd(net_resp, stim_specs_dict, desc_dict):
     
-    #make the nd-array to hold on to the responses
+    #get the dimensions of the stimuli in order.
     dims = tuple([ len( stim_specs_dict[key] ) for key in stim_specs_dict ] ) + tuple( [net_resp.shape[1],])
-    dim_inds = np.array([ stim_trans_dict_ind[key] for key in stim_specs_dict ])
-    resp_ndarray = np.zeros( dims )
-
-
+    
+    #reshape into net_resp_xray
+    #this working is dependent on cartesian producing A type cartesian (last index element changes fastest)
     net_resp_xray = np.reshape( net_resp, dims )
+    
+
+    net_dims = [key for key in stim_specs_dict]
+    net_dims.append('unit')
+    net_coords =[stim_specs_dict[key] for key in stim_specs_dict]
+    net_coords.append( range( dims[-1] ) )
+    
+    foo = xr.DataArray( net_resp_xray, coords = net_coords , dims = net_dims )
+    
+    # adding extra coordinates.
+    foo['layer'] = ('unit', desc_dict['layer_ind'])
+    foo['layer_unit'] = ('unit', desc_dict['layer_unit_ind'])
+    layer_label = [ desc_dict['layer_names'][ int( layer_num ) ] for layer_num  in desc_dict['layer_ind'] ]
+    foo['layer_label'] = ('unit', layer_label)
+    
+    return foo
 
 
 import matplotlib.pyplot as plt
 img_dir = cwd + '/images/baseimgs/PC370/'  
-
-
-stim_trans_dict, stim_trans_dict_ind, stim_specs_dict = stim_idprestrans_generator(shapes = [1,2,5], scale = (1,1,1), x = (-20,20,4), y = None, rotation = None)
+stim_trans_dict, stim_specs_dict = stim_idprestrans_generator(shapes = [1,2,5], 
+                              scale = (1,1,1), x = (-20,20,4), y = None, rotation = None)
 
 stack, stack_desc = load_npy_img_dirs_into_stack( img_dir )
-
 trans_stack = imp.imgStackTransform( stim_trans_dict, stack )
 
-img_num = 2
-
-#plt.subplot(1,3,1)
-#plt.imshow( stack[stim_trans_dict['shapes'][img_num]], interpolation = 'none', cmap = plt.cm.Greys_r  )
-#plt.subplot(1,3,2)
-#plt.imshow( trans_stack[img_num], interpolation = 'none', cmap = plt.cm.Greys_r  )
-#
-#plt.subplot(1,3,3)
-#plt.plot(trans_stack[img_num, :, 120])
-#print( str(stim_trans_dict['shapes'][img_num]) + ' scale ' + str(stim_trans_dict['scale'][img_num]) + ' x ' + str(stim_trans_dict['x'][img_num]) )
 
 ANNDir = '/home/dean/caffe/models/bvlc_reference_caffenet/'
 ANNFileName='bvlc_reference_caffenet.caffemodel'
@@ -248,36 +249,17 @@ responseFile = cwd + '/responses/testresp'
 with open( responseFile + '.pickle', 'w') as f:
     pickle.dump( [ net_resp, desc_dict, stim_specs_dict ] , f )
 
-#responseFile = '/Users/deanpospisil/Desktop/net_code/responses/testresp.pickle'
+#responseFile = cwd + '/responses/testresp.pickle'
 #with open( responseFile, 'rb') as f:
 #    a= pickle.load(f, encoding='latin1')
 #
 #net_resp = a[0]
 #desc_dict = a[1]
+#stim_specs_dict = a[2]
 
-#make the nd-array to hold on to the responses
-dims = tuple([ len( stim_specs_dict[key] ) for key in stim_specs_dict ] ) + tuple( [net_resp.shape[1],])
-
-#this working is dependent on cartesian producing A type cartesian, last index element changes fastest
-net_resp_xray = np.reshape( net_resp, dims )
 import xray as xr
 
 
-net_dims= [key for key in stim_specs_dict]
-net_dims.append('unit')
-net_coords =[stim_specs_dict[key] for key in stim_specs_dict]
-net_coords.append( range( dims[-1] ) )
-
-foo = xr.DataArray( net_resp_xray, coords = net_coords , dims = net_dims )
-desc_dict
-
-# adding extra coordinates.
-foo['layer'] = ('unit', desc_dict['layer_ind'])
-
-foo['layer_unit'] = ('unit', desc_dict['layer_unit_ind'])
-
-layer_label = [ desc_dict['layer_names'][ int( layer_num ) ] for layer_num  in desc_dict['layer_ind'] ]
-foo['layer_label'] = ('unit', layer_label)
 
 
 
@@ -287,13 +269,3 @@ foo = foo[ dict( unit = foo['layer_label'] == 'fc8')  ]
 plt.cla()
 foo.mean( [ 'shapes', 'scale','unit'] ).plot()
 
-#plt.plot( foo['layer_label'] == 'conv1' )
-#
-#
-#foo[ dict( unit = foo['layer']==4 ) ]
-#foo[dict( unit=foo['layer']==4, shape=2 )]
-#
-#rf = foo.mean([ 'shapes', 'scale'])
-#
-#
-#

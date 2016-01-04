@@ -231,35 +231,32 @@ img_num = 2
 #plt.plot(trans_stack[img_num, :, 120])
 #print( str(stim_trans_dict['shapes'][img_num]) + ' scale ' + str(stim_trans_dict['scale'][img_num]) + ' x ' + str(stim_trans_dict['x'][img_num]) )
 
-#ANNDir = '/home/dean/caffe/models/bvlc_reference_caffenet/'
-#ANNFileName='bvlc_reference_caffenet.caffemodel'
-#import caffe
-#caffe.set_mode_gpu()
+ANNDir = '/home/dean/caffe/models/bvlc_reference_caffenet/'
+ANNFileName='bvlc_reference_caffenet.caffemodel'
+import caffe
+caffe.set_mode_gpu()
 
-#net = caffe.Net(
-#    ANNDir+'deploy.prototxt',
-#    ANNDir+ANNFileName, 
-#    caffe.TEST)
-#
-#net_resp, resp_descriptor_dict = identity_preserving_transform_resp( stack, stim_trans_dict, net)
+net = caffe.Net(
+    ANNDir+'deploy.prototxt',
+    ANNDir+ANNFileName, 
+    caffe.TEST)
+
+net_resp, desc_dict = identity_preserving_transform_resp( stack, stim_trans_dict, net)
 #
 import pickle
-#responseFile = cwd + '/responses/testresp'
-#with open( responseFile + '.pickle', 'w') as f:
-#    pickle.dump( [ net_resp, resp_descriptor_dict ] , f )
+responseFile = cwd + '/responses/testresp'
+with open( responseFile + '.pickle', 'w') as f:
+    pickle.dump( [ net_resp, desc_dict, stim_specs_dict ] , f )
 
-responseFile = '/Users/deanpospisil/Desktop/net_code/responses/testresp.pickle'
-with open( responseFile, 'rb') as f:
-    a= pickle.load(f, encoding='latin1')
-
-net_resp = a[0]
-desc_dict = a[1]
+#responseFile = '/Users/deanpospisil/Desktop/net_code/responses/testresp.pickle'
+#with open( responseFile, 'rb') as f:
+#    a= pickle.load(f, encoding='latin1')
+#
+#net_resp = a[0]
+#desc_dict = a[1]
 
 #make the nd-array to hold on to the responses
-
 dims = tuple([ len( stim_specs_dict[key] ) for key in stim_specs_dict ] ) + tuple( [net_resp.shape[1],])
-#dim_inds = np.array([ stim_trans_dict_ind[key] for key in stim_specs_dict ])
-#resp_ndarray = np.zeros( dims )
 
 #this working is dependent on cartesian producing A type cartesian, last index element changes fastest
 net_resp_xray = np.reshape( net_resp, dims )

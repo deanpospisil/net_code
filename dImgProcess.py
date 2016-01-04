@@ -172,11 +172,11 @@ def fftDilateImg(img, dilR ):
 
 def imgStackTransform(imgDict, shape_img):
     
-    n_imgs = np.size( imgDict['shape'] , 0 )
+    n_imgs = np.size( imgDict['shapes'] , 0 )
     trans_stack = []
     for ind in range( n_imgs ):
         
-        trans_img = shape_img[imgDict['shape'][ind]]
+        trans_img = shape_img[imgDict['shapes'][ind]]
         
         if 'scale' in imgDict:
             trans_img = fftDilateImg( trans_img, imgDict['scale'][ind] )

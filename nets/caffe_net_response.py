@@ -215,8 +215,11 @@ sys.path.append( cwd)
 
 
 img_dir = cwd + '/images/baseimgs/PC370/'  
+
+#lets think about provenance now, and make this a little bit more flexible
 stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
                               scale = (0.1, 0.1,1), x = (-120,120,10), y = None, rotation = None)
+                             
 
 
 #choose a library of images

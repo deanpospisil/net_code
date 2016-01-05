@@ -18,6 +18,8 @@ dname = os.path.dirname(abspath)
 cwd = os.path.dirname(dname)
 sys.path.append( cwd)
 
+sys.path.append('/home/dean/caffe/python')
+
 import dImgProcess as imp
 import dMisc as misc
 import pickle
@@ -75,7 +77,7 @@ def get_indices_for_net_unit_vec(net, layer_names = None):
     
     return resp_descriptor_dict
     
-def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, nimgs_per_pass = 10 ):
+def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, nimgs_per_pass = 100 ):
     #takes stim specs, transforms images accordingly, gets their responses 
     
     n_imgs = len( stim_trans_cart_dict[stim_trans_cart_dict.keys()[0]] )
@@ -86,7 +88,7 @@ def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, ni
     stim_trans_cart_dict_sect = {} 
     all_net_resp = []
     for stack_ind in stack_indices:
-        
+        print(stack_ind)
         #load up a chunk of images
         for key in stim_trans_cart_dict:
             stim_trans_cart_dict_sect[key] = stim_trans_cart_dict[key][ stack_ind[0] : stack_ind[1] ]
@@ -195,16 +197,16 @@ def net_resp_2d_to_xray_nd(net_resp, stim_trans_dict, indices_for_net_unit_vec):
     da = xr.DataArray( net_resp_xray, coords = net_coords , dims = net_dims )
     
     # adding extra coordinates using indices_for_net_unit_vec
-    with indices_for_net_unit_vec as d:
-        da['layer'] = ('unit', d['layer_ind'])
-        da['layer_unit'] = ('unit', d['layer_unit_ind'])
-        layer_label = [ d['layer_names'][ int( layer_num ) ] for layer_num  in d['layer_ind'] ]
-        da['layer_label'] = ('unit', layer_label)
+    d = indices_for_net_unit_vec 
+    da['layer'] = ('unit', d['layer_ind'])
+    da['layer_unit'] = ('unit', d['layer_unit_ind'])
+    layer_label = [ d['layer_names'][ int( layer_num ) ] for layer_num  in d['layer_ind'] ]
+    da['layer_label'] = ('unit', layer_label)
         
     return da
 
 
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plts
 import caffe
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -213,14 +215,14 @@ sys.path.append( cwd)
 
 
 img_dir = cwd + '/images/baseimgs/PC370/'  
-stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = [1,2,5], 
-                              scale = (0.1,1,2), x = (-20,20,4), y = None, rotation = None)
+stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
+                              scale = (0.1, 0.1,1), x = (-120,120,10), y = None, rotation = None)
 
 
 #choose a library of images
 img_dir = cwd + '/images/baseimgs/PC370/'  
 stack, stack_desc = load_npy_img_dirs_into_stack( img_dir )
-trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )
+#trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )
 
 
 #get the response from the given net
@@ -249,9 +251,9 @@ indices_for_net_unit_vec = get_indices_for_net_unit_vec( net )
 da = net_resp_2d_to_xray_nd(net_resp, stim_trans_dict, indices_for_net_unit_vec)
 
 #is there a simpler way to make this call
-da = da[ dict( unit = da['layer_label'] == 'fc8')  ]
+da = da[ dict( unit = da['layer_label'] == 'conv1')  ]
 plt.cla()
-da.mean( [ 'shapes', 'scale','unit'] ).plot()
+da.mean( [ 'shapes','scale', 'unit'] ).plot()
 
 
 
@@ -265,10 +267,10 @@ da.mean( [ 'shapes', 'scale','unit'] ).plot()
 #da.mean( [ 'shapes', 'scale','unit'] ).plot()
 
 
-#import pickle
-#responseFile = cwd + '/responses/testresp'
-#with open( responseFile + '.pickle', 'w') as f:
-#    pickle.dump( [ net_resp, desc_dict, stim_specs_dict ] , f )
+
+responseFile = cwd + '/responses/testresp'
+with open( responseFile + '.pickle', 'w') as f:
+    pickle.dump( [ da, net_resp, stim_trans_dict, indices_for_net_unit_vec ] , f )
 
 #responseFile = cwd + '/responses/testresp.pickle'
 #with open( responseFile, 'rb') as f:

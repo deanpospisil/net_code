@@ -20,6 +20,7 @@ sys.path.append( cwd)
 
 import dImgProcess as imp
 import dMisc as misc
+import xray as xr
 
 
 def  net_imgstack_response(net, stack):
@@ -212,30 +213,35 @@ def net_resp_2d_to_xray_nd(net_resp, stim_specs_dict, desc_dict):
     net_coords =[stim_specs_dict[key] for key in stim_specs_dict]
     net_coords.append( range( dims[-1] ) )
     
-    foo = xr.DataArray( net_resp_xray, coords = net_coords , dims = net_dims )
+    da = xr.DataArray( net_resp_xray, coords = net_coords , dims = net_dims )
     
     # adding extra coordinates.
-    foo['layer'] = ('unit', desc_dict['layer_ind'])
-    foo['layer_unit'] = ('unit', desc_dict['layer_unit_ind'])
+    da['layer'] = ('unit', desc_dict['layer_ind'])
+    da['layer_unit'] = ('unit', desc_dict['layer_unit_ind'])
     layer_label = [ desc_dict['layer_names'][ int( layer_num ) ] for layer_num  in desc_dict['layer_ind'] ]
-    foo['layer_label'] = ('unit', layer_label)
+    da['layer_label'] = ('unit', layer_label)
     
-    return foo
+    return da
 
 
 import matplotlib.pyplot as plt
-img_dir = cwd + '/images/baseimgs/PC370/'  
+
+
+#generate some transformations
 stim_trans_dict, stim_specs_dict = stim_idprestrans_generator(shapes = [1,2,5], 
                               scale = (1,1,1), x = (-20,20,4), y = None, rotation = None)
 
+#choose a library of images
+img_dir = cwd + '/images/baseimgs/PC370/'  
 stack, stack_desc = load_npy_img_dirs_into_stack( img_dir )
 trans_stack = imp.imgStackTransform( stim_trans_dict, stack )
 
 
+#get the response
 ANNDir = '/home/dean/caffe/models/bvlc_reference_caffenet/'
 ANNFileName='bvlc_reference_caffenet.caffemodel'
 import caffe
-caffe.set_mode_gpu()
+caffe.set_mode_cpu()
 
 net = caffe.Net(
     ANNDir+'deploy.prototxt',
@@ -243,11 +249,24 @@ net = caffe.Net(
     caffe.TEST)
 
 net_resp, desc_dict = identity_preserving_transform_resp( stack, stim_trans_dict, net)
+
+#organize that response into xray file
+da = net_resp_2d_to_xray_nd(net_resp, stim_specs_dict, desc_dict)
+
+#now save that file
+
+
+##is there a simpler way to make this call
+#da = da[ dict( unit = da['layer_label'] == 'fc8')  ]
 #
-import pickle
-responseFile = cwd + '/responses/testresp'
-with open( responseFile + '.pickle', 'w') as f:
-    pickle.dump( [ net_resp, desc_dict, stim_specs_dict ] , f )
+#plt.cla()
+#da.mean( [ 'shapes', 'scale','unit'] ).plot()
+
+
+#import pickle
+#responseFile = cwd + '/responses/testresp'
+#with open( responseFile + '.pickle', 'w') as f:
+#    pickle.dump( [ net_resp, desc_dict, stim_specs_dict ] , f )
 
 #responseFile = cwd + '/responses/testresp.pickle'
 #with open( responseFile, 'rb') as f:
@@ -256,16 +275,3 @@ with open( responseFile + '.pickle', 'w') as f:
 #net_resp = a[0]
 #desc_dict = a[1]
 #stim_specs_dict = a[2]
-
-import xray as xr
-
-
-
-
-
-#is there a simpler way to make this call
-foo = foo[ dict( unit = foo['layer_label'] == 'fc8')  ]
-
-plt.cla()
-foo.mean( [ 'shapes', 'scale','unit'] ).plot()
-

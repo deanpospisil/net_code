@@ -223,13 +223,11 @@ stack, stack_desc = load_npy_img_dirs_into_stack( img_dir )
 trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )
 
 
-#get the response
+#get the response from the given net
 ANNDir = '/home/dean/caffe/models/bvlc_reference_caffenet/'
 ANNFileName='bvlc_reference_caffenet.caffemodel'
 
-import caffe
-caffe.set_mode_cpu()
-
+caffe.set_mode_gpu()
 
 net = caffe.Net(
     ANNDir+'deploy.prototxt',
@@ -243,10 +241,10 @@ indices_for_net_unit_vec = get_indices_for_net_unit_vec( net )
 
 
 
-responseFile = cwd + '/responses/testresp'
-with open( responseFile + '.pickle', 'w') as f:
-    pickle.dump( [ net_resp, indices_for_net_unit_vec, stim_trans_dict ] , f )
-
+#responseFile = cwd + '/responses/testresp'
+#with open( responseFile + '.pickle', 'w') as f:
+#    pickle.dump( [ net_resp, indices_for_net_unit_vec, stim_trans_dict ] , f )
+#
 
 da = net_resp_2d_to_xray_nd(net_resp, stim_trans_dict, indices_for_net_unit_vec)
 

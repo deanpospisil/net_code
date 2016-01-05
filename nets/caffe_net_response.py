@@ -192,16 +192,16 @@ def net_resp_2d_to_xray_nd(net_resp, stim_trans_dict, indices_for_net_unit_vec):
     net_coords =[stim_trans_dict[key] for key in stim_trans_dict]
     net_coords.append( range( dims[-1] ) )
     
-    foo = xr.DataArray( net_resp_xray, coords = net_coords , dims = net_dims )
+    da = xr.DataArray( net_resp_xray, coords = net_coords , dims = net_dims )
     
     # adding extra coordinates using indices_for_net_unit_vec
     with indices_for_net_unit_vec as d:
-        foo['layer'] = ('unit', d['layer_ind'])
-        foo['layer_unit'] = ('unit', d['layer_unit_ind'])
+        da['layer'] = ('unit', d['layer_ind'])
+        da['layer_unit'] = ('unit', d['layer_unit_ind'])
         layer_label = [ d['layer_names'][ int( layer_num ) ] for layer_num  in d['layer_ind'] ]
-        foo['layer_label'] = ('unit', layer_label)
+        da['layer_label'] = ('unit', layer_label)
         
-    return foo
+    return da
 
 
 import matplotlib.pyplot as plt
@@ -216,19 +216,26 @@ img_dir = cwd + '/images/baseimgs/PC370/'
 stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = [1,2,5], 
                               scale = (0.1,1,2), x = (-20,20,4), y = None, rotation = None)
 
+
+#choose a library of images
+img_dir = cwd + '/images/baseimgs/PC370/'  
 stack, stack_desc = load_npy_img_dirs_into_stack( img_dir )
 trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )
 
 
+#get the response
 ANNDir = '/home/dean/caffe/models/bvlc_reference_caffenet/'
 ANNFileName='bvlc_reference_caffenet.caffemodel'
 
-caffe.set_mode_gpu()
+import caffe
+caffe.set_mode_cpu()
+
 
 net = caffe.Net(
     ANNDir+'deploy.prototxt',
     ANNDir+ANNFileName, 
     caffe.TEST)
+
 
 net_resp = identity_preserving_transform_resp( stack, stim_trans_cart_dict, net)
 
@@ -247,4 +254,29 @@ da = net_resp_2d_to_xray_nd(net_resp, stim_trans_dict, indices_for_net_unit_vec)
 da = da[ dict( unit = da['layer_label'] == 'fc8')  ]
 plt.cla()
 da.mean( [ 'shapes', 'scale','unit'] ).plot()
+
+
+
+#now save that file
+
+
+##is there a simpler way to make this call
+#da = da[ dict( unit = da['layer_label'] == 'fc8')  ]
+#
+#plt.cla()
+#da.mean( [ 'shapes', 'scale','unit'] ).plot()
+
+
+#import pickle
+#responseFile = cwd + '/responses/testresp'
+#with open( responseFile + '.pickle', 'w') as f:
+#    pickle.dump( [ net_resp, desc_dict, stim_specs_dict ] , f )
+
+#responseFile = cwd + '/responses/testresp.pickle'
+#with open( responseFile, 'rb') as f:
+#    a= pickle.load(f, encoding='latin1')
+#
+#net_resp = a[0]
+#desc_dict = a[1]
+#stim_specs_dict = a[2]
 

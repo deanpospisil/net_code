@@ -20,7 +20,8 @@ sys.path.append( cwd)
 
 import dImgProcess as imp
 import dMisc as misc
-
+import pickle
+import xray as xr
 
 def  net_imgstack_response(net, stack):
     #stack is expected to be nImages x RGB x rows x cols
@@ -74,68 +75,59 @@ def get_indices_for_net_unit_vec(net, layer_names = None):
     
     return resp_descriptor_dict
     
-def identity_preserving_transform_resp( img_stack, stim_specs_dict, net, nimgs_per_pass = 10 ):
+def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, nimgs_per_pass = 10 ):
     #takes stim specs, transforms images accordingly, gets their responses 
     
-    n_imgs = len( stim_specs_dict[stim_specs_dict.keys()[0]] )
+    n_imgs = len( stim_trans_cart_dict[stim_trans_cart_dict.keys()[0]] )
     stack_indices, remainder = misc.sectStrideInds( nimgs_per_pass, n_imgs )
     
     #now divide the dict up into sects.
-    #order doesn't matter using normal dict
-    stim_specs_dict_sect = {} 
+    #order doesn't matter using normal dict, imgStackTransform has correct order
+    stim_trans_cart_dict_sect = {} 
     all_net_resp = []
     for stack_ind in stack_indices:
         
         #load up a chunk of images
-        for key in stim_specs_dict:
-            stim_specs_dict_sect[key] = stim_specs_dict[key][ stack_ind[0] : stack_ind[1] ]
+        for key in stim_trans_cart_dict:
+            stim_trans_cart_dict_sect[key] = stim_trans_cart_dict[key][ stack_ind[0] : stack_ind[1] ]
         
-        trans_stack = imp.imgStackTransform( stim_specs_dict_sect, img_stack )
+        trans_stack = imp.imgStackTransform( stim_trans_cart_dict_sect, img_stack )
         
         net_resp = net_imgstack_response( net, trans_stack )
         all_net_resp.append(net_resp)
         
     response = np.vstack(all_net_resp)
+     
     
-    resp_descriptor_dict = get_indices_for_net_unit_vec(net)    
-    
-    return response, resp_descriptor_dict
+    return response
 
 def stim_idprestrans_generator(shapes = None, scale = None, x = None, y = None, 
                         rotation = None):
 #takes descrptions of ranges for different transformations (start, stop, npoints)
 #produces a cartesian dictionary of those.
                         
-    stim_specs_dict = ordDict()  
+    stim_trans_dict = ordDict()  
              
         
     if not shapes is None:
-        stim_specs_dict[ 'shapes' ] = np.array( shapes, dtype = float)
+        stim_trans_dict[ 'shapes' ] = np.array( shapes, dtype = float)
     
     if not scale is None :
-        stim_specs_dict[ 'scale' ] = np.linspace( *scale )
+        stim_trans_dict[ 'scale' ] = np.linspace( *scale )
 
     if not x is None :
-        stim_specs_dict[ 'x' ] = np.linspace( *x )
+        stim_trans_dict[ 'x' ] = np.linspace( *x )
     
     if not y is None :
-        stim_specs_dict[ 'y' ] = np.linspace( *y )
+        stim_trans_dict[ 'y' ] = np.linspace( *y )
     
     if not rotation is None :
-        stim_specs_dict[ 'rotation' ] = np.linspace( *rotation )
+        stim_trans_dict[ 'rotation' ] = np.linspace( *rotation )
     
     # get all dimensions, into a dict
-    stim_trans_dict = cartesian_prod_dicts_lists( stim_specs_dict )
-      
-#    this was code to get indices for the stim, unneccesary. I think...
-#    stim_specs_dict_ind = ordDict()  
-#    for key in stim_specs_dict:
-#        stim_specs_dict_ind[key] = range( len( stim_specs_dict[ key ] ) )
-#    stim_trans_dict_ind = cartesian_prod_dicts_lists( stim_specs_dict_ind )  
-#    if not shapes is None:
-#        stim_specs_dict[ 'shapes' ] = map(int, stim_specs_dict[ 'shapes' ])
+    stim_trans_cart_dict = cartesian_prod_dicts_lists( stim_trans_dict )
  
-    return stim_trans_dict, stim_specs_dict
+    return stim_trans_cart_dict, stim_trans_dict
          
 def cartesian_prod_dicts_lists( the_dict ) :
     
@@ -158,17 +150,6 @@ def cartesian_prod_dicts_lists( the_dict ) :
     
     return cart_dict
     
-#d = ordDict()
-#d['a'] = [1,2,3]
-#d['b'] = [1,2]
-#c_d = cartesian_prod_dicts_lists( d )
-
-#def argsort(seq):
-#    # http://stackoverflow.com/questions/3071415/efficient-method-to-calculate-the-rank-vector-of-a-list-in-python
-#    return sorted(range(len(seq)), key=seq.__getitem__)
-#    #
-#    
-
 
 def load_sorted_dir_numbered_fnms_with_particular_extension(the_dir, extension):
     #takes a directory and an extension, and loads up all file names with that extension,
@@ -183,7 +164,6 @@ def load_sorted_dir_numbered_fnms_with_particular_extension(the_dir, extension):
 
 def load_npy_img_dirs_into_stack( img_dir ):
     #given a directory, loads all the npy images in it, into a stack.
-    
     stack_descriptor_dict = {}
     img_names = load_sorted_dir_numbered_fnms_with_particular_extension( img_dir , 'npy')
     
@@ -197,44 +177,52 @@ def load_npy_img_dirs_into_stack( img_dir ):
     return stack, stack_descriptor_dict
 
 
-def net_resp_2d_to_xray_nd(net_resp, stim_specs_dict, desc_dict):
+def net_resp_2d_to_xray_nd(net_resp, stim_trans_dict, indices_for_net_unit_vec):
     
     #get the dimensions of the stimuli in order.
-    dims = tuple([ len( stim_specs_dict[key] ) for key in stim_specs_dict ] ) + tuple( [net_resp.shape[1],])
+    dims = tuple([ len( stim_trans_dict[key] ) for key in stim_trans_dict ] ) + tuple( [net_resp.shape[1],])
     
     #reshape into net_resp_xray
     #this working is dependent on cartesian producing A type cartesian (last index element changes fastest)
     net_resp_xray = np.reshape( net_resp, dims )
     
 
-    net_dims = [key for key in stim_specs_dict]
+    net_dims = [key for key in stim_trans_dict]
     net_dims.append('unit')
-    net_coords =[stim_specs_dict[key] for key in stim_specs_dict]
+    net_coords =[stim_trans_dict[key] for key in stim_trans_dict]
     net_coords.append( range( dims[-1] ) )
     
     foo = xr.DataArray( net_resp_xray, coords = net_coords , dims = net_dims )
     
-    # adding extra coordinates.
-    foo['layer'] = ('unit', desc_dict['layer_ind'])
-    foo['layer_unit'] = ('unit', desc_dict['layer_unit_ind'])
-    layer_label = [ desc_dict['layer_names'][ int( layer_num ) ] for layer_num  in desc_dict['layer_ind'] ]
-    foo['layer_label'] = ('unit', layer_label)
-    
+    # adding extra coordinates using indices_for_net_unit_vec
+    with indices_for_net_unit_vec as d:
+        foo['layer'] = ('unit', d['layer_ind'])
+        foo['layer_unit'] = ('unit', d['layer_unit_ind'])
+        layer_label = [ d['layer_names'][ int( layer_num ) ] for layer_num  in d['layer_ind'] ]
+        foo['layer_label'] = ('unit', layer_label)
+        
     return foo
 
 
 import matplotlib.pyplot as plt
+import caffe
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+cwd = os.path.dirname(dname)
+sys.path.append( cwd)
+
+
 img_dir = cwd + '/images/baseimgs/PC370/'  
-stim_trans_dict, stim_specs_dict = stim_idprestrans_generator(shapes = [1,2,5], 
-                              scale = (1,1,1), x = (-20,20,4), y = None, rotation = None)
+stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = [1,2,5], 
+                              scale = (0.1,1,2), x = (-20,20,4), y = None, rotation = None)
 
 stack, stack_desc = load_npy_img_dirs_into_stack( img_dir )
-trans_stack = imp.imgStackTransform( stim_trans_dict, stack )
+trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )
 
 
 ANNDir = '/home/dean/caffe/models/bvlc_reference_caffenet/'
 ANNFileName='bvlc_reference_caffenet.caffemodel'
-import caffe
+
 caffe.set_mode_gpu()
 
 net = caffe.Net(
@@ -242,30 +230,21 @@ net = caffe.Net(
     ANNDir+ANNFileName, 
     caffe.TEST)
 
-net_resp, desc_dict = identity_preserving_transform_resp( stack, stim_trans_dict, net)
-#
-import pickle
+net_resp = identity_preserving_transform_resp( stack, stim_trans_cart_dict, net)
+
+indices_for_net_unit_vec = get_indices_for_net_unit_vec( net )   
+
+
+
 responseFile = cwd + '/responses/testresp'
 with open( responseFile + '.pickle', 'w') as f:
-    pickle.dump( [ net_resp, desc_dict, stim_specs_dict ] , f )
-
-#responseFile = cwd + '/responses/testresp.pickle'
-#with open( responseFile, 'rb') as f:
-#    a= pickle.load(f, encoding='latin1')
-#
-#net_resp = a[0]
-#desc_dict = a[1]
-#stim_specs_dict = a[2]
-
-import xray as xr
+    pickle.dump( [ net_resp, indices_for_net_unit_vec, stim_trans_dict ] , f )
 
 
-
-
+da = net_resp_2d_to_xray_nd(net_resp, stim_trans_dict, indices_for_net_unit_vec)
 
 #is there a simpler way to make this call
-foo = foo[ dict( unit = foo['layer_label'] == 'fc8')  ]
-
+da = da[ dict( unit = da['layer_label'] == 'fc8')  ]
 plt.cla()
-foo.mean( [ 'shapes', 'scale','unit'] ).plot()
+da.mean( [ 'shapes', 'scale','unit'] ).plot()
 

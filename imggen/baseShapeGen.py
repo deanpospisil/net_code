@@ -77,9 +77,9 @@ def save_boundaries_as_image( imlist, save_dir,cwd, nPixPerSide = 227 ,  fill = 
     if require_provenance is True:
         sha = dm.provenance_commit(cwd)
     
-        responseFile = save_dir + 'sha'
-        with open( responseFile + '.pickle', 'w') as f:
-            pickle.dump( sha, f )
+        sha_file = save_dir + 'sha'
+        with open( sha_file + '.pickle', 'w') as f:
+            pickle.dump( [sha], f )
     
 
     for boundaryNumber in range(len(imlist)):

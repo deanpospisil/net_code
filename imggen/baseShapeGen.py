@@ -64,8 +64,8 @@ def boundaryToMat(boundary, nPixPerSide = 227, fill = True ):
 def save_boundaries_as_image( imlist, saveDir, nPixPerSide = 227 , fill = True, require_provenance = True ):
     
     if require_provenance is True:
-        from git import Repo
-        git = repo.git
+        dm.provenance_commit
+
                 
         
     for boundaryNumber in range(len(imlist)):

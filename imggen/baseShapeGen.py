@@ -75,18 +75,19 @@ def save_boundaries_as_image( imlist, save_dir,cwd, nPixPerSide = 227 ,  fill = 
             os.remove(save_dir + name)
     
     if require_provenance is True:
+        
         sha = dm.provenance_commit(cwd)
     
         sha_file = save_dir + 'sha'
         with open( sha_file + '.pickle', 'w') as f:
-            pickle.dump( str(sha), f )
-    
+            pickle.dump( [sha,], f )
 
     for boundaryNumber in range(len(imlist)):
     
         im = boundaryToMat(imlist[boundaryNumber], nPixPerSide, fill  )
         sc.misc.imsave( save_dir + str(boundaryNumber) + '.png', im)
         np.save( save_dir  + str(boundaryNumber) , im)
+        
     
 def centerBoundary(s):
     

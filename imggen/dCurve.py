@@ -7,7 +7,6 @@ Created on Thu Sep  3 10:02:24 2015
 
 import warnings
 import numpy as np
-import random
 pi=np.pi
 
 def curveDists(cShape):
@@ -51,7 +50,12 @@ def curveAngularPos(cShape):
     return angularPos    
 
 
-def makeNaturalFormlet(nPts=1000, radius=1, nFormlets=32, meanFormDir=-pi, stdFormDir=pi/10, meanFormDist=1, stdFormDist=0.1, startSigma=0.3, endSigma=0.1 ):
+def makeNaturalFormlet(nPts=1000, radius=1, nFormlets=32, meanFormDir=-pi, stdFormDir=pi/10, meanFormDist=1, stdFormDist=0.1, startSigma=0.3, endSigma=0.1, randomstate = None ):
+    
+    #set the seed for reproducibility    
+    if randomstate == None:
+        randomstate = np.random.RandomState(np.random.rand(1))
+
     if meanFormDist==np.nan:
         meanFormDist=radius
         stdFormDist=radius/10
@@ -65,12 +69,13 @@ def makeNaturalFormlet(nPts=1000, radius=1, nFormlets=32, meanFormDir=-pi, stdFo
     for ind in range(nPts):
         #gaussian distributed with some bias towards a direction, but some jitter in distance from
         #origin and orientation
-        centers[ind] = random.gauss(meanFormDist, stdFormDist)*np.exp(random.gauss(meanFormDir, stdFormDir)*1j)
+        centers[ind] = randomstate.normal(meanFormDist, stdFormDist)*np.exp(randomstate.normal(meanFormDir, stdFormDir)*1j)
         
     #what will be the scale of those formlets
-    sigma = np.logspace(np.log10(startSigma), np.log10(endSigma),nFormlets) 
+    sigma = np.logspace( np.log10( startSigma ), np.log10( endSigma ), nFormlets) 
+    
     # roughly the sigma to alpha ratiorandom sign of gain
-    alpha = 0.10*sigma*2*(np.random.binomial(1,0.5, nFormlets)-0.5)
+    alpha = 0.10*sigma*2*( randomstate.binomial( 1, 0.5, nFormlets ) - 0.5 )
     
     #alpha = ((1.0/(-2.0*pi))*sigma)/1.1
     
@@ -80,9 +85,28 @@ def makeNaturalFormlet(nPts=1000, radius=1, nFormlets=32, meanFormDir=-pi, stdFo
     
     if cShape[0] is not cShape[-1]:
         cShape[-1] = cShape[0]
+        
     return cShape, np.real(cShape), np.imag(cShape), sigma, alpha
 
+def make_n_natural_formlets( **args ):
+    rng = np.random.RandomState(args['randseed'])
+    s= []
+    for ind in range(args['n']):
+        cShape, x, y, sigma, alpha = makeNaturalFormlet(nPts=args['nPts'], 
+                                                    radius = args['radius'],
+                                                    nFormlets = args['nFormlets'], 
+                                                    meanFormDir = args['meanFormDir'],
+                                                    stdFormDir = args['stdFormDir'],
+                                                    meanFormDist = args['meanFormDist'], 
+                                                    stdFormDist = args['stdFormDist'], 
+                                                    startSigma = args['startSigma'], 
+                                                    endSigma = args['endSigma'], 
+                                                    randomstate = rng )
+                        
 
+        s.append( np.array( [x, y]).T )
+        
+    return s, args
 
 def applyGaborFormlet(cShape, center, alpha, sigma):
    

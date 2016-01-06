@@ -78,7 +78,7 @@ def save_boundaries_as_image( imlist, save_dir,cwd, nPixPerSide = 227 ,  fill = 
         
         sha = dm.provenance_commit(cwd)
     
-        sha_file = save_dir + 'sha'
+        sha_file = save_dir + 'sha1'
         with open( sha_file + '.pickle', 'w') as f:
             pickle.dump( [sha,], f )
 

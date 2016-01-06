@@ -71,16 +71,19 @@ def save_boundaries_as_image( imlist, save_dir,cwd, nPixPerSide = 227 ,  fill = 
     
     #remove existing files
     for name in dir_filenames:
-        if 'npy' or 'png' in name:
+        if 'npy' or 'png' or 'pickle' in name:
             os.remove(save_dir + name)
+    
     
     if require_provenance is True:
         
+        #commit the state of the directory and get is sha identification
         sha = dm.provenance_commit(cwd)
     
+        #now save that identification with the images
         sha_file = save_dir + 'sha1'
         with open( sha_file + '.pickle', 'wb') as f:
-            pickle.dump( [sha,], f )
+            pickle.dump( sha, f )
 
     for boundaryNumber in range(len(imlist)):
     

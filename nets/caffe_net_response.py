@@ -89,15 +89,18 @@ def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, ni
     all_net_resp = []
     for stack_ind in stack_indices:
         print(stack_ind)
-        #load up a chunk of images
+        
+        #load up a chunk of transformations
         for key in stim_trans_cart_dict:
             stim_trans_cart_dict_sect[key] = stim_trans_cart_dict[key][ stack_ind[0] : stack_ind[1] ]
         
+        #produce those images
         trans_stack = imp.imgStackTransform( stim_trans_cart_dict_sect, img_stack )
         
-        net_resp = net_imgstack_response( net, trans_stack )
-        all_net_resp.append(net_resp)
-        
+        #run then and append them
+        all_net_resp.append( net_imgstack_response( net, trans_stack ) )
+    
+    #stack up all these images    
     response = np.vstack(all_net_resp)
      
     
@@ -181,18 +184,18 @@ def load_npy_img_dirs_into_stack( img_dir ):
 
 def net_resp_2d_to_xray_nd(net_resp, stim_trans_dict, indices_for_net_unit_vec):
     
+    
     #get the dimensions of the stimuli in order.
     dims = tuple([ len( stim_trans_dict[key] ) for key in stim_trans_dict ] ) + tuple( [net_resp.shape[1],])
     
     #reshape into net_resp_xray
     #this working is dependent on cartesian producing A type cartesian (last index element changes fastest)
     net_resp_xray = np.reshape( net_resp, dims )
-    
 
-    net_dims = [key for key in stim_trans_dict]
-    net_dims.append('unit')
-    net_coords =[stim_trans_dict[key] for key in stim_trans_dict]
-    net_coords.append( range( dims[-1] ) )
+    net_dims = [key for key in stim_trans_dict] + ['unit',]
+#    net_dims.append('unit')
+    net_coords =[stim_trans_dict[key] for key in stim_trans_dict] + range( dims[-1] )
+#    net_coords.append( range( dims[-1] ) )
     
     da = xr.DataArray( net_resp_xray, coords = net_coords , dims = net_dims )
     

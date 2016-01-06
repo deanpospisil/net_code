@@ -11,6 +11,7 @@ import scipy
 import scipy as sc
 import matplotlib.pyplot as plt
 import os
+import pickle
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 cwd = os.path.dirname(dname)
@@ -61,18 +62,26 @@ def boundaryToMat(boundary, nPixPerSide = 227, fill = True ):
     return ima
 
 
-def save_boundaries_as_image( imlist, saveDir,cwd, nPixPerSide = 227 ,  fill = True, require_provenance = False ):
+def save_boundaries_as_image( imlist, save_dir,cwd, nPixPerSide = 227 ,  fill = True, require_provenance = False ):
+    
+    
     
     if require_provenance is True:
         sha = dm.provenance_commit(cwd)
-    np.save(saveDir  + 'sha',sha)
-
-
-    for boundaryNumber in range(len(imlist)):
+    np.save(save_dir  + 'sha',sha)
     
-        im=boundaryToMat(imlist[boundaryNumber], nPixPerSide, fill  )
-        sc.misc.imsave(saveDir + str(boundaryNumber) + '.png', im)
-        np.save(saveDir  + str(boundaryNumber) , im)
+    dir_filenames = os.listdir(save_dir)
+    
+    for name in dir_filenames:
+        if 'npy' or 'png' in name:
+            os.remove(save_dir + name)
+    
+
+#    for boundaryNumber in range(len(imlist)):
+#    
+#        im = boundaryToMat(imlist[boundaryNumber], nPixPerSide, fill  )
+#        sc.misc.imsave( save_dir + str(boundaryNumber) + '.png', im)
+#        np.save( save_dir  + str(boundaryNumber) , im)
     
 def centerBoundary(s):
     

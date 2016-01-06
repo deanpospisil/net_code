@@ -79,7 +79,7 @@ def save_boundaries_as_image( imlist, save_dir,cwd, nPixPerSide = 227 ,  fill = 
     
         sha_file = save_dir + 'sha'
         with open( sha_file + '.pickle', 'w') as f:
-            pickle.dump( [sha], f )
+            pickle.dump( str(sha), f )
     
 
     for boundaryNumber in range(len(imlist)):

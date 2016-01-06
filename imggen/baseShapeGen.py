@@ -68,7 +68,7 @@ def save_boundaries_as_image( imlist, save_dir,cwd, nPixPerSide = 227 ,  fill = 
     
     #remove existing files
     for name in dir_filenames:
-        if 'npy' or 'png' or 'pickle' in name:
+        if 'npy' in name or 'png' in name or 'pickle' in name:
             os.remove(save_dir + name)
     
     

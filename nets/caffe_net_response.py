@@ -210,7 +210,7 @@ def net_resp_2d_to_xray_nd(net_resp, stim_trans_dict, indices_for_net_unit_vec):
 
 
 import matplotlib.pyplot as plts
-import caffe
+
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 cwd = os.path.dirname(dname)
@@ -225,12 +225,13 @@ stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = rang
                              
 
 
+
 #choose a library of images
 img_dir = cwd + '/images/baseimgs/PC370/'  
 stack, stack_desc = load_npy_img_dirs_into_stack( img_dir )
 #trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )
 
-
+import caffe
 #get the response from the given net
 ANNDir = '/home/dean/caffe/models/bvlc_reference_caffenet/'
 ANNFileName='bvlc_reference_caffenet.caffemodel'

@@ -17,6 +17,7 @@ assert not repo.bare
 git = repo.git
 #parse this for status
 time_str = str(datetime.now())
+time_str = 'provenance commit ' + time_str
 #repo.git.add( 'somefile' )
 commit_message = "git commit -a -m  %r." %time_str
 

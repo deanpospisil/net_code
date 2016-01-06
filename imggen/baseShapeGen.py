@@ -61,13 +61,13 @@ def boundaryToMat(boundary, nPixPerSide = 227, fill = True ):
     return ima
 
 
-def save_boundaries_as_image( imlist, saveDir, nPixPerSide = 227 , fill = True, require_provenance = True ):
+def save_boundaries_as_image( imlist, saveDir,cwd, nPixPerSide = 227 ,  fill = True, require_provenance = False ):
     
     if require_provenance is True:
-        dm.provenance_commit
+        sha = dm.provenance_commit(cwd)
+    np.save(saveDir  + 'sha',sha)
 
-                
-        
+
     for boundaryNumber in range(len(imlist)):
     
         im=boundaryToMat(imlist[boundaryNumber], nPixPerSide, fill  )
@@ -119,7 +119,7 @@ saveDir = cwd + '/images/baseimgs/'
 dm.ifNoDirMakeDir(saveDir)
 
 baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
-baseImage = baseImageList[1] 
+baseImage = baseImageList[0] 
 fracOfImage = 1
 dm.ifNoDirMakeDir(saveDir + baseImage +'/')
 
@@ -132,7 +132,7 @@ if baseImage is baseImageList[0]:
 
 elif baseImage is baseImageList[1]:
 
-    s, args = dc.make_n_natural_formlets( n=10,
+    s = dc.make_n_natural_formlets( n=10,
                 nPts=600, radius=1, nFormlets=32, meanFormDir=np.pi/2, 
                 stdFormDir=np.pi/3, meanFormDist=1, stdFormDist=0.1, 
                 startSigma=3, endSigma=0.1, randseed = 2 )
@@ -146,4 +146,4 @@ elif baseImage is baseImageList[3]:
     
 s = centerBoundary( s )
 s = scaleBoundary ( s, fracOfImage )
-save_boundaries_as_image( s, saveDir + baseImage + '/', nPixPerSide = 227 , fill = True, require_provenance = True )
+save_boundaries_as_image( s, saveDir + baseImage + '/', cwd, nPixPerSide = 227 ,  fill = True, require_provenance = True )

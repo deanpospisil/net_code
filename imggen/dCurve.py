@@ -91,6 +91,7 @@ def makeNaturalFormlet(nPts=1000, radius=1, nFormlets=32, meanFormDir=-pi, stdFo
 def make_n_natural_formlets( **args ):
     rng = np.random.RandomState(args['randseed'])
     s= []
+    #I did this with **args so later on I could easily return them
     for ind in range(args['n']):
         cShape, x, y, sigma, alpha = makeNaturalFormlet(nPts=args['nPts'], 
                                                     radius = args['radius'],
@@ -106,7 +107,7 @@ def make_n_natural_formlets( **args ):
 
         s.append( np.array( [x, y]).T )
         
-    return s, args
+    return s
 
 def applyGaborFormlet(cShape, center, alpha, sigma):
    

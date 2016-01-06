@@ -63,9 +63,6 @@ def boundaryToMat(boundary, nPixPerSide = 227, fill = True ):
 
 
 def save_boundaries_as_image( imlist, save_dir,cwd, nPixPerSide = 227 ,  fill = True, require_provenance = False ):
-    
-    
-    
 
     dir_filenames = os.listdir(save_dir)
     

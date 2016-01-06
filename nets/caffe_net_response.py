@@ -216,20 +216,22 @@ dname = os.path.dirname(abspath)
 cwd = os.path.dirname(dname)
 sys.path.append( cwd)
 
+#choose a library of images
+baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
+base_image = baseImageList[0] 
 
-img_dir = cwd + '/images/baseimgs/PC370/'  
+
+img_dir = cwd + '/images/baseimgs/' + base_image +'/'  
+stack, stack_desc = load_npy_img_dirs_into_stack( img_dir )
 
 #lets think about provenance now, and make this a little bit more flexible
 stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
                               scale = (0.1, 0.1,1), x = (-120,120,10), y = None, rotation = None)
                              
 
-
-
-#choose a library of images
-img_dir = cwd + '/images/baseimgs/PC370/'  
-stack, stack_desc = load_npy_img_dirs_into_stack( img_dir )
 #trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )
+
+xray_desc_name = base_image + str(stim_trans_dict.keys())
 
 import caffe
 #get the response from the given net
@@ -248,19 +250,35 @@ net_resp = identity_preserving_transform_resp( stack, stim_trans_cart_dict, net)
 
 indices_for_net_unit_vec = get_indices_for_net_unit_vec( net )   
 
-
-
-#responseFile = cwd + '/responses/testresp'
-#with open( responseFile + '.pickle', 'w') as f:
-#    pickle.dump( [ net_resp, indices_for_net_unit_vec, stim_trans_dict ] , f )
-#
-
 da = net_resp_2d_to_xray_nd(net_resp, stim_trans_dict, indices_for_net_unit_vec)
 
-#is there a simpler way to make this call
-da = da[ dict( unit = da['layer_label'] == 'conv1')  ]
-plt.cla()
-da.mean( [ 'shapes','scale', 'unit'] ).plot()
+if require_provenance is True:
+    #commit the state of the directory and get is sha identification
+    da.attrs['sha'] =     dm.provenance_commit(cwd)
+        
+
+
+responseFile = cwd + '/responses/' + xray_desc_name
+with open( responseFile + '.pickle', 'w') as f:
+    
+    if require_provenance is True:
+        #commit the state of the directory and get is sha identification
+        sha = dm.provenance_commit(cwd)
+        da.attrs['sha'] = sha
+    pickle.dump( [ da, net_resp, stim_trans_dict, indices_for_net_unit_vec, sha ] , f )
+
+#responseFile = cwd + '/responses/testresp.pickle'
+#with open( responseFile, 'rb') as f:
+#    a= pickle.load(f, encoding='latin1')
+#
+#net_resp = a[0]
+#desc_dict = a[1]
+#stim_specs_dict = a[2]
+
+##is there a simpler way to make this call
+#da = da[ dict( unit = da['layer_label'] == 'conv1')  ]
+#plt.cla()
+#da.mean( [ 'shapes','scale', 'unit'] ).plot()
 
 
 
@@ -272,18 +290,4 @@ da.mean( [ 'shapes','scale', 'unit'] ).plot()
 #
 #plt.cla()
 #da.mean( [ 'shapes', 'scale','unit'] ).plot()
-
-
-
-responseFile = cwd + '/responses/testresp'
-with open( responseFile + '.pickle', 'w') as f:
-    pickle.dump( [ da, net_resp, stim_trans_dict, indices_for_net_unit_vec ] , f )
-
-#responseFile = cwd + '/responses/testresp.pickle'
-#with open( responseFile, 'rb') as f:
-#    a= pickle.load(f, encoding='latin1')
-#
-#net_resp = a[0]
-#desc_dict = a[1]
-#stim_specs_dict = a[2]
 

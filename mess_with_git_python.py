@@ -25,10 +25,10 @@ status = git.status()
 
 if modified in status:
     print('current file has not been commited')
-
+    abspath = os.path.abspath(__file__)
+    git.add(abspath)
+    git.commit(m='git python test')
 
 sha = repo.head.commit.hexsha
 
-abspath = os.path.abspath(__file__)
-git.add(abspath)
-git.commit(m='git python test')
+

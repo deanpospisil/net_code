@@ -19,7 +19,7 @@ git = repo.git
 
 #repo.git.add( 'somefile' )
 
-
+os.system('git commit -a -m "a"')
 modified = '\n\n\tmodified:'
 status = git.status()
 

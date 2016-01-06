@@ -21,7 +21,7 @@ time_str = str(datetime.now())
 commit_message = "git commit -a -m  %r." %time_str
 
 s = commit_message
-os.system('git commit -a -m "a"')
+os.system(commit_message)
 modified = '\n\n\tmodified:'
 status = git.status()
 

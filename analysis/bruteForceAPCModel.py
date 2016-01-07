@@ -19,13 +19,13 @@ import pandas as pd
 
 
 import pandas as pd
-import seaborn as sns
-sns.set_context("talk", font_scale=1.4)
+#import seaborn as sns
+#sns.set_context("talk", font_scale=1.4)
 
 def apc370models(nMeans=10, nSD=10, perc=5):
     #the parameters of the shapes
 
-    mat = l.loadmat('PC2001370Params.mat')
+    mat = l.loadmat('/Users/deanpospisil/Desktop/net_code/imggen/PC2001370Params.mat')
     s = mat['orcurv'][0]
     
     #adjustment for repeats [ 14, 15, 16,17, 318, 319, 320, 321] 
@@ -164,22 +164,22 @@ def load_pandas(fname, mmap_mode='r'):
     elif len(meta) == 1:
         return pd.Series(values, index=meta[0])
 
-##now find the best model for the data
-#if 'models' not in locals():
-#    models, modelParams = apc370models(nMeans=16, nSD=10, perc=5)
-#    
-###firing rates
-#maindir = '/Users/deanpospisil/Desktop/bictPresent/'
-#os.chdir( maindir)
-##mat = l.loadmat('V4_370PC2001.mat')
-##resp = mat['resp'][0][0]
-##resp = resp.T
-###adjustment for repeats [ 14, 15, 16,17, 318, 319, 320, 321] 
-#a = np.hstack((range(14), range(18,318)))
-#a = np.hstack((a, range(322, 370)))
-##resp = resp[a]
-##
-##fits, bestrV4 = modelFits(resp, models)
+#now find the best model for the data
+if 'models' not in locals():
+    models, modelParams = apc370models(nMeans=16, nSD=10, perc=5)
+    
+##firing rates
+maindir = '/Users/deanpospisil/Desktop/bictPresent/'
+os.chdir( maindir)
+mat = l.loadmat('V4_370PC2001.mat')
+resp = mat['resp'][0][0]
+resp = resp.T
+##adjustment for repeats [ 14, 15, 16,17, 318, 319, 320, 321] 
+a = np.hstack((range(14), range(18,318)))
+a = np.hstack((a, range(322, 370)))
+resp = resp[a]
+#
+fits, bestrV4 = modelFits(resp, models)
 #
 #bestralexl = []
 #bestralexll= []

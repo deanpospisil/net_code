@@ -222,10 +222,19 @@ base_image = baseImageList[0]
 
 
 img_dir = cwd + '/images/baseimgs/' + base_image +'/'  
+dir_filenames = os.listdir(img_dir)
+    
+    #remove existing files
+for name in dir_filenames:
+    if 'sha1.pickle' in name:
+        with open( img_dir + name, 'rb') as f:
+            image_sha = pickle.load( f)
+
+
 stack, stack_desc = load_npy_img_dirs_into_stack( img_dir )
 
 #lets think about provenance now, and make this a little bit more flexible
-stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(10), 
+stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
                               scale = (0.2, 0.2,1), x = (-120, 120, 10), y = None, rotation = None)
                              
 
@@ -260,7 +269,9 @@ with open( responseFile + '.pickle', 'w') as f:
     if require_provenance is True:
         #commit the state of the directory and get is sha identification
         sha = dm.provenance_commit(cwd)
-        da.attrs['sha'] = sha
+        da.attrs['resp_sha'] = sha
+        da.attrs['img_sha'] = image_sha
+        
     pickle.dump( [ da, net_resp, stim_trans_dict, indices_for_net_unit_vec, sha ] , f )
 
 #responseFile = cwd + '/responses/testresp.pickle'

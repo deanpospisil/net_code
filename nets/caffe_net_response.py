@@ -21,7 +21,7 @@ sys.path.append( cwd)
 sys.path.append('/home/dean/caffe/python')
 
 import dImgProcess as imp
-import dMisc as misc
+import dMisc as dm
 import pickle
 import xray as xr
 
@@ -81,7 +81,7 @@ def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, ni
     #takes stim specs, transforms images accordingly, gets their responses 
     
     n_imgs = len( stim_trans_cart_dict[stim_trans_cart_dict.keys()[0]] )
-    stack_indices, remainder = misc.sectStrideInds( nimgs_per_pass, n_imgs )
+    stack_indices, remainder = dm.sectStrideInds( nimgs_per_pass, n_imgs )
     
     #now divide the dict up into sects.
     #order doesn't matter using normal dict, imgStackTransform has correct order
@@ -193,9 +193,9 @@ def net_resp_2d_to_xray_nd(net_resp, stim_trans_dict, indices_for_net_unit_vec):
     net_resp_xray = np.reshape( net_resp, dims )
 
     net_dims = [key for key in stim_trans_dict] + ['unit',]
-#    net_dims.append('unit')
-    net_coords =[stim_trans_dict[key] for key in stim_trans_dict] + range( dims[-1] )
-#    net_coords.append( range( dims[-1] ) )
+
+    net_coords =[stim_trans_dict[key] for key in stim_trans_dict] + [range( dims[-1] ),]
+
     
     da = xr.DataArray( net_resp_xray, coords = net_coords , dims = net_dims )
     
@@ -225,8 +225,8 @@ img_dir = cwd + '/images/baseimgs/' + base_image +'/'
 stack, stack_desc = load_npy_img_dirs_into_stack( img_dir )
 
 #lets think about provenance now, and make this a little bit more flexible
-stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
-                              scale = (0.1, 0.1,1), x = (-120,120,10), y = None, rotation = None)
+stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(10), 
+                              scale = (0.2, 0.2,1), x = (-120, 120, 10), y = None, rotation = None)
                              
 
 #trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )
@@ -250,17 +250,13 @@ net_resp = identity_preserving_transform_resp( stack, stim_trans_cart_dict, net)
 
 indices_for_net_unit_vec = get_indices_for_net_unit_vec( net )   
 
-da = net_resp_2d_to_xray_nd(net_resp, stim_trans_dict, indices_for_net_unit_vec)
-
-if require_provenance is True:
-    #commit the state of the directory and get is sha identification
-    da.attrs['sha'] =     dm.provenance_commit(cwd)
-        
-
+da = net_resp_2d_to_xray_nd( net_resp, stim_trans_dict, indices_for_net_unit_vec )
 
 responseFile = cwd + '/responses/' + xray_desc_name
+
+require_provenance = True
 with open( responseFile + '.pickle', 'w') as f:
-    
+   
     if require_provenance is True:
         #commit the state of the directory and get is sha identification
         sha = dm.provenance_commit(cwd)

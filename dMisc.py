@@ -7,6 +7,10 @@ Created on Thu Sep  3 10:06:16 2015
 import numpy as np
 import os
 pi = np.pi
+from collections import OrderedDict as ordDict
+import warnings
+
+
 
 def circPoints(center, radius, theta):
     circ = center[:,None] + radius * np.array([np.cos(theta), np.sin(theta)])
@@ -73,7 +77,27 @@ def provenance_commit(cwd):
     sha = repo.head.commit.hexsha
     
     return sha
-
+    
+def cartesian_prod_dicts_lists( the_dict ) :
+    
+    #takes a dictionary and produces a dictionary of the cartesian product of the input
+    if not type(the_dict) is type(ordDict()):
+        warnings.warn('We were expecting an ordered dict for provenance concerns.')
+        
+    from sklearn.utils.extmath import cartesian
+    
+    stim_list = []
+    stim_list = tuple([ list(the_dict[ key_name ]) for key_name in the_dict ])
+        
+    #cartesian has the last column change the fastest, thus is like c-indexing
+    stim_cart_array = cartesian(stim_list)
+    
+    cart_dict = ordDict()
+    #load up the vectors assosciated with keys to cart_dict
+    for key_name, key_num in zip( the_dict, range( len( the_dict ) ) ):
+        cart_dict[key_name] = stim_cart_array[ :, key_num]
+    
+    return cart_dict
 
 ##lets just look at these gaussians
 #import matplotlib.pyplot as plt

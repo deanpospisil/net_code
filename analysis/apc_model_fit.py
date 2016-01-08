@@ -6,47 +6,84 @@ Created on Wed Jan  6 18:28:57 2016
 """
 
 # analysis
+import scipy.io as  l
+import scipy.stats as st
+import numpy as np
+import warnings
+import os
+import sys
 
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+cwd = os.path.dirname(dname)
+sys.path.append( cwd)
+
+sys.path.append('/home/dean/caffe/python')
+
+import dMisc as dm
+
+def get_2d_dims_right(vec, dims_order=(1,0)):
+    dims = vec.shape
+    if len(dims)>2:
+        warnings.warn('model params should not have more than 2-d')
+        right_dims = None
+    elif len(dims) < 2 :
+        right_dims = np.expand_dims(vec, axis= dims_order[0])
+    elif dims[ dims_order[1]] < dims[ dims_order[0]]:  
+        right_dims = np.swapaxes( vec, 1, 0)
+    return right_dims
+    
 #takes a set of points in apc plane and makes prediction based on different receptive fields
-def apc_models( apc_points = {'curvature': 1, 'orientation': 3.14} , cur_means= [1 0.5], cur_sd= [1, 0.5], or_means = [1, 0.5], or_sd = [1, 0.5]):
-    #the parameters of the shapes
+def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ], 
+                                   model_params_dict = { 'or_sd': [3.14], 'or_mean':[3.14], 'cur_mean':[1], 'cur_sd':[0.1]} ):
+                                 
+     # make sure everything has the right dimensionality for broadcating
+    for key in model_params_dict:
+        vec = np.array( model_params_dict[key] )
+        model_params_dict[key] = get_2d_dims_right(vec, dims_order=(1,0) )
 
+                
+    # make sure everything has the right dimensionality for broadcating, figure out a more succint way to do this            
+    for ind, a_shape in enumerate(shape_dict_list):
+        
+        for key in a_shape:
+            vec = np.array(a_shape[key])
+            a_shape[key] = get_2d_dims_right(vec, dims_order= (0,1) )
 
+        shape_dict_list[ind] = a_shape
 
-    orientation_gaussian = st.vonmises.pdf( apc_points['orientation'], 
-                        kappa = or_sd**-1 , 
-                        loc = modelParams[:,0] ) 
-                        
-    curvature_gaussian = st.norm.pdf(apc_points['curvature'], 
-                    modelParams[:,1],  
-                    modelParams[:,3])
-                    
-    prod_of_gaussians = orientation_gaussian * curvature_gaussian
+    #initialize our distributions
+    vm_rv = st.vonmises( kappa = model_params_dict['or_sd']**-1 , loc = model_params_dict['or_mean'] ) 
+    nm_rv = st.norm( scale = model_params_dict['cur_sd']**-1 , loc = model_params_dict['cur_mean'] ) 
+    
+    #get responses to all points for each axis ap and c then their product, then the max of all those points as the resp
+    model_resp_all_apc_points = [ nm_rv.pdf( apc_points['orientation'] )*vm_rv.pdf( apc_points['curvature'] ) for apc_points in shape_dict_list ]
+    model_resp = np.array([ np.max( a_shape, axis = 0 ) for a_shape in model_resp_all_apc_points])
+    
+    #mean subtract
+    model_resp = model_resp - np.mean( model_resp, axis = 0 )
+    #scale
+    magnitude = np.linalg.norm( model_resp, axis = 0)
+    magnitude = np.swapaxes(magnitude,0,1)
+    model_resp = model_resp / magnitude
 
-    models = np.empty(( 362, nModels ))
+    return model_resp
     
-    for shapeInd in range(nStim):
-        models[ shapeInd, : ] = np.max( prod_of_gaussians[ inds[ 0, shapeInd ] : inds[ 1 , shapeInd ] , : ] ,  axis = 0 )
-    
-    models = models - np.mean(models,axis = 0)
-    magnitude = np.linalg.norm( models, axis = 0)
-    magnitude.shape=(1,nModels)
-    models = models / magnitude
-    
-    del a,b, temp
-    
-    return models, modelParams
-    
-or_sd = [ 0.1, 0.2, 0.3]
-or_mean = [ 1, 0, -1]
 
-mat = l.loadmat('/Users/deanpospisil/Desktop/net_code/imggen/PC2001370Params.mat')
+mat = l.loadmat( '/Users/dean/Desktop/net_code/imggen/PC2001370Params.mat' )
 s = mat['orcurv'][0]
+shape_dict_list = []
+for shape in s:
+    shape_dict_list.append( { 'curvature' : shape[ : , 1 ], 'orientation' : shape[ : , 0 ]} ) 
+    
+    
 
-orientation_gaussian = st.vonmises.pdf( s[0], 
-                    kappa = np.array(or_sd)**-1 , 
-                    loc = np.array(or_mean) ) 
-                    
+
+model_params_dict = { 'or_sd': [3.14,2], 'or_mean':[3.14,1], 'cur_mean':[1,1], 'cur_sd':[0.1,1]}   
+
+model_params_dict = dm.cartesian_prod_dicts_lists( model_params_dict )
+    
+model_resp = apc_models( shape_dict_list = shape_dict_list, model_params_dict = model_params_dict)
     
 #adjustment for repeats [ 14, 15, 16,17, 318, 319, 320, 321] 
 a = np.hstack((range(14), range(18,318)))

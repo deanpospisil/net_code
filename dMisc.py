@@ -82,7 +82,7 @@ def cartesian_prod_dicts_lists( the_dict ) :
     
     #takes a dictionary and produces a dictionary of the cartesian product of the input
     if not type(the_dict) is type(ordDict()):
-        warnings.warn('We were expecting an ordered dict for provenance concerns.')
+        warnings.warn('An ordered dict was not used. Thus if this function is called again with the same dict it might not produce the same results.')
         
     from sklearn.utils.extmath import cartesian
     

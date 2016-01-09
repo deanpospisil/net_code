@@ -220,8 +220,13 @@ stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = rang
                              
 
 #trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )
+xray_desc_name = ''
+for key in stim_trans_dict:
+    xray_desc_name = xray_desc_name + '_' +  str(np.min(stim_trans_dict[key])) \
+    + '_' + str(np.max(stim_trans_dict[key])) + '_' +  str(len(stim_trans_dict[key]))
 
-xray_desc_name = base_image + str(stim_trans_dict.keys())
+xray_desc_name = base_image + xray_desc_name    
+
 
 import caffe
 #get the response from the given net
@@ -242,18 +247,19 @@ indices_for_net_unit_vec = get_indices_for_net_unit_vec( net )
 
 da = net_resp_2d_to_xray_nd( net_resp, stim_trans_dict, indices_for_net_unit_vec )
 
-responseFile = cwd + '/responses/' + xray_desc_name
+response_file = cwd + '/responses/' + xray_desc_name
 
 require_provenance = True
-with open( responseFile + '.pickle', 'w') as f:
-   
-    if require_provenance is True:
-        #commit the state of the directory and get is sha identification
-        sha = dm.provenance_commit(cwd)
-        da.attrs['resp_sha'] = sha
-        da.attrs['img_sha'] = image_sha
-        
-    pickle.dump( [ da, net_resp, stim_trans_dict, indices_for_net_unit_vec, sha ] , f )
+
+if require_provenance is True:
+    #commit the state of the directory and get is sha identification
+    sha = dm.provenance_commit(cwd)
+    da.attrs['resp_sha'] = sha
+    da.attrs['img_sha'] = image_sha
+ds = xr.Dataset({'resp': da})
+ds.to_netcdf(response_file + xray_desc_name )
+
+
 
 #responseFile = cwd + '/responses/testresp.pickle'
 #with open( responseFile, 'rb') as f:

@@ -77,7 +77,7 @@ def get_indices_for_net_unit_vec(net, layer_names = None):
     
     return resp_descriptor_dict
     
-def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, nimgs_per_pass = 100 ):
+def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, nimgs_per_pass = 200 ):
     #takes stim specs, transforms images accordingly, gets their responses 
     
     n_imgs = len( stim_trans_cart_dict[stim_trans_cart_dict.keys()[0]] )
@@ -88,7 +88,7 @@ def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, ni
     stim_trans_cart_dict_sect = {} 
     all_net_resp = []
     for stack_ind in stack_indices:
-        print(stack_ind)
+        print(stack_ind[1]/np.double(stack_indices[-1][1]))
         
         #load up a chunk of transformations
         for key in stim_trans_cart_dict:
@@ -216,7 +216,7 @@ stack, stack_desc = load_npy_img_dirs_into_stack( img_dir )
 
 #lets think about provenance now, and make this a little bit more flexible
 stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
-                              scale = (0.2, 0.2,1), x = (-120, 120, 10), y = None, rotation = None)
+                              scale = (0.1, 1,5), x = (-120, 120, 11), y = None, rotation = None)
                              
 
 #trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )

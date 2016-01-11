@@ -13,7 +13,7 @@ import warnings
 import os
 import sys
 
-
+import matplotlib.pyplot as plt
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -78,7 +78,7 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
 
 
 
-
+pi = np.pi
 
 mat = l.loadmat( '/Users/dean/Desktop/net_code/imggen/PC2001370Params.mat' )
 s = mat['orcurv'][0]
@@ -86,34 +86,69 @@ shape_dict_list = []
 for shape in s:
     shape_dict_list.append( { 'curvature' : shape[ : , 1 ], 'orientation' : shape[ : , 0 ]} ) 
 
-npts = 10
-model_params_dict = { 'or_sd': np.linspace(0.1, np.pi, npts), 'or_mean':np.linspace(0, np.pi, npts), 
-                     'cur_mean' : np.linspace(-0.5, 1, npts), 'cur_sd': np.linspace(0.1, 1, npts)}   
+
+
+maxAngSD = np.deg2rad(171)
+minAngSD = np.deg2rad(23)
+maxCurSD = 0.98
+minCurSD = 0.09
+
+nMeans = 16
+nSD =10
+#make this into a pyramid based on d-prime
+orMeans = np.linspace(0, 2*pi-2*pi/nMeans, nMeans) 
+orSDs = np.logspace(np.log10(minAngSD),  np.log10(maxAngSD),  nSD)
+curvMeans = np.linspace(-0.5,1,nMeans)
+curvSDs = np.logspace(np.log10(minCurSD),  np.log10(maxCurSD),  nSD)
+
+
+model_params_dict = { 'or_sd': orSDs, 'or_mean':orMeans, 
+                     'cur_mean' : curvMeans, 'cur_sd': curvSDs}   
+
+#npts=10
+#model_params_dict = { 'or_sd': np.linspace(0.01, np.pi, npts), 'or_mean':np.linspace(0, np.pi, npts), 
+#                     'cur_mean' : np.linspace(-0.5, 1, npts), 'cur_sd': np.linspace(0.01, 1, npts)}   
 
 model_params_dict = dm.cartesian_prod_dicts_lists( model_params_dict )
     
 model_resp = apc_models( shape_dict_list = shape_dict_list, model_params_dict = model_params_dict)
+
+#plt.scatter( np.rad2deg(model_params_dict['or_sd']), np.rad2deg(model_params_dict['or_mean']))
 dam =xr.DataArray(model_resp, dims = ['shapes', 'models'])
 ds = xr.Dataset({'resp': dam})
 ds.to_netcdf('/Users/dean/Desktop/net_code/responses/test_models_cdf.nc')
 del model_resp, ds
 
 
-dm = xr.open_dataset('/Users/dean/Desktop/net_code/responses/test_models_cdf.nc', chunks={'models': 100})
-da = xr.open_dataset('/Users/dean/Desktop/net_code/responses/test_cdf.nc', chunks={'unit': 200})
+dm = xr.open_dataset('/Users/dean/Desktop/net_code/responses/test_models_cdf.nc', chunks={'models': 100, 'shapes':370} )
+da = xr.open_dataset('/Users/dean/Desktop/net_code/responses/test_cdf.nc', chunks={'x': 1, 'unit': 25} )
 
-#da = da.sel(x = 0, method = 'nearest' )
+##()
+#dm = xr.open_dataset('/Users/dean/Desktop/net_code/responses/test_models_cdf.nc')
+#da = xr.open_dataset('/Users/dean/Desktop/net_code/responses/test_cdf.nc')
+#
+da = da.sel(x = 0, method = 'nearest' )
+da = da.squeeze()
 da_n = da['resp']/np.sqrt( (da['resp']**2).sum('shapes'))
+##
+#fits = (da_n*dm['resp']).sum('shapes').load()
+#fits.load()
+##fits = np.dot(da_n.T, dm['resp'])
+##
+resp = np.squeeze(da_n.values.T)
+mresp = dm['resp'].values
+fits = np.dot(resp, mresp)
 
-b = (da_n*dm).sum('shapes')
-fits = b.max('models')
-fits = fits.max('x')
-#ds = xr.Dataset({'r': c})
-fits.to_netcdf('/Users/dean/Desktop/net_code/responses/test_r_cdf.nc')
-#c = xr.open_dataset('/Users/dean/Desktop/net_code/responses/test_r_cdf.nc', chunks={'models': 1000})
- 
-    
-    
+
+
+#
+#
+#fits = xr.Dataset({'r': fits})
+#fits.to_netcdf('/Users/dean/Desktop/net_code/responses/test_r_cdf.nc')
+##c = xr.open_dataset('/Users/dean/Desktop/net_code/responses/test_r_cdf.nc', chunks={'models': 1000})
+# 
+#
+#    
     
     
     

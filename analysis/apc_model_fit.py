@@ -58,18 +58,17 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
         shape_dict_list[ind] = a_shape
 
     #initialize our distributions
-    vm_rv = st.vonmises( kappa = model_params_dict['or_sd']**-1 , loc = model_params_dict['or_mean'] ) 
-    nm_rv = st.norm( scale = model_params_dict['cur_sd']**-1 , loc = model_params_dict['cur_mean'] ) 
+    von_rv = st.vonmises( kappa = model_params_dict['or_sd']**-1 , loc = model_params_dict['or_mean'] ) 
+    norm_rv = st.norm( scale = model_params_dict['cur_sd'] , loc = model_params_dict['cur_mean'] ) 
     
     #get responses to all points for each axis ap and c then their product, then the max of all those points as the resp
-    model_resp_all_apc_points = [ nm_rv.pdf( apc_points['orientation'] )*vm_rv.pdf( apc_points['curvature'] ) for apc_points in shape_dict_list ]
+    model_resp_all_apc_points = [ von_rv.pdf( apc_points['orientation'] ) * norm_rv.pdf( apc_points['curvature'] ) for apc_points in shape_dict_list ]
     model_resp = np.array([ np.max( a_shape, axis = 0 ) for a_shape in model_resp_all_apc_points])
     
     #mean subtract
     model_resp = model_resp - np.mean( model_resp, axis = 0 )
     #scale
     magnitude = np.linalg.norm( model_resp, axis = 0)
-    magnitude = np.swapaxes(magnitude,0,1)
     model_resp = model_resp / magnitude
 
     return model_resp
@@ -80,7 +79,7 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
 
 pi = np.pi
 
-mat = l.loadmat( '/Users/dean/Desktop/net_code/imggen/PC2001370Params.mat' )
+mat = l.loadmat( cwd +'/imggen/PC2001370Params.mat' )
 s = mat['orcurv'][0]
 shape_dict_list = []
 for shape in s:
@@ -116,12 +115,12 @@ model_resp = apc_models( shape_dict_list = shape_dict_list, model_params_dict = 
 #plt.scatter( np.rad2deg(model_params_dict['or_sd']), np.rad2deg(model_params_dict['or_mean']))
 dam =xr.DataArray(model_resp, dims = ['shapes', 'models'])
 ds = xr.Dataset({'resp': dam})
-ds.to_netcdf('/Users/dean/Desktop/net_code/responses/test_models_cdf.nc')
+ds.to_netcdf(cwd +'/responses/test_models_cdf.nc')
 del model_resp, ds
 
 
-dm = xr.open_dataset('/Users/dean/Desktop/net_code/responses/test_models_cdf.nc', chunks={'models': 100, 'shapes':370} )
-da = xr.open_dataset('/Users/dean/Desktop/net_code/responses/test_cdf.nc', chunks={'x': 1, 'unit': 25} )
+dm = xr.open_dataset(cwd +'/responses/test_models_cdf.nc', chunks={'models': 100, 'shapes':370} )
+da = xr.open_dataset(cwd +'/responses/test_cdf.nc', chunks={'x': 1, 'unit': 25} )
 
 ##()
 #dm = xr.open_dataset('/Users/dean/Desktop/net_code/responses/test_models_cdf.nc')
@@ -139,7 +138,7 @@ resp = np.squeeze(da_n.values.T)
 mresp = dm['resp'].values
 fits = np.dot(resp, mresp)
 
-
+np.nanmax(fits)
 
 #
 #

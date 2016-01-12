@@ -84,7 +84,7 @@ def apc370models(nMeans=10, nSD=10, perc=5):
     nModels = np.size( modelParams, 0)
     
     a = st.vonmises.pdf(angularPosition, kappa = modelParams[:,2]**-1 , loc =  modelParams[:,0]) # 
-    b = st.norm.pîdf(curvature, modelParams[:,1],  modelParams[:,3])
+    b = st.norm.pdf(curvature, loc = modelParams[:,1],  scale = modelParams[:,3])
     temp = a * b
 
     models = np.empty(( 362, nModels ))

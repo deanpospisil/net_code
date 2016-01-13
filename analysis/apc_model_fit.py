@@ -6,6 +6,7 @@ Created on Wed Jan  6 18:28:57 2016
 """
 
 # analysis
+from collections import OrderedDict as ordDict
 import scipy.io as  l
 import scipy.stats as st
 import numpy as np
@@ -79,7 +80,7 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
 
 pi = np.pi
 
-mat = l.loadmat( cwd +'/imggen/PC2001370Params.mat' )
+mat = l.loadmat( cwd + '/imggen/PC2001370Params.mat' )
 s = mat['orcurv'][0]
 shape_dict_list = []
 for shape in s:
@@ -101,8 +102,8 @@ curvMeans = np.linspace(-0.5,1,nMeans)
 curvSDs = np.logspace(np.log10(minCurSD),  np.log10(maxCurSD),  nSD)
 
 
-model_params_dict = { 'or_sd': orSDs, 'or_mean':orMeans, 
-                     'cur_mean' : curvMeans, 'cur_sd': curvSDs}   
+model_params_dict = ordDict({ 'or_sd': orSDs, 'or_mean':orMeans, 
+                     'cur_mean' : curvMeans, 'cur_sd': curvSDs})
 
 #npts=10
 #model_params_dict = { 'or_sd': np.linspace(0.01, np.pi, npts), 'or_mean':np.linspace(0, np.pi, npts), 
@@ -136,74 +137,6 @@ da_n = da['resp']/np.sqrt( (da['resp']**2).sum('shapes'))
 ##
 resp = np.squeeze(da_n.values.T)
 mresp = dm['resp'].values
-fits = np.dot(resp, mresp)
+fits = np.dot( resp, mresp )
 
 np.nanmax(fits)
-
-#
-#
-#fits = xr.Dataset({'r': fits})
-#fits.to_netcdf('/Users/dean/Desktop/net_code/responses/test_r_cdf.nc')
-##c = xr.open_dataset('/Users/dean/Desktop/net_code/responses/test_r_cdf.nc', chunks={'models': 1000})
-# 
-#
-#    
-    
-    
-    
-    
-    
-##adjustment for repeats [ 14, 15, 16,17, 318, 319, 320, 321] 
-#a = np.hstack((range(14), range(18,318)))
-#a = np.hstack((a, range(322, 370)))
-#s = s[a]
-#    
-#
-#nStim = np.size(s,0) 
-#
-#angularPosition = []
-#curvature = []
-#paramLens = []
-#
-#for shapeInd in range(nStim):
-#    angularPosition.append(s[shapeInd][:, 0])
-#    curvature.append(s[shapeInd][:, 1])
-#    paramLens.append(np.size(s[shapeInd],0))
-#    
-#angularPosition = np.array(list(itertools.chain.from_iterable(angularPosition)))
-#angularPosition.shape = (np.size(angularPosition),1)
-#
-#curvature = np.array(list(itertools.chain.from_iterable(curvature)))
-#curvature.shape = (np.size(curvature),1)
-#
-##variable section length striding
-#inds = np.empty((2,np.size(paramLens)),dtype = np.intp)
-#inds[1,:] = np.cumsum(np.array(paramLens), dtype = np.intp) #ending index
-#inds[0,:] = np.concatenate(([0,], inds[1,:-1])) #beginning index
-#
-#
-#
-#
-##    #the Nonlin fit model for Pasupathy V4 Neurons
-##    mat = l.loadmat('V4_370PC2001_LSQnonlin.mat')
-##    f = np.array(mat['fI'][0])[0]
-##    # orientation, curvature, orientation SD , curvature SD , correlation
-##    
-##    #use these to generate parameters for brute force model
-##    maxAngSD = np.percentile(f[:,2], 100 - perc)
-##    minAngSD = np.percentile(f[:,2], perc)
-##    maxCurSD = np.percentile(f[:,3], 100 - perc)
-##    minCurSD = np.percentile(f[:,3], perc)
-#
-#maxAngSD = np.deg2rad(171)
-#minAngSD = np.deg2rad(23)
-#maxCurSD = 0.98
-#minCurSD = 0.09
-#
-##make this into a pyramid based on d-prime
-#orMeans = np.linspace(0, 2*pi-2*pi/nMeans, nMeans) 
-#orSDs = np.logspace(np.log10(minAngSD),  np.log10(maxAngSD),  nSD)
-#curvMeans = np.linspace(-0.5,1,nMeans)
-#curvSDs = np.logspace(np.log10(minCurSD),  np.log10(maxCurSD),  nSD)
-#modelParams = cartesian([orMeans,curvMeans,orSDs,curvSDs])
-#nModels = np.size( modelParams, 0)

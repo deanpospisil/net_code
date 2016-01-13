@@ -168,19 +168,19 @@ def load_pandas(fname, mmap_mode='r'):
 if 'models' not in locals():
     models, modelParams = apc370models(nMeans=16, nSD=10, perc=5)
     
-##firing rates
-maindir = '/Users/deanpospisil/Desktop/bictPresent/'
-os.chdir( maindir)
-mat = l.loadmat('V4_370PC2001.mat')
-resp = mat['resp'][0][0]
-resp = resp.T
-##adjustment for repeats [ 14, 15, 16,17, 318, 319, 320, 321] 
-a = np.hstack((range(14), range(18,318)))
-a = np.hstack((a, range(322, 370)))
-resp = resp[a]
-#
-fits, bestrV4 = modelFits(resp, models)
-#
+####firing rates
+##maindir = '/Users/deanpospisil/Desktop/bictPresent/'
+##os.chdir( maindir)
+##mat = l.loadmat('V4_370PC2001.mat')
+##resp = mat['resp'][0][0]
+##resp = resp.T
+####adjustment for repeats [ 14, 15, 16,17, 318, 319, 320, 321] 
+##a = np.hstack((range(14), range(18,318)))
+##a = np.hstack((a, range(322, 370)))
+##resp = resp[a]
+###
+##fits, bestrV4 = modelFits(resp, models)
+###
 #bestralexl = []
 #bestralexll= []
 #layerFits = []

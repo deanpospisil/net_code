@@ -216,16 +216,16 @@ stack, stack_desc = load_npy_img_dirs_into_stack( img_dir )
 
 #lets think about provenance now, and make this a little bit more flexible
 stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
-                              scale = (0.1, 1,5), x = (-120, 120, 11), y = None, rotation = None)
+                              scale = (0.1, 1, 10), x = (-120, 120, 15), y = None, rotation = None)
                              
 
 #trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )
 xray_desc_name = ''
 for key in stim_trans_dict:
-    xray_desc_name = xray_desc_name + '_' +  str(np.min(stim_trans_dict[key])) \
+    xray_desc_name = xray_desc_name + '_' + key +  '_' +  str(np.min(stim_trans_dict[key])) \
     + '_' + str(np.max(stim_trans_dict[key])) + '_' +  str(len(stim_trans_dict[key]))
 
-xray_desc_name = base_image + xray_desc_name    
+xray_desc_name = base_image + xray_desc_name + '.nc'    
 
 
 import caffe

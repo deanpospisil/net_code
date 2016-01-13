@@ -106,7 +106,7 @@ def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, ni
     
     return response
 
-def stim_idprestrans_generator(shapes = None, scale = None, x = None, y = None, 
+def stim_idprestrans_generator(shapes = None, blur= None, scale = None, x = None, y = None, 
                         rotation = None):
 #takes descrptions of ranges for different transformations (start, stop, npoints)
 #produces a cartesian dictionary of those.
@@ -116,7 +116,10 @@ def stim_idprestrans_generator(shapes = None, scale = None, x = None, y = None,
         
     if not shapes is None:
         stim_trans_dict[ 'shapes' ] = np.array( shapes, dtype = float)
-    
+     
+    if not blur is None :
+        stim_trans_dict[ 'blur' ] = np.linspace( *blur )
+        
     if not scale is None :
         stim_trans_dict[ 'scale' ] = np.linspace( *scale )
 
@@ -205,7 +208,7 @@ stack, stack_desc = imp.load_npy_img_dirs_into_stack( img_dir )
 
 #lets think about provenance now, and make this a little bit more flexible
 stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
-                              scale = (0.1, 1, 10), x = (-120, 120, 15), y = None, rotation = None)
+                              blur=(0.1,2,10), scale = None,  x = None, y = None, rotation = None)
                              
 
 #trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )

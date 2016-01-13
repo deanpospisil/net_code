@@ -247,7 +247,7 @@ if require_provenance is True:
     da.attrs['resp_sha'] = sha
     da.attrs['img_sha'] = image_sha
 ds = xr.Dataset({'resp': da})
-ds.to_netcdf(response_file + xray_desc_name )
+ds.to_netcdf( response_file  )
 
 
 

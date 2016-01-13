@@ -102,31 +102,32 @@ model_params_dict = ordDict({ 'or_sd': orSDs, 'or_mean':orMeans,
 
 model_params_dict = dm.cartesian_prod_dicts_lists( model_params_dict )
     
-model_resp = apc_models( shape_dict_list = shape_dict_list, model_params_dict = model_params_dict)
-
-#plt.scatter( np.rad2deg(model_params_dict['or_sd']), np.rad2deg(model_params_dict['or_mean']))
-dam =xr.DataArray(model_resp, dims = ['shapes', 'models'])
-ds = xr.Dataset({'resp': dam})
-ds.to_netcdf(cwd +'/responses/apc_models.nc')
+#model_resp = apc_models( shape_dict_list = shape_dict_list, model_params_dict = model_params_dict)
+#
+##plt.scatter( np.rad2deg(model_params_dict['or_sd']), np.rad2deg(model_params_dict['or_mean']))
+#dam =xr.DataArray(model_resp, dims = ['shapes', 'models'])
+#ds = xr.Dataset({'resp': dam})
+#ds.to_netcdf(cwd +'/responses/apc_models.nc')
 
 
 
 dm = xr.open_dataset(cwd +'/responses/apc_models.nc', chunks={'models': 100, 'shapes':370} )
-da = xr.open_dataset(cwd +'/responses/PC370_shapes0.0_369.0_370_scale0.1_1.0_5_x-120.0_120.0_11.nc', chunks={'x': 1, 'scale':1, 'unit': 25} )
+#da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_blur_0.1_2.0_10.ncPC370_shapes_0.0_369.0_370_blur_0.1_2.0_10.nc', chunks={'x': 1, 'scale':1, 'unit': 25} )
+da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_blur_0.1_2.0_10.ncPC370_shapes_0.0_369.0_370_blur_0.1_2.0_10.nc', chunks={'blur': 2, 'unit': 50} )
 
 
 #da = da.sel(x = 0, method = 'nearest' )
 #da = da.sel(scale = 0, method = 'nearest' )
-da = da.squeeze()
+#da = da.squeeze()
 da_n = da - da.mean('shapes')
 da_n = da / np.sqrt( ( da['resp']**2 ).sum('shapes') )
 
 
 fitm = (da_n*dm).sum('shapes')
-ds = xr.Dataset({'resp': fitm})
-ds.to_netcdf(cwd +'/responses/apc_models_r.nc')
+#ds = xr.Dataset({'resp': fitm})
+fitm.to_netcdf(cwd +'/responses/apc_models_r.nc')
 
-fits = xr.open_dataset(cwd +'/responses/apc_models_r.nc')
+#fits = xr.open_dataset(cwd +'/responses/apc_models_r.nc')
 
 #fitd = np.dot( da_n['resp'].T , dm['resp'] ).max(axis =1)
 

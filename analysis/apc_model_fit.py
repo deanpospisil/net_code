@@ -86,8 +86,8 @@ minAngSD = np.deg2rad(23)
 maxCurSD = 0.98
 minCurSD = 0.09
 
-nMeans = 4
-nSD = 4 
+nMeans = 16
+nSD = 10
 
 #make this into a pyramid based on d-prime
 orMeans = np.linspace( 0, 2*np.pi-2*np.pi / nMeans , nMeans ) 
@@ -126,7 +126,7 @@ fitm = (da_n*dm).sum('shapes')
 ds = xr.Dataset({'resp': fitm})
 ds.to_netcdf(cwd +'/responses/apc_models_r.nc')
 
-
+fits = xr.open_dataset(cwd +'/responses/apc_models_r.nc')
 
 #fitd = np.dot( da_n['resp'].T , dm['resp'] ).max(axis =1)
 

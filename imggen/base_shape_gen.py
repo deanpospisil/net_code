@@ -16,8 +16,8 @@ abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 cwd = os.path.dirname(dname)
 sys.path.append( cwd)
-import dCurve as dc
-import dMisc as dm
+import d_curve as dc
+import d_misc as dm
 
 
 def boundaryToMat(boundary, nPixPerSide = 227, fill = True ):
@@ -135,7 +135,7 @@ dm.ifNoDirMakeDir(saveDir)
 
 baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
 baseImage = baseImageList[0] 
-fracOfImage = 1
+fracOfImage = 0.5
 dm.ifNoDirMakeDir(saveDir + baseImage +'/')
 
 

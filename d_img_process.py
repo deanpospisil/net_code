@@ -25,7 +25,7 @@ def saveToPNGDir(directory, fileName, img):
   
 def getfIndex(nSamps, fs):
     
-    f = np.fft.fftfreq(nSamps,1./fs)
+    f = np.fft.fftfreq( nSamps, 1./fs)
 #    nSamps=np.double(nSamps)
 #    fs=np.double(fs)
 #    nyq = fs/2
@@ -136,18 +136,26 @@ def guassianDownSampleSTD( oldSize, newSize,  stdCutOff, fs ):
     
 #def fftDilateImg
     
-def fftResampleImg(img, nPix, stdCutOff = 8):
+def fft_resample_img(img, nPix, std_cut_off = None):
     #this is only for square images
-    oldSize = np.size(img,0)
 
-#    sr = sig.resample(img, nPix)
-#    sr = sig.resample(sr, nPix, axis = 1)  
-    std = guassianDownSampleSTD( oldSize, nPix,  stdCutOff, oldSize )
-    sr = sig.resample(img, nPix, window = ('gaussian',std))
-    sr = sig.resample(sr, nPix, window = ('gaussian',std), axis = 1)
-
-        
+    if not std_cut_off is None:
+        oldSize = np.size(img,0)
+        std = guassianDownSampleSTD( oldSize, nPix,  stdCutOff, oldSize )
+        sr = sig.resample(img, nPix, window = ('gaussian', std))
+        sr = sig.resample(sr, nPix, window = ('gaussian', std ), axis = 1)
+    else:
+        sr = sig.resample( img, nPix, window = ('boxcar') )
+        sr = sig.resample( sr, nPix, window = ('boxcar'), axis = 1)
+    
     return sr
+    
+def fft_gauss_blur_img(img, scale, std_cut_off = 7):
+    
+    std = guassianDownSampleSTD( oldSize, nPix,  stdCutOff, oldSize ) 
+    sr = sig.resample( img, img.shape[0], window = ('gaussian', std) )
+    sr = sig.resample( sr, img.shape[1], window = ('gaussian', std), axis = 1)
+     
 
 def fftDilateImg( img, dilR ):
     #just for square images for now
@@ -159,9 +167,10 @@ def fftDilateImg( img, dilR ):
     if np.double(n[1]/nPix[0]) != n[0]/ np.double(nPix[0]):
         warnings.warn( 'There will be a small distortion, percent '+ str(100*(efRatioY/efRatioX) ))
     if dilR<=0 or dilR>1:
-        warnings.warn('No dilationsless than or equal to 0, or dilations over 1.')
+        warnings.warn('No dilations less than or equal to 0, or dilations over 1.')
     
-    temp = fftResampleImg(img, n[0], stdCutOff = 4 )
+    temp = fft_resample_img(img, n[0], stdCutOff = 4 )
+    
     if (np.size(temp)>np.size(img)):  
     
         dilImg = centeredCrop(temp, nPix[0], nPix[1])
@@ -179,6 +188,10 @@ def imgStackTransform(imgDict, shape_img):
     for ind in range( n_imgs ):
         
         trans_img = shape_img[imgDict['shapes'][ind]]
+        
+        if 'blur' in imgDict:
+            trans_img = fftDilateImg( trans_img, imgDict['scale'][ind] )
+            
         
         if 'scale' in imgDict:
             trans_img = fftDilateImg( trans_img, imgDict['scale'][ind] )

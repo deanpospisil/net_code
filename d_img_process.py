@@ -150,13 +150,18 @@ def fft_resample_img(img, nPix, std_cut_off = None):
     
     return sr
     
-def fft_gauss_blur_img(img, scale, std_cut_off = 7):
+def fft_gauss_blur_img( img, scale, std_cut_off = 5):
     
-    std = guassianDownSampleSTD( oldSize, nPix,  stdCutOff, oldSize ) 
-    sr = sig.resample( img, img.shape[0], window = ('gaussian', std) )
-    sr = sig.resample( sr, img.shape[1], window = ('gaussian', std), axis = 1)
+    old_img_size = img.shape[0]
+    new_img_size = np.round( img.shape[0]*scale )
+    
+    std = guassianDownSampleSTD( old_img_size , new_img_size,  std_cut_off, old_img_size ) 
+    
+    sr = sig.resample( img, old_img_size, window = ('gaussian', std) )
+    sr = sig.resample( sr, old_img_size, window = ('gaussian', std), axis = 1)
      
-
+    return sr
+    
 def fftDilateImg( img, dilR ):
     #just for square images for now
     nPix= np.array(np.shape(img))
@@ -169,7 +174,7 @@ def fftDilateImg( img, dilR ):
     if dilR<=0 or dilR>1:
         warnings.warn('No dilations less than or equal to 0, or dilations over 1.')
     
-    temp = fft_resample_img(img, n[0], stdCutOff = 4 )
+    temp = fft_resample_img(img, n[0], std_cut_off = None )
     
     if (np.size(temp)>np.size(img)):  
     
@@ -190,9 +195,8 @@ def imgStackTransform(imgDict, shape_img):
         trans_img = shape_img[imgDict['shapes'][ind]]
         
         if 'blur' in imgDict:
-            trans_img = fftDilateImg( trans_img, imgDict['scale'][ind] )
-            
-        
+            trans_img = fft_gauss_blur_img( trans_img, imgDict['blur'][ind], std_cut_off = 5 )
+
         if 'scale' in imgDict:
             trans_img = fftDilateImg( trans_img, imgDict['scale'][ind] )
         

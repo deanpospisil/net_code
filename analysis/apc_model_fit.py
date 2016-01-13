@@ -23,8 +23,8 @@ sys.path.append( cwd)
 
 sys.path.append('/home/dean/caffe/python')
 import xray as xr
-
-import dMisc as dm
+import d_misc as dm
+import pickle
 
 def get_2d_dims_right(vec, dims_order=(1,0)):
     dims = vec.shape
@@ -78,36 +78,27 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
 
 
 
-pi = np.pi
 
-mat = l.loadmat( cwd + '/imggen/PC2001370Params.mat' )
-s = mat['orcurv'][0]
-shape_dict_list = []
-for shape in s:
-    shape_dict_list.append( { 'curvature' : shape[ : , 1 ], 'orientation' : shape[ : , 0 ]} ) 
-
-
+shape_dict_list = pickle.load( open( cwd + '/images/baseimgs/PC370/PC370_params.p', 'r')  )
 
 maxAngSD = np.deg2rad(171)
 minAngSD = np.deg2rad(23)
 maxCurSD = 0.98
 minCurSD = 0.09
 
-nMeans = 16
-nSD =10
+nMeans = 4
+nSD = 4 
+
 #make this into a pyramid based on d-prime
-orMeans = np.linspace(0, 2*pi-2*pi/nMeans, nMeans) 
-orSDs = np.logspace(np.log10(minAngSD),  np.log10(maxAngSD),  nSD)
-curvMeans = np.linspace(-0.5,1,nMeans)
-curvSDs = np.logspace(np.log10(minCurSD),  np.log10(maxCurSD),  nSD)
+orMeans = np.linspace( 0, 2*np.pi-2*np.pi / nMeans , nMeans ) 
+orSDs = np.logspace( np.log10( minAngSD ) , np.log10( maxAngSD ) ,  nSD )
+curvMeans = np.linspace( -0.5, 1, nMeans )
+curvSDs = np.logspace( np.log10(minCurSD),  np.log10(maxCurSD),  nSD )
 
 
 model_params_dict = ordDict({ 'or_sd': orSDs, 'or_mean':orMeans, 
                      'cur_mean' : curvMeans, 'cur_sd': curvSDs})
 
-#npts=10
-#model_params_dict = { 'or_sd': np.linspace(0.01, np.pi, npts), 'or_mean':np.linspace(0, np.pi, npts), 
-#                     'cur_mean' : np.linspace(-0.5, 1, npts), 'cur_sd': np.linspace(0.01, 1, npts)}   
 
 model_params_dict = dm.cartesian_prod_dicts_lists( model_params_dict )
     
@@ -116,27 +107,33 @@ model_resp = apc_models( shape_dict_list = shape_dict_list, model_params_dict = 
 #plt.scatter( np.rad2deg(model_params_dict['or_sd']), np.rad2deg(model_params_dict['or_mean']))
 dam =xr.DataArray(model_resp, dims = ['shapes', 'models'])
 ds = xr.Dataset({'resp': dam})
-ds.to_netcdf(cwd +'/responses/test_models_cdf.nc')
-del model_resp, ds
+ds.to_netcdf(cwd +'/responses/apc_models.nc')
 
 
-dm = xr.open_dataset(cwd +'/responses/test_models_cdf.nc', chunks={'models': 100, 'shapes':370} )
-da = xr.open_dataset(cwd +'/responses/test_cdf.nc', chunks={'x': 1, 'unit': 25} )
 
-##()
-#dm = xr.open_dataset('/Users/dean/Desktop/net_code/responses/test_models_cdf.nc')
-#da = xr.open_dataset('/Users/dean/Desktop/net_code/responses/test_cdf.nc')
-#
-da = da.sel(x = 0, method = 'nearest' )
+dm = xr.open_dataset(cwd +'/responses/apc_models.nc', chunks={'models': 100, 'shapes':370} )
+da = xr.open_dataset(cwd +'/responses/PC370_shapes0.0_369.0_370_scale0.1_1.0_5_x-120.0_120.0_11.nc', chunks={'x': 1, 'scale':1, 'unit': 25} )
+
+
+#da = da.sel(x = 0, method = 'nearest' )
+#da = da.sel(scale = 0, method = 'nearest' )
 da = da.squeeze()
-da_n = da['resp']/np.sqrt( (da['resp']**2).sum('shapes'))
-##
-#fits = (da_n*dm['resp']).sum('shapes').load()
-#fits.load()
-##fits = np.dot(da_n.T, dm['resp'])
-##
-resp = np.squeeze(da_n.values.T)
-mresp = dm['resp'].values
-fits = np.dot( resp, mresp )
+da_n = da - da.mean('shapes')
+da_n = da / np.sqrt( ( da['resp']**2 ).sum('shapes') )
 
-np.nanmax(fits)
+
+fitm = (da_n*dm).sum('shapes')
+ds = xr.Dataset({'resp': fitm})
+ds.to_netcdf(cwd +'/responses/apc_models_r.nc')
+
+
+
+#fitd = np.dot( da_n['resp'].T , dm['resp'] ).max(axis =1)
+
+
+
+#resp = np.squeeze(da_n.values.T)
+#mresp = dm.values
+#fits = np.dot( resp, mresp )
+#
+#np.nanmax(fits)

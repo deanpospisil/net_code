@@ -20,8 +20,8 @@ sys.path.append( cwd)
 
 sys.path.append('/home/dean/caffe/python')
 
-import dImgProcess as imp
-import dMisc as dm
+import d_img_process as imp
+import d_misc as dm
 import pickle
 import xray as xr
 
@@ -137,21 +137,10 @@ def stim_idprestrans_generator(shapes = None, scale = None, x = None, y = None,
 
     
 
-def load_sorted_dir_numbered_fnms_with_particular_extension(the_dir, extension):
-    #takes a directory and an extension, and loads up all file names with that extension,
-    #attempting to sort thm by number, gives back all the sorted file names
-    dir_filenames = os.listdir(the_dir)
-    file_names = [ file_name for file_name in dir_filenames if file_name.split('.')[-1] == extension ]
-    
-    file_names = sorted( file_names, key = lambda num : int(num.split('.')[0]) )
-    
-    return file_names
-    
-
 def load_npy_img_dirs_into_stack( img_dir ):
     #given a directory, loads all the npy images in it, into a stack.
     stack_descriptor_dict = {}
-    img_names = load_sorted_dir_numbered_fnms_with_particular_extension( img_dir , 'npy')
+    img_names = dm.load_sorted_dir_numbered_fnms_with_particular_extension( img_dir , 'npy')
     
     #will need to check this for color images.
     stack_descriptor_dict['img_paths'] = [ img_dir + img_name for img_name in img_names ]
@@ -212,7 +201,7 @@ for name in dir_filenames:
             image_sha = pickle.load( f)
 
 
-stack, stack_desc = load_npy_img_dirs_into_stack( img_dir )
+stack, stack_desc = imp.load_npy_img_dirs_into_stack( img_dir )
 
 #lets think about provenance now, and make this a little bit more flexible
 stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
@@ -229,16 +218,14 @@ xray_desc_name = base_image + xray_desc_name + '.nc'
 
 
 import caffe
+caffe.set_mode_gpu()
+
 #get the response from the given net
 ANNDir = '/home/dean/caffe/models/bvlc_reference_caffenet/'
 ANNFileName='bvlc_reference_caffenet.caffemodel'
 
-caffe.set_mode_gpu()
 
-net = caffe.Net(
-    ANNDir+'deploy.prototxt',
-    ANNDir+ANNFileName, 
-    caffe.TEST)
+net = caffe.Net(ANNDir+'deploy.prototxt',ANNDir+ANNFileName, caffe.TEST)
 
 
 net_resp = identity_preserving_transform_resp( stack, stim_trans_cart_dict, net)

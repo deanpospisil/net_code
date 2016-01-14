@@ -208,7 +208,7 @@ stack, stack_desc = imp.load_npy_img_dirs_into_stack( img_dir )
 
 #lets think about provenance now, and make this a little bit more flexible
 stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
-                              blur=(0.1,2,10), scale = None,  x = None, y = None, rotation = None)
+                              blur=None, scale = None,  x = (-120,120,10), y = (-120,120,10), rotation = None)
                              
 
 #trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )
@@ -248,30 +248,4 @@ if require_provenance is True:
     da.attrs['img_sha'] = image_sha
 ds = xr.Dataset({'resp': da})
 ds.to_netcdf( response_file  )
-
-
-
-#responseFile = cwd + '/responses/testresp.pickle'
-#with open( responseFile, 'rb') as f:
-#    a= pickle.load(f, encoding='latin1')
-#
-#net_resp = a[0]
-#desc_dict = a[1]
-#stim_specs_dict = a[2]
-
-##is there a simpler way to make this call
-#da = da[ dict( unit = da['layer_label'] == 'conv1')  ]
-#plt.cla()
-#da.mean( [ 'shapes','scale', 'unit'] ).plot()
-
-
-
-#now save that file
-
-
-##is there a simpler way to make this call
-#da = da[ dict( unit = da['layer_label'] == 'fc8')  ]
-#
-#plt.cla()
-#da.mean( [ 'shapes', 'scale','unit'] ).plot()
 

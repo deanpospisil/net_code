@@ -123,12 +123,12 @@ da_n = da - da.mean('shapes')
 da_n = da / np.sqrt( ( da['resp']**2 ).sum('shapes') )
 
 
-fitm = (da_n*dm).sum('shapes')
-#ds = xr.Dataset({'resp': fitm})
-fitm.to_netcdf(cwd +'/responses/apc_models_r.nc')
+#fitm = (da_n*dm).sum('shapes')
+##ds = xr.Dataset({'resp': fitm})
+#fitm.to_netcdf(cwd +'/responses/apc_models_r.nc')
 
-#fits = xr.open_dataset(cwd +'/responses/apc_models_r.nc')
-
+fits = xr.open_dataset(cwd +'/responses/apc_models_r.nc',chunks={'models':1000})
+#bfits = fits.max('models')
 #fitd = np.dot( da_n['resp'].T , dm['resp'] ).max(axis =1)
 
 

@@ -108,7 +108,8 @@ model_params_dict = dm.cartesian_prod_dicts_lists( model_params_dict )
 #dam =xr.DataArray(model_resp, dims = ['shapes', 'models'])
 #ds = xr.Dataset({'resp': dam})
 #ds.to_netcdf(cwd +'/responses/apc_models.nc')
-
+mat2 = l.loadmat( cwd + '/responses/AlexNet_51rfs370PC2001.mat')
+resp = mat2['resp'][0][layer]
 
 
 dm = xr.open_dataset(cwd +'/responses/apc_models.nc', chunks={'models': 100} )
@@ -119,9 +120,9 @@ da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_blur_0.1_2.0_10
 #da = da.sel(unit = range(10), method = 'nearest' )
 #dm = dm.sel(models = range(1000), method = 'nearest' )
 #da = da.squeeze()
-da_n = da - da.mean('shapes')
-da_n = da / np.sqrt( ( da['resp']**2 ).sum('shapes') )
-
-fitm = (da_n*dm).sum('shapes').max('models')
-
-fitm.to_netcdf(cwd +'/responses/apc_models_r.nc')
+#da_n = da - da.mean('shapes')
+#da_n = da / np.sqrt( ( da['resp']**2 ).sum('shapes') )
+#
+#fitm = (da_n*dm).sum('shapes').max('models')
+#
+#fitm.to_netcdf(cwd +'/responses/apc_models_r.nc')

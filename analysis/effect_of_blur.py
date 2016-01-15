@@ -36,3 +36,9 @@ blur_corr = fitm['resp'].groupby('layer_label')
 
 p=blur_corr.mean().to_pandas()
 p.plot()
+
+fitm.to_netcdf(cwd +'/responses/apc_models_r_blur.nc')
+
+(fitm['resp']>0.5).groupby('layer_label').mean().to_pandas().plot.
+
+(fitm['resp'].sel(blur=2, method = 'nearest' )>0.5).groupby('layer_label').mean().to_pandas().plot(kind='bar')

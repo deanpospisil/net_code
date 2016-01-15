@@ -111,30 +111,17 @@ model_params_dict = dm.cartesian_prod_dicts_lists( model_params_dict )
 
 
 
-dm = xr.open_dataset(cwd +'/responses/apc_models.nc', chunks={'models': 100, 'shapes':370} )
-#da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_blur_0.1_2.0_10.ncPC370_shapes_0.0_369.0_370_blur_0.1_2.0_10.nc', chunks={'x': 1, 'scale':1, 'unit': 25} )
-da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_blur_0.1_2.0_10.ncPC370_shapes_0.0_369.0_370_blur_0.1_2.0_10.nc', chunks={'blur': 2, 'unit': 50} )
+dm = xr.open_dataset(cwd +'/responses/apc_models.nc', chunks={'models': 100} )
+da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_blur_0.1_2.0_10.ncPC370_shapes_0.0_369.0_370_blur_0.1_2.0_10.nc', chunks={'blur': 1, 'unit':100} )
 
 
-#da = da.sel(x = 0, method = 'nearest' )
-#da = da.sel(scale = 0, method = 'nearest' )
+#da = da.sel(blur = [1, 2], method = 'nearest' )
+#da = da.sel(unit = range(10), method = 'nearest' )
+#dm = dm.sel(models = range(1000), method = 'nearest' )
 #da = da.squeeze()
 da_n = da - da.mean('shapes')
 da_n = da / np.sqrt( ( da['resp']**2 ).sum('shapes') )
 
+fitm = (da_n*dm).sum('shapes').max('models')
 
-fitm = (da_n*dm).sum('shapes')
-#ds = xr.Dataset({'resp': fitm})
 fitm.to_netcdf(cwd +'/responses/apc_models_r.nc')
-
-#fits = xr.open_dataset(cwd +'/responses/apc_models_r.nc')
-
-#fitd = np.dot( da_n['resp'].T , dm['resp'] ).max(axis =1)
-
-
-
-#resp = np.squeeze(da_n.values.T)
-#mresp = dm.values
-#fits = np.dot( resp, mresp )
-#
-#np.nanmax(fits)

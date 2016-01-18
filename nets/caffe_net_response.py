@@ -118,7 +118,12 @@ def stim_idprestrans_generator(shapes = None, blur= None, scale = None, x = None
         stim_trans_dict[ 'shapes' ] = np.array( shapes, dtype = float)
      
     if not blur is None :
-        stim_trans_dict[ 'blur' ] = np.linspace( *blur )
+        if isinstance(blur,tuple):
+            
+            stim_trans_dict[ 'blur' ] = np.linspace( *blur )
+        else:
+            stim_trans_dict[ 'blur' ] = blur
+        
         
     if not scale is None :
         stim_trans_dict[ 'scale' ] = np.linspace( *scale )
@@ -208,7 +213,7 @@ stack, stack_desc = imp.load_npy_img_dirs_into_stack( img_dir )
 
 #lets think about provenance now, and make this a little bit more flexible
 stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
-                              blur = None, scale = None,  x = (-120,120,11), y = (-120,120,11), rotation = None)
+                              blur = [0.25,0.5,1,2,1000], scale = None,  x = None, y = None, rotation = None)
                              
 
 #trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )
@@ -246,6 +251,7 @@ if require_provenance is True:
     sha = dm.provenance_commit(cwd)
 
 ds = xr.Dataset({'resp': da})
-ds.attrs['resp_sha'] = shads.attrs['img_sha'] = image_sha
+ds.attrs['resp_sha'] =sha
+ds.attrs['img_sha'] = image_sha
 ds.to_netcdf( response_file  )
 

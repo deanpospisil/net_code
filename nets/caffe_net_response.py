@@ -208,7 +208,7 @@ stack, stack_desc = imp.load_npy_img_dirs_into_stack( img_dir )
 
 #lets think about provenance now, and make this a little bit more flexible
 stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
-                              blur=None, scale = None,  x = (-120,120,10), y = (-120,120,10), rotation = None)
+                              blur = None, scale = None,  x = (-120,120,11), y = (-120,120,11), rotation = None)
                              
 
 #trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )
@@ -244,8 +244,8 @@ require_provenance = True
 if require_provenance is True:
     #commit the state of the directory and get is sha identification
     sha = dm.provenance_commit(cwd)
-    da.attrs['resp_sha'] = sha
-    da.attrs['img_sha'] = image_sha
+
 ds = xr.Dataset({'resp': da})
+ds.attrs['resp_sha'] = shads.attrs['img_sha'] = image_sha
 ds.to_netcdf( response_file  )
 

@@ -213,7 +213,7 @@ stack, stack_desc = imp.load_npy_img_dirs_into_stack( img_dir )
 
 #lets think about provenance now, and make this a little bit more flexible
 stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
-                              blur = [0.25,0.5,1,2,1000], scale = None,  x = None, y = None, rotation = None)
+                              blur = None, scale =None,  x = (-100,100,201), y = None, rotation = None)
                              
 
 #trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )

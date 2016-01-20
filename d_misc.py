@@ -77,6 +77,7 @@ if __name__ == '__main__':
     print(s | t)
     print(s & t)
     print(s - t)
+    
 def circPoints(center, radius, theta):
     circ = center[:,None] + radius * np.array([np.cos(theta), np.sin(theta)])
     return circ 

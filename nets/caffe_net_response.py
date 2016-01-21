@@ -241,7 +241,7 @@ response_file = cwd + '/responses/' + xray_desc_name
 
 require_provenance = True
 
-if require_provenance is True:
+if require_provenance == True:
     #commit the state of the directory and get is sha identification
     sha = dm.provenance_commit(cwd)
     da.attrs['resp_sha'] = sha

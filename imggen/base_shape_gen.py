@@ -32,7 +32,7 @@ def boundaryToMat(boundary, nPixPerSide = 227, fill = True ):
         tooSmall = True
         inches = 0.85
     
-    fig=plt.figure(figsize = ( inches, inches ))#min size seems to be 0.81 in the horizontal, annoying
+    fig = plt.figure(figsize = ( inches, inches ))#min size seems to be 0.81 in the horizontal, annoying
     
     plt.axis( 'off' )
     plt.gca().set_xlim([-1, 1])
@@ -135,7 +135,7 @@ dm.ifNoDirMakeDir(saveDir)
 
 baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
 baseImage = baseImageList[0] 
-fracOfImage = 1.1
+fracOfImage = 1
 dm.ifNoDirMakeDir(saveDir + baseImage +'/')
 
 
@@ -143,7 +143,7 @@ if baseImage is baseImageList[0]:
 
 #    os.chdir( saveDir + baseImageList[0])
     mat = l.loadmat(cwd + '/imggen/'+ 'PC3702001ShapeVerts.mat')
-    s = np.array(mat['shapes'][0][[278,279]])
+    s = np.array(mat['shapes'][0])
 
 elif baseImage is baseImageList[1]:
 

@@ -85,7 +85,7 @@ def save_boundaries_as_image( imlist, save_dir,cwd, nPixPerSide = 227 ,  fill = 
     for boundaryNumber in range(len(imlist)):
     
         im = boundaryToMat(imlist[boundaryNumber], nPixPerSide, fill  )
-        sc.misc.imsave( save_dir + str(boundaryNumber) + '.png', im)
+        sc.misc.imsave( save_dir + str(boundaryNumber) + '.bmp', im)
         np.save( save_dir  + str(boundaryNumber) , im)
         
     
@@ -135,7 +135,7 @@ dm.ifNoDirMakeDir(saveDir)
 
 baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
 baseImage = baseImageList[0] 
-fracOfImage = 0.25
+fracOfImage = 1.20
 dm.ifNoDirMakeDir(saveDir + baseImage +'/')
 
 
@@ -161,4 +161,4 @@ elif baseImage is baseImageList[3]:
     
 s = centerBoundary( s )
 s = scaleBoundary ( s, fracOfImage )
-save_boundaries_as_image( s, saveDir + baseImage + '/', cwd, nPixPerSide = 227 ,  fill = True, require_provenance = True )
+save_boundaries_as_image( s, saveDir + baseImage + '/', cwd, nPixPerSide = 540 ,  fill = True, require_provenance = True )

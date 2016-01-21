@@ -35,8 +35,8 @@ def boundaryToMat(boundary, nPixPerSide = 227, fill = True ):
     fig=plt.figure(figsize = ( inches, inches ))#min size seems to be 0.81 in the horizontal, annoying
     
     plt.axis( 'off' )
-    plt.gca().set_xlim([-1.5, 1.5])
-    plt.gca().set_ylim([-1.5, 1.5])
+    plt.gca().set_xlim([-1, 1])
+    plt.gca().set_ylim([-1, 1])
     
     if fill is True:
         line = plt.Polygon(boundary, closed=True, fill='k', edgecolor='none',fc='k')

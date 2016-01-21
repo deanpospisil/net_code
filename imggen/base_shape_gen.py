@@ -143,7 +143,7 @@ if baseImage is baseImageList[0]:
 
 #    os.chdir( saveDir + baseImageList[0])
     mat = l.loadmat(cwd + '/imggen/'+ 'PC3702001ShapeVerts.mat')
-    s = np.array(mat['shapes'][0][[39, 40, 41]])
+    s = np.array(mat['shapes'][0][[39, 40, 41,43 ,44, 45]])
 
 elif baseImage is baseImageList[1]:
 

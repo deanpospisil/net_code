@@ -41,13 +41,14 @@ u, s, v = np.linalg.svd(rpt, full_matrices=False)
 
 sda = xr.DataArray( u[:,:,0], coords = [ da.coords['unit'], da.coords['shapes'] ], dims=['unit','shapes'])
 
-#sda['layer_label'] =  da.coords['layer_label']
+sda['layer_label'] =  da.coords['layer_label']
 
-#fitm = (sda*dm).sum('shapes').max('models').load()
+fitm = (sda*dm).sum('shapes').max('models').load()
 #columns of u will be the unit length feature sensitvity 
 #rows of v will be the unit length receptive fields, across transformation
 #s is how much variance each of these transformation invariant receptive fields accounts for the variance of the response
 
+fitm.to_netcdf(cwd +'/responses/apc_models_r_svd.nc')
 
 
 

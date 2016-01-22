@@ -121,7 +121,7 @@ da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_blur_0.1_2.0_10
 #dm = dm.sel(models = range(1000), method = 'nearest' )
 #da = da.squeeze()
 #da_n = da - da.mean('shapes')
-#da_n = da / np.sqrt( ( da['resp']**2 ).sum('shapes') )
+#da_n = da_n / np.sqrt( ( da_n['resp']**2 ).sum('shapes') )
 #
 #fitm = (da_n*dm).sum('shapes').max('models')
 #

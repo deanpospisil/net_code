@@ -27,18 +27,21 @@ sys.path.append( cwd)
 
 # effect of blur
 dm = xr.open_dataset(cwd +'/responses/apc_models.nc', chunks={'models': 100} )
-da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-120.0_120.0_10_y_-120.0_120.0_10.nc', chunks={'x': 1, 'y': 1, 'unit':100} )
+da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-100.0_100.0_201.nc', chunks={'x': 1, 'unit':100} )
 
 #da = da.sel(x = 0, method = 'nearest' )
-da = da.sel(y = 0, method = 'nearest' )
+#da = da.sel(y = 0, method = 'nearest' )
 unit_sel = np.arange(0, da.dims['unit'],100 )
-da = da.sel(unit = range(96), method = 'nearest' )
+da = da.sel(unit = unit_sel, method = 'nearest' )
+
+x_sel = np.arange(0, da.dims['x'], 3 )
+da = da.sel(unit = x_sel, method = 'nearest' )
 
 rpt = da['resp'].values
 rpt= rpt.transpose(2,0,1)
 
 u, s, v = np.linalg.svd(rpt, full_matrices=False)
-
+print('svd')
 sda = xr.DataArray( u[:,:,0], coords = [ da.coords['unit'], da.coords['shapes'] ], dims=['unit','shapes'])
 
 sda['layer_label'] =  da.coords['layer_label']

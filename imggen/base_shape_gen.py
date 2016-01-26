@@ -37,7 +37,7 @@ def boundaryToMat( boundary, n_pix_per_side = 227, fill = True, frac_of_img=1 ):
         tooSmall = True
         inches = 0.85
     
-    fig=plt.figure(figsize = ( inches, inches ))#min size seems to be 0.81 in the horizontal, annoying
+    fig = plt.figure(figsize = ( inches, inches ))#min size seems to be 0.81 in the horizontal, annoying
     
     plt.axis( 'off' )
     plt.gca().set_xlim([-1, 1])
@@ -90,7 +90,9 @@ def save_boundaries_as_image( imlist, save_dir, cwd, n_pix_per_side = 227 ,  fil
     for boundaryNumber in range(len(imlist)):
         print(boundaryNumber)
     
+
         im = boundaryToMat(imlist[boundaryNumber], n_pix_per_side, fill, fracOfImage  )
+
         sc.misc.imsave( save_dir + str(boundaryNumber) + '.bmp', im)
         np.save( save_dir  + str(boundaryNumber) , im)
         
@@ -143,7 +145,9 @@ dm.ifNoDirMakeDir(saveDir)
 
 baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
 baseImage = baseImageList[0] 
-fracOfImage = 1.2
+
+fracOfImage = 1
+
 dm.ifNoDirMakeDir(saveDir + baseImage +'/')
 
 
@@ -170,3 +174,4 @@ elif baseImage is baseImageList[3]:
 s = centerBoundary( s )
 s = scaleBoundary ( s, fracOfImage )
 save_boundaries_as_image( s, saveDir + baseImage + '/', cwd, n_pix_per_side = 540 ,  fill = True, require_provenance = False, fracOfImage=fracOfImage )
+

@@ -51,6 +51,7 @@ fitm = (sda*dm).sum('shapes').max('models').load()
 #rows of v will be the unit length receptive fields, across transformation
 #s is how much variance each of these transformation invariant receptive fields accounts for the variance of the response
 
+fitm.to_netcdf(cwd +'/responses/apc_models_r_svd.nc')
 
 
 

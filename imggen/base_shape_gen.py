@@ -18,14 +18,19 @@ cwd = os.path.dirname(dname)
 sys.path.append( cwd)
 import d_curve as dc
 import d_misc as dm
+import d_img_process as imp
 
 
-def boundaryToMat(boundary, nPixPerSide = 227, fill = True ):
+def boundaryToMat( boundary, n_pix_per_side = 227, fill = True, frac_of_img=1 ):
+        
+    if fracOfImage > 1:
+        n_pix_per_side_old = n_pix_per_side
+        n_pix_per_side = round(n_pix_per_side*frac_of_img)
         
     #haven't quite figured out how to get the correct images.
     plt.close('all')
     inchOverPix = 2.84/227. #this happens to work because of the dpi of my current screen. 1920X1080
-    inches = inchOverPix*nPixPerSide
+    inches = inchOverPix*n_pix_per_side
     
     if inches<0.81:
         print( 'inches < 0.81, needed to resize')
@@ -53,17 +58,17 @@ def boundaryToMat(boundary, nPixPerSide = 227, fill = True ):
     
     data2[data2 == data2[0,0,0]] = 255
     ima = - (data2 - 255)[:,:,0]
+    ima = imp.centeredCrop(ima, n_pix_per_side_old, n_pix_per_side_old)
     
-    if np.size( ima, 0 ) is not nPixPerSide and np.size(ima,1 ) is not nPixPerSide:
+    if (not np.size( ima, 0 ) == n_pix_per_side_old) or (not np.size(ima,1 ) == n_pix_per_side_old):
         print('had to resize')
-        ima = scipy.misc.imresize(ima, (nPixPerSide, nPixPerSide), interp='cubic', mode=None)
+        ima = scipy.misc.imresize(ima, (n_pix_per_side_old, n_pix_per_side_old), interp='cubic', mode=None)
 
 
     return ima
 
 
-def save_boundaries_as_image( imlist, save_dir,cwd, nPixPerSide = 227 ,  fill = True, require_provenance = False ):
-
+def save_boundaries_as_image( imlist, save_dir, cwd, n_pix_per_side = 227 ,  fill = True, require_provenance = False, fracOfImage=1 ):
     dir_filenames = os.listdir(save_dir)
     
     #remove existing files
@@ -83,8 +88,11 @@ def save_boundaries_as_image( imlist, save_dir,cwd, nPixPerSide = 227 ,  fill = 
             pickle.dump( sha, f )
 
     for boundaryNumber in range(len(imlist)):
+        print(boundaryNumber)
     
-        im = boundaryToMat(imlist[boundaryNumber], nPixPerSide, fill  )
+
+        im = boundaryToMat(imlist[boundaryNumber], n_pix_per_side, fill, fracOfImage  )
+
         sc.misc.imsave( save_dir + str(boundaryNumber) + '.bmp', im)
         np.save( save_dir  + str(boundaryNumber) , im)
         
@@ -106,7 +114,9 @@ def centerBoundary(s):
     return s
 def scaleBoundary(s, fracOfImage):
     
-    
+    if fracOfImage>1:
+        fracOfImage =1
+        
     #get the furthest point from the center
     ind= -1
     curmax = 0  
@@ -135,7 +145,9 @@ dm.ifNoDirMakeDir(saveDir)
 
 baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
 baseImage = baseImageList[0] 
+
 fracOfImage = 1
+
 dm.ifNoDirMakeDir(saveDir + baseImage +'/')
 
 
@@ -161,4 +173,5 @@ elif baseImage is baseImageList[3]:
     
 s = centerBoundary( s )
 s = scaleBoundary ( s, fracOfImage )
-save_boundaries_as_image( s, saveDir + baseImage + '/', cwd, nPixPerSide = 540 ,  fill = True, require_provenance = True )
+save_boundaries_as_image( s, saveDir + baseImage + '/', cwd, n_pix_per_side = 540 ,  fill = True, require_provenance = False, fracOfImage=fracOfImage )
+

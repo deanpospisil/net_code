@@ -6,22 +6,13 @@ Created on Thu Jan 21 14:54:30 2016
 """
 import numpy as np
 
-<<<<<<< HEAD
-=======
 
->>>>>>> d4b4c275a8f4f01684b135973f799c8da4794f9e
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os, sys
 import dask.array as d
-<<<<<<< HEAD
-import xarray as xr
-sys.path.append()
 
-=======
-sys.path.insert(0,'/Users/deanpospisil/Desktop/xarray/')
->>>>>>> d4b4c275a8f4f01684b135973f799c8da4794f9e
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 cwd = os.path.dirname(dname)

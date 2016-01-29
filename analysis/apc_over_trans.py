@@ -17,39 +17,29 @@ abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 cwd = os.path.dirname(dname)
 sys.path.append( cwd)
-
+sys.path.append( cwd + '/xarray')
 import xarray as xr
-
-from sys import getsizeof, stderr
-from itertools import chain
-from collections import deque
-try:
-    from reprlib import repr
-except ImportError:
-    pass
-
-
-
 
 
 #best fit apc
 # effect of blur
-dm = xr.open_dataset(cwd +'/responses/apc_models.nc'  )
-#da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-100.0_100.0_201.nc' )
-da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-120.0_120.0_10_y_-120.0_120.0_10.nc' )
+dm = xr.open_dataset(cwd +'/responses/apc_models.nc',chunks = {'models': 1000, 'shapes': 370}  )
+da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-100.0_100.0_201.nc',chunks = {'unit': 100, 'x': 100} )
+
+#dm = xr.open_dataset(cwd +'/responses/apc_models.nc'  )
+#da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-100.0_100.0_201.nc')
 
 
-dm = dm.sel(models = range(100), method = 'nearest' )
+#dm = dm.sel(models = range(100), method = 'nearest' )
 
-unitsel = np.arange(0, da.dims['unit'], 1000 )
+unitsel = np.arange(0, da.dims['unit'], 1)
 da = da.sel(unit = unitsel, method = 'nearest' )
 
 
 xsel = np.arange(-da.dims['x'] / 10., da.dims['x'] / 10., 2 )
-da = da.sel(x = [8, 6, 4, 2,0,2,4,6 ,8], method = 'nearest' )
-da = da.sel(y = 0, method = 'nearest' )
+da = da.sel(x = [8, 6, 4, 2, 0, 2, 4, 6, 8], method = 'nearest' )
 
-dm = dm.sel(models = range(100))
+#dm = dm.sel(models = range(100))
 
 t = da['resp'].dot(dm['resp'])
 #t is the projection of each apc model onto each of the translated responses

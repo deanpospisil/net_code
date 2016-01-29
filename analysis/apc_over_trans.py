@@ -5,36 +5,60 @@ Created on Thu Jan 21 14:54:30 2016
 @author: dean
 """
 import numpy as np
-import xray as xr
+
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os, sys
 import dask.array as d
-
-
+sys.path.insert(0,'/Users/deanpospisil/Desktop/xarray/')
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 cwd = os.path.dirname(dname)
 sys.path.append( cwd)
 
+import xarray as xr
+
+from sys import getsizeof, stderr
+from itertools import chain
+from collections import deque
+try:
+    from reprlib import repr
+except ImportError:
+    pass
+
+
+
+
 
 #best fit apc
 # effect of blur
 dm = xr.open_dataset(cwd +'/responses/apc_models.nc'  )
-da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-100.0_100.0_201.nc' )
+#da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-100.0_100.0_201.nc' )
+da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-120.0_120.0_10_y_-120.0_120.0_10.nc' )
 
-
-unitsel = np.arange(0, da.dims['unit'], 10 )
+unitsel = np.arange(0, da.dims['unit'], 1000 )
 da = da.sel(unit = unitsel, method = 'nearest' )
+
 
 xsel = np.arange(-da.dims['x'] / 10., da.dims['x'] / 10., 2 )
 da = da.sel(x = [8, 6, 4, 2,0,2,4,6 ,8], method = 'nearest' )
+da = da.sel(y = 0, method = 'nearest' )
 
-x = np.transpose(d.from_array(da['resp'].values, chunks=(1000, 1,1000)), (2,1,0))
-y = d.from_array(dm['resp'].values, chunks=(370, 200 ))
+dm = dm.sel(models = range(100))
 
-t = x.dot(y)
+t = da['resp'].dot(dm['resp'])
+#t is the projection of each apc model onto each of the translated responses
+
+n = da.reduce(np.linalg.norm, ['shapes', 'x'] )
+t = t.reduce(np.linalg.norm,  'x' )
+
+cor = (t/n).max('models')
+
+
+
+
 
 #d.to_hdf5(cwd +'/responses/apc_models_r_trans.nc', {'/t': t})
 #da_n = da - da.mean('shapes').mean('x')

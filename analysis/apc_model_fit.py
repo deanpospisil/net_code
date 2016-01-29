@@ -22,7 +22,7 @@ cwd = os.path.dirname(dname)
 sys.path.append( cwd)
 
 sys.path.append('/home/dean/caffe/python')
-import xray as xr
+import xarray as xr
 import d_misc as dm
 import pickle
 

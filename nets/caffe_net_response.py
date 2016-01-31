@@ -17,13 +17,14 @@ abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 cwd = os.path.dirname(dname)
 sys.path.append( cwd)
+sys.path.append( cwd+'/xarray')
 
 sys.path.append('/home/dean/caffe/python')
 
 import d_img_process as imp
 import d_misc as dm
 import pickle
-import xray as xr
+import xarray as xr
 
 def  net_imgstack_response(net, stack):
     #stack is expected to be nImages x RGB x rows x cols
@@ -213,7 +214,7 @@ stack, stack_desc = imp.load_npy_img_dirs_into_stack( img_dir )
 
 #lets think about provenance now, and make this a little bit more flexible
 stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
-                              blur = None, scale =None,  x = (-100,100,201), y = None, rotation = None)
+                              blur = None, scale =None,  x = (-100,100,25), y =(-100,100,25), rotation = None)
                              
 
 #trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )

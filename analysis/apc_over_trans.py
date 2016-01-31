@@ -21,64 +21,31 @@ sys.path.append( cwd + '/xarray')
 import xarray as xr
 
 
-<<<<<<< HEAD
-#best fit apc
-# effect of blur
-dm = xr.open_dataset(cwd +'/responses/apc_models.nc',chunks = {'models': 100, 'shapes': 370}  )
-da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-100.0_100.0_201.nc',chunks = {'unit': 100, 'x': 100} )
-=======
->>>>>>> bf2dbad10f73782cc87a3eb1e77cc15568932efd
+dm = xr.open_dataset(cwd +'/responses/apc_models.nc',chunks = {'models': 1000}  )
+da = xr.open_dataset( cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-100.0_100.0_201.nc',chunks = {'unit': 500} )
 
-dm = xr.open_dataset(cwd +'/responses/apc_models.nc',chunks = {'models': 1000, 'shapes': 370}  )
-da = xr.open_dataset( cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-100.0_100.0_201.nc',chunks = {'unit': 100, 'x': 100} )
-#dm = xr.open_dataset(cwd +'/responses/apc_models.nc'  )
-#da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-100.0_100.0_201.nc')
-#dm = dm.load()
-#da = da.load()
-
-dm = dm.sel(models = range(100), method = 'nearest' )
-
-unitsel = np.arange(0, da.dims['unit'], 1000)
-da = da.sel(unit = unitsel, method = 'nearest' )
+#dm = dm.sel(models = range(100), method = 'nearest' )
+#
+#unitsel = np.arange(0, da.dims['unit'], 1000)
+#da = da.sel(unit = unitsel, method = 'nearest' )
 #da = da.sel(x = [8, 6, 4, 2, 0, 2, 4, 6, 8], method = 'nearest' )
-
-dm = dm.sel(models = range(100))
+#dm = dm.sel(models = range(100))
 
 t = da['resp'].dot( dm['resp'] )
 #t is the projection of each apc model onto each of the translated responses
 
-<<<<<<< HEAD
-n = da['resp'].std(['shapes', 'x'] )
-t = t.std('x' )
-=======
+
 n = da['resp'].vnorm(['shapes', 'x'] )
 t = t.vnorm( 'x' )
->>>>>>> bf2dbad10f73782cc87a3eb1e77cc15568932efd
 
-#n = da['resp'].reduce(np.linalg.norm, ['shapes', 'x'] )
-#t = t.reduce(np.linalg.norm,  'x' )
-##
+
 cor = (t/n).max('models')
 
 
 
-cor.to_hdf5(cwd +'/responses/apc_models_r_trans.nc', {'/t': t})
-#da_n = da - da.mean('shapes').mean('x')
-#da_n = da_n / ( ( da_n**2 ).sum('shapes').sum('x') )**0.5
-#
-#
-#dm_s = (da_n*dm).sum('shapes')*dm #get the projection of the apc vectors on each translation
-#
-##turn the vector of a scaled apc model over translations into a unit vector
-#dm_s = dm_s / ( ( dm_s**2 ).sum('shapes').sum('x') )**0.5 
-#
-##get the correlation of each of these scaled apc models
-#fitm = (da_n*dm_s).sum('shapes').sum('x').max('models')
-#
-#print('chunked')
-#
-#fitm.to_netcdf(cwd +'/responses/apc_models_r_trans.nc')
-#fitm = xr.open_dataset(cwd +'/responses/apc_models_r_trans.nc' )
+cor.to_dataset('cor').to_netcdf(cwd +'/responses/apc_models_r_trans.nc')
+
+fitm = xr.open_dataset(cwd +'/responses/apc_models_r_trans.nc' )
 ####
 #
 #b = fitm.to_dataframe()

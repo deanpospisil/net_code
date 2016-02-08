@@ -232,6 +232,8 @@ caffe.set_mode_gpu()
 #get the response from the given net
 ANNDir = '/home/dean/caffe/models/bvlc_reference_caffenet/'
 ANNFileName='bvlc_reference_caffenet.caffemodel'
+ANNDir = '/home/dean/caffe/models/bvlc_alexnet/'
+ANNFileName='bvlc_alexnet.caffemodel'
 
 
 net = caffe.Net(ANNDir+'deploy.prototxt',ANNDir+ANNFileName, caffe.TEST)

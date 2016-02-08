@@ -24,8 +24,8 @@ stack, stack_desc = imp.load_npy_img_dirs_into_stack( img_dir )
 stack, stack_desc = imp.load_npy_img_dirs_into_stack( img_dir )
 
 plt.imshow(stack[1,:,:])
-trans_stack = imp.imgStackTransform( {'shapes':[2,2],'blur':[1, 0.25]}, stack )
+trans_stack = imp.imgStackTransform( {'shapes':[1,1]}, stack )
 
-
+plt.close('all')
 plt.imshow(trans_stack[1,:,:],cmap = cm.Greys_r, interpolation = 'none')
-plt.plot(trans_stack[1,111,:])
+

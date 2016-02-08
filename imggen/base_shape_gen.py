@@ -174,5 +174,5 @@ elif baseImage is baseImageList[3]:
     
 s = centerBoundary( s )
 s = scaleBoundary ( s, fracOfImage )
-save_boundaries_as_image( s, saveDir + baseImage + '/', cwd, n_pix_per_side = 227 ,  fill = True, require_provenance = False, fracOfImage = fracOfImage )
+save_boundaries_as_image( s, saveDir + baseImage + '/', cwd, n_pix_per_side = 227 ,  fill = True, require_provenance = True, fracOfImage = fracOfImage )
 

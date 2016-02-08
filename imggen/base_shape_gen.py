@@ -22,12 +22,11 @@ import d_img_process as imp
 
 
 def boundaryToMat( boundary, n_pix_per_side = 227, fill = True, frac_of_img=1 ):
-        
+    n_pix_per_side_old = n_pix_per_side    
     if fracOfImage > 1:
-        n_pix_per_side_old = n_pix_per_side
+        
         n_pix_per_side = round(n_pix_per_side*frac_of_img)
         
-    #haven't quite figured out how to get the correct images.
     plt.close('all')
     inchOverPix = 2.84/227. #this happens to work because of the dpi of my current screen. 1920X1080
     inches = inchOverPix*n_pix_per_side
@@ -146,7 +145,9 @@ dm.ifNoDirMakeDir(saveDir)
 baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
 baseImage = baseImageList[0] 
 
-fracOfImage = 1
+pixCirc = 51
+fracOfImage = (pixCirc/135.)
+
 
 dm.ifNoDirMakeDir(saveDir + baseImage +'/')
 
@@ -173,5 +174,5 @@ elif baseImage is baseImageList[3]:
     
 s = centerBoundary( s )
 s = scaleBoundary ( s, fracOfImage )
-save_boundaries_as_image( s, saveDir + baseImage + '/', cwd, n_pix_per_side = 540 ,  fill = True, require_provenance = False, fracOfImage=fracOfImage )
+save_boundaries_as_image( s, saveDir + baseImage + '/', cwd, n_pix_per_side = 227 ,  fill = True, require_provenance = False, fracOfImage = fracOfImage )
 

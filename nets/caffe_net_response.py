@@ -78,7 +78,7 @@ def get_indices_for_net_unit_vec(net, layer_names = None):
     
     return resp_descriptor_dict
     
-def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, nimgs_per_pass = 200 ):
+def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, nimgs_per_pass = 100 ):
     #takes stim specs, transforms images accordingly, gets their responses 
     
     n_imgs = len( stim_trans_cart_dict[stim_trans_cart_dict.keys()[0]] )
@@ -216,6 +216,9 @@ stack, stack_desc = imp.load_npy_img_dirs_into_stack( img_dir )
 stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
                               blur = None, scale =None,  x = (-100,100,25), y =(-100,100,25), rotation = None)
                              
+stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
+                              blur = None, scale =None,  x = None, y = None, rotation = None)
+                                                          
 
 #trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )
 xray_desc_name = ''

@@ -251,13 +251,14 @@ da = net_resp_2d_to_xray_nd( net_resp, stim_trans_dict, indices_for_net_unit_vec
 response_file = cwd + '/responses/' + xray_desc_name
 
 require_provenance = True
+ds = xr.Dataset({'resp': da})
 
 if require_provenance == True:
     #commit the state of the directory and get is sha identification
     sha = dm.provenance_commit(cwd)
+    ds.attrs['resp_sha'] =sha
+    ds.attrs['img_sha'] = image_sha
 
-ds = xr.Dataset({'resp': da})
-ds.attrs['resp_sha'] =sha
-ds.attrs['img_sha'] = image_sha
-ds.to_netcdf( response_file  )
+    
+ds.to_netcdf(response_file)
 

@@ -24,44 +24,49 @@ import xarray as xr
 
 dm = xr.open_dataset(cwd +'/responses/apc_models.nc',chunks = {'models': 1000, 'shapes': 370}  )
 #da = xr.open_dataset( cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-100.0_100.0_201.nc',chunks = {'unit': 100, 'x': 100} )
-da = xr.open_dataset( cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-120.0_120.0_11_y_-120.0_120.0_11.nc',chunks = {'unit': 100}  )
-#da = xr.open_dataset( cwd +'/responses/PC370_shapes_matlab.nc',chunks = {'unit': 100}  )
+#da = xr.open_dataset( cwd +'/responses/PC370_shapes_0.0_369.0_370.nc',chunks = {'unit': 100}  )
+da = xr.open_dataset( cwd +'/responses/PC370_shapes_matlab.nc',chunks = {'unit': 100}  )
 
 
 #dm = dm.sel(models = range(100), method = 'nearest' )
 #unitsel = np.arange(0, da.dims['unit'], 1000)
 #da = da.sel(unit = unitsel, method = 'nearest' )
 ##xsel = np.arange(-da.dims['x'] / 10., da.dims['x'] / 10., 2 )
-da = da.sel(x = [ 0, 10], method = 'nearest' )
-da = da.sel(y = [ 0], method = 'nearest' )
+#da = da.sel(x = [ 0 ], method = 'nearest' )
+
 #dm = dm.sel(models = range(100))
 
 #using xray
 da = da['resp'] - da['resp'].mean(('shapes'))
 dm = dm['resp']
 
-n =  da.vnorm(('shapes'))
-resp_norm =  n.vnorm(('x'))
-
+resp_n =  da.vnorm(('shapes'))
 proj_resp_on_model = da.dot(dm)
 
-proj_resp_on_model_norm =  proj_resp_on_model.vnorm(('shapes')).vnorm(('x'))
-
-all_cor = proj_resp_on_model_norm / resp_norm
+if 'x' in da.dims:
+    resp_norm =  resp_n.vnorm(('x'))
+    proj_resp_on_model_norm =  proj_resp_on_model.sum(('x'))
+    n_x = len(da.coords['x'].values)
+else:
+    resp_norm =  resp_n
+    proj_resp_on_model_norm = proj_resp_on_model
+    n_x = 1
+    
+all_cor = (proj_resp_on_model_norm) / (resp_norm*(n_x**0.5))
 
 cor = all_cor.max('models')
 
 
-cor.to_dataset('cor').to_netcdf(cwd +'/responses/apc_models_r_repro.nc')
-
-
+cor.to_dataset('cor').to_netcdf( cwd + '/responses/apc_models_r_repro.nc')
 
 fitm = xr.open_dataset(cwd +'/responses/apc_models_r_repro.nc' )
 b = fitm.to_dataframe()
-b.set_index(['layer_unit' ,'layer'], append=True, inplace=True)
+b.set_index(['layer_unit', 'layer'], append=True, inplace=True)
 
 
 #sns.boxplot(x="layer_label", y="cor" , data=b)
+b = b.fillna(0)
+
 per = b[b>0.5].groupby('layer_label').count()/b.groupby('layer_label').count()
 per.plot(kind = 'bar')
 plt.ylim((0,1))

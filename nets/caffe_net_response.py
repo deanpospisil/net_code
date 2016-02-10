@@ -217,7 +217,7 @@ stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = rang
                               blur = None, scale =None,  x = (-100,100,25), y =(-100,100,25), rotation = None)
                              
 stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
-                              blur = None, scale =None,  x = (-10,10,3), y = None, rotation = None)
+                              blur = None, scale =None,  x = (-50,50, 101), y = None, rotation = None)
                                                           
 
 #trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )

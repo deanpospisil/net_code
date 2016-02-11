@@ -214,11 +214,11 @@ stack, stack_desc = imp.load_npy_img_dirs_into_stack( img_dir )
 
 #lets think about provenance now, and make this a little bit more flexible
 stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
-                              blur = None, scale =None,  x = (-100,100,25), y =(-100,100,25), rotation = None)
+                              blur = None, scale =None,  x = (-50,50, 25), y =(-50, 50, 25), rotation = None)
                              
-stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
-                              blur = None, scale =None,  x = (-50,50, 101), y = None, rotation = None)
-                                                          
+#stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
+#                              blur =(0.25,1000,5), scale =None,  x = (-50,50, 101), y = None, rotation = None)
+#                                                          
 
 #trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )
 xray_desc_name = ''
@@ -240,8 +240,15 @@ ANNFileName='bvlc_alexnet.caffemodel'
 
 
 net = caffe.Net(ANNDir+'deploy.prototxt',ANNDir+ANNFileName, caffe.TEST)
+s = ['conv1', 'conv2', 'conv3', 'conv4',  'conv5',  'fc6', 'fc7', 'fc8'   ]
+b = [ net.params[name][1].data for name in s]
+w = [ net.params[name][0].data for name in s]
+
+import pickle
+pickle.dump( (w,b), open( "alexNetWeights.p", "wb" ) )
 
 
+'''
 net_resp = identity_preserving_transform_resp( stack, stim_trans_cart_dict, net)
 
 indices_for_net_unit_vec = get_indices_for_net_unit_vec( net )   
@@ -261,4 +268,4 @@ if require_provenance == True:
 
     
 ds.to_netcdf(response_file)
-
+'''

@@ -213,11 +213,11 @@ stack, stack_desc = imp.load_npy_img_dirs_into_stack( img_dir )
 
 #lets think about provenance now, and make this a little bit more flexible
 stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
-                              blur = None, scale =None,  x = (-100,100,201), y = None, rotation = None)
+                              blur = None, scale =None,  x = (-50,50,101), y = None, rotation = None)
                              
 
 #trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )
-xray_desc_name = ''
+xray_desc_name = 'caffenet_train_iter_10000'
 for key in stim_trans_dict:
     xray_desc_name = xray_desc_name + '_' + key +  '_' +  str(np.min(stim_trans_dict[key])) \
     + '_' + str(np.max(stim_trans_dict[key])) + '_' +  str(len(stim_trans_dict[key]))
@@ -230,7 +230,7 @@ caffe.set_mode_gpu()
 
 #get the response from the given net
 ANNDir = '/home/dean/caffe/models/bvlc_reference_caffenet/'
-ANNFileName='bvlc_reference_caffenet.caffemodel'
+ANNFileName='caffenet_train_iter_10000.caffemodel '
 
 
 net = caffe.Net(ANNDir+'deploy.prototxt',ANNDir+ANNFileName, caffe.TEST)

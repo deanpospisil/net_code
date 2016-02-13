@@ -22,7 +22,7 @@ cwd = os.path.dirname(dname)
 sys.path.append( cwd)
 
 sys.path.append('/home/dean/caffe/python')
-import xarray as xr
+#import xarray as xr
 import d_misc as dm
 import pickle
 
@@ -80,7 +80,7 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
 
 
 shape_dict_list = pickle.load( open( cwd + '/images/baseimgs/PC370/PC370_params.p', 'r')  )
-
+''' 
 maxAngSD = np.deg2rad(171)
 minAngSD = np.deg2rad(23)
 maxCurSD = 0.98
@@ -101,13 +101,14 @@ model_params_dict = ordDict({ 'or_sd': orSDs, 'or_mean':orMeans,
 
 
 model_params_dict = dm.cartesian_prod_dicts_lists( model_params_dict )
-    
-#model_resp = apc_models( shape_dict_list = shape_dict_list, model_params_dict = model_params_dict)
-#
-##plt.scatter( np.rad2deg(model_params_dict['or_sd']), np.rad2deg(model_params_dict['or_mean']))
-#dam =xr.DataArray(model_resp, dims = ['shapes', 'models'])
-#ds = xr.Dataset({'resp': dam})
-#ds.to_netcdf(cwd +'/responses/apc_models.nc')
+
+  
+model_resp = apc_models( shape_dict_list = shape_dict_list, model_params_dict = model_params_dict)
+
+#plt.scatter( np.rad2deg(model_params_dict['or_sd']), np.rad2deg(model_params_dict['or_mean']))
+dam =xr.DataArray(model_resp, dims = ['shapes', 'models'])
+ds = xr.Dataset({'resp': dam})
+ds.to_netcdf(cwd +'/responses/apc_models.nc')
 mat2 = l.loadmat( cwd + '/responses/AlexNet_51rfs370PC2001.mat')
 resp = mat2['resp'][0][layer]
 
@@ -116,15 +117,16 @@ dm = xr.open_dataset(cwd +'/responses/apc_models.nc', chunks={'models': 100} )
 da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_blur_0.1_2.0_10.ncPC370_shapes_0.0_369.0_370_blur_0.1_2.0_10.nc', chunks={'blur': 1, 'unit':100} )
 
 
-#da = da.sel(blur = [1, 2], method = 'nearest' )
-#da = da.sel(unit = range(10), method = 'nearest' )
-#dm = dm.sel(models = range(1000), method = 'nearest' )
-#da = da.squeeze()
+da = da.sel(blur = [1, 2], method = 'nearest' )
+da = da.sel(unit = range(10), method = 'nearest' )
+dm = dm.sel(models = range(1000), method = 'nearest' )
+da = da.squeeze()
 
-#da_n = da - da.mean('shapes')
-#da_n = da_n / np.sqrt( ( da_n['resp']**2 ).sum('shapes') )
-#
-#fitm = (da_n*dm).sum('shapes').max('models')
+da_n = da - da.mean('shapes')
+da_n = da_n / np.sqrt( ( da_n['resp']**2 ).sum('shapes') )
 
-#
-#fitm.to_netcdf(cwd +'/responses/apc_models_r.nc')
+fitm = (da_n*dm).sum('shapes').max('models')
+
+
+fitm.to_netcdf(cwd +'/responses/apc_models_r.nc')
+'''

@@ -17,13 +17,14 @@ abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 cwd = os.path.dirname(dname)
 sys.path.append( cwd)
+sys.path.append( cwd+'/xarray')
 
 sys.path.append('/home/dean/caffe/python')
 
 import d_img_process as imp
 import d_misc as dm
 import pickle
-import xray as xr
+import xarray as xr
 
 def  net_imgstack_response(net, stack):
     #stack is expected to be nImages x RGB x rows x cols
@@ -77,7 +78,7 @@ def get_indices_for_net_unit_vec(net, layer_names = None):
     
     return resp_descriptor_dict
     
-def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, nimgs_per_pass = 200 ):
+def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, nimgs_per_pass = 100 ):
     #takes stim specs, transforms images accordingly, gets their responses 
     
     n_imgs = len( stim_trans_cart_dict[stim_trans_cart_dict.keys()[0]] )
@@ -213,11 +214,16 @@ stack, stack_desc = imp.load_npy_img_dirs_into_stack( img_dir )
 
 #lets think about provenance now, and make this a little bit more flexible
 stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
-                              blur = None, scale =None,  x = (-100,100,201), y = None, rotation = None)
+
+blur = None, scale =None,  x = (-50,50,101), y = None, rotation = None)
+
                              
+#stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
+#                              blur =(0.25,1000,5), scale =None,  x = (-50,50, 101), y = None, rotation = None)
+#                                                          
 
 #trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )
-xray_desc_name = ''
+xray_desc_name = 'caffenet_train_iter_10000'
 for key in stim_trans_dict:
     xray_desc_name = xray_desc_name + '_' + key +  '_' +  str(np.min(stim_trans_dict[key])) \
     + '_' + str(np.max(stim_trans_dict[key])) + '_' +  str(len(stim_trans_dict[key]))
@@ -230,11 +236,21 @@ caffe.set_mode_gpu()
 
 #get the response from the given net
 ANNDir = '/home/dean/caffe/models/bvlc_reference_caffenet/'
-ANNFileName='bvlc_reference_caffenet.caffemodel'
+
+ANNFileName='caffenet_train_iter_10000.caffemodel'
+
+net = caffe.Net(ANNDir+'deploy.prototxt', ANNDir+ANNFileName, caffe.TEST)
 
 
+'''
 net = caffe.Net(ANNDir+'deploy.prototxt',ANNDir+ANNFileName, caffe.TEST)
+s = ['conv1', 'conv2', 'conv3', 'conv4',  'conv5',  'fc6', 'fc7', 'fc8'   ]
+b = [ net.params[name][1].data for name in s]
+w = [ net.params[name][0].data for name in s]
 
+import pickle
+pickle.dump( (w,b), open( "alexNetWeights.p", "wb" ) )
+'''
 
 net_resp = identity_preserving_transform_resp( stack, stim_trans_cart_dict, net)
 

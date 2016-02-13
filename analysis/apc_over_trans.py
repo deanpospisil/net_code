@@ -20,18 +20,20 @@ sys.path.append( cwd + '/xarray')
 import xarray as xr
 
 
-
+'''
 dm = xr.open_dataset(cwd +'/responses/apc_models.nc',chunks = {'models': 1000, 'shapes': 370}  )
 #da = xr.open_dataset( cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-100.0_100.0_201.nc',chunks = {'unit': 100, 'x': 100} )
-da = xr.open_dataset( cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc',chunks = {'unit': 100,'x': 100}  )
+
+#da = xr.open_dataset( cwd +'/responses/PC370_shapes_0.0_369.0_370.nc',chunks = {'unit': 100}  )
 #da = xr.open_dataset( cwd +'/responses/PC370_shapes_matlab.nc',chunks = {'unit': 100}  )
+da = xr.open_dataset( cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
 
 
 #dm = dm.sel(models = range(100), method = 'nearest' )
 #unitsel = np.arange(0, da.dims['unit'], 1000)
 #da = da.sel(unit = unitsel, method = 'nearest' )
 ##xsel = np.arange(-da.dims['x'] / 10., da.dims['x'] / 10., 2 )
-#da = da.sel(x = [ 0 ], method = 'nearest' )
+da = da.sel(x = [ 0 ], method = 'nearest' )
 
 #dm = dm.sel(models = range(100))
 
@@ -56,20 +58,22 @@ all_cor = (proj_resp_on_model_norm) / (resp_norm*(n_x**0.5))
 cor = all_cor.max('models')
 
 
-cor.to_dataset('cor').to_netcdf( cwd + '/responses/apc_models_r_trans101.nc')
 
-fitm = xr.open_dataset(cwd +'/responses/apc_models_r_trans101.nc' )
+cor.to_dataset('cor').to_netcdf( cwd + '/responses/apc_models_r_trans1.nc')
+'''
+fitm = xr.open_dataset(cwd +'/responses/apc_models_r_trans1.nc' )
 b = fitm.to_dataframe()
 b.set_index(['layer_unit', 'layer'], append=True, inplace=True)
 
 
-#sns.boxplot(x="layer_label", y="cor" , data=b)
-b = b.fillna(0)
+sns.boxplot(x="layer_label", y="cor", data=b)
 
-per = b[b>0.5].groupby('layer_label').count()/b.groupby('layer_label').count()
+fillb = b.fillna(0)
+
+per = b[b>0.5].groupby('layer_label', sort=False).count()/fillb.groupby('layer_label', sort=False).count()
 per.plot(kind = 'bar')
 plt.ylim((0,1))
-plt.title('Percent units > 0.5 Correlation a')
+plt.title('Percent units > 0.5 Correlation')
 
 
 

@@ -97,7 +97,6 @@ model_params_dict = dm.cartesian_prod_dicts_lists( model_params_dict )
   
 model_resp = apc_models( shape_dict_list = shape_dict_list, model_params_dict = model_params_dict)
 
-#plt.scatter( np.rad2deg(model_params_dict['or_sd']), np.rad2deg(model_params_dict['or_mean']))
 dam =xr.DataArray(model_resp, dims = ['shapes', 'models'])
 ds = xr.Dataset({'resp': dam})
 ds.to_netcdf(cwd +'/responses/apc_models.nc')

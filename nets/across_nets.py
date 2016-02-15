@@ -13,7 +13,7 @@ base_image_nm = baseImageList[0]
 stim_trans_cart_dict, stim_trans_dict = cf.stim_trans_generator(shapes=range(370), 
                                                              blur=None, 
                                                              scale =None,  
-                                                             x=(-1, 1, 101), 
+                                                             x=(-50, 50, 10), 
                                                              y=None, 
                                                              rotation = None) 
 #you will need to write a whole bunch of individual files
@@ -22,6 +22,7 @@ da = cf.get_net_resp(base_image_nm, ann_dir, ann_fn, stim_trans_cart_dict,
 
 resp_name = cf.get_net_resp_name(stim_trans_dict, ann_fn, base_image_nm)
 
+'''
 #then you will need to concatenate them into one dataset
 def read_netcdfs(files, dim):
     # glob expands paths with * to a list of files, like the unix shell
@@ -29,3 +30,4 @@ def read_netcdfs(files, dim):
     datasets = [xr.open_dataset(p) for p in paths]
     combined = xr.concat(dataset, dim)
     return combined
+'''

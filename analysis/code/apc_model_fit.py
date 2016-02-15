@@ -16,13 +16,11 @@ import sys
 
 import matplotlib.pyplot as plt
 
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-cwd = os.path.dirname(dname)
-sys.path.append( cwd)
+top_dir = os.getcwd().split('net_code')[0] + 'net_code/'
+sys.path.append(top_dir)
 
-sys.path.append('/home/dean/caffe/python')
-#import xarray as xr
+#sys.path.append('/home/dean/caffe/python')
+import xarray as xr
 import d_misc as dm
 import pickle
 
@@ -74,20 +72,15 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
 
     return model_resp
     
+shape_dict_list = pickle.load( open( top_dir + 'images/baseimgs/PC370/PC370_params.p', 'r')  )
 
-
-
-
-
-shape_dict_list = pickle.load( open( cwd + '/images/baseimgs/PC370/PC370_params.p', 'r')  )
-''' 
 maxAngSD = np.deg2rad(171)
 minAngSD = np.deg2rad(23)
 maxCurSD = 0.98
 minCurSD = 0.09
 
 nMeans = 16
-nSD = 10
+nSD = 16
 
 #make this into a pyramid based on d-prime
 orMeans = np.linspace( 0, 2*np.pi-2*np.pi / nMeans , nMeans ) 
@@ -99,7 +92,6 @@ curvSDs = np.logspace( np.log10(minCurSD),  np.log10(maxCurSD),  nSD )
 model_params_dict = ordDict({ 'or_sd': orSDs, 'or_mean':orMeans, 
                      'cur_mean' : curvMeans, 'cur_sd': curvSDs})
 
-
 model_params_dict = dm.cartesian_prod_dicts_lists( model_params_dict )
 
   
@@ -109,24 +101,3 @@ model_resp = apc_models( shape_dict_list = shape_dict_list, model_params_dict = 
 dam =xr.DataArray(model_resp, dims = ['shapes', 'models'])
 ds = xr.Dataset({'resp': dam})
 ds.to_netcdf(cwd +'/responses/apc_models.nc')
-mat2 = l.loadmat( cwd + '/responses/AlexNet_51rfs370PC2001.mat')
-resp = mat2['resp'][0][layer]
-
-
-dm = xr.open_dataset(cwd +'/responses/apc_models.nc', chunks={'models': 100} )
-da = xr.open_dataset(cwd +'/responses/PC370_shapes_0.0_369.0_370_blur_0.1_2.0_10.ncPC370_shapes_0.0_369.0_370_blur_0.1_2.0_10.nc', chunks={'blur': 1, 'unit':100} )
-
-
-da = da.sel(blur = [1, 2], method = 'nearest' )
-da = da.sel(unit = range(10), method = 'nearest' )
-dm = dm.sel(models = range(1000), method = 'nearest' )
-da = da.squeeze()
-
-da_n = da - da.mean('shapes')
-da_n = da_n / np.sqrt( ( da_n['resp']**2 ).sum('shapes') )
-
-fitm = (da_n*dm).sum('shapes').max('models')
-
-
-fitm.to_netcdf(cwd +'/responses/apc_models_r.nc')
-'''

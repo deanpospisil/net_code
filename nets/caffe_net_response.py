@@ -16,7 +16,7 @@ import warnings
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 cwd = os.path.dirname(dname)
-sys.path.append( cwd)
+sys.path.append(cwd)
 sys.path.append( cwd+'/xarray')
 
 sys.path.append('/home/dean/caffe/python')
@@ -26,7 +26,7 @@ import d_misc as dm
 import pickle
 import xarray as xr
 
-def  net_imgstack_response(net, stack):
+def net_imgstack_response(net, stack):
     #stack is expected to be nImages x RGB x rows x cols
         
     if not net.blobs['data'].data.shape[1:] == stack.shape[1:]:
@@ -61,7 +61,7 @@ def  net_imgstack_response(net, stack):
             
             
 def get_indices_for_net_unit_vec(net, layer_names = None):
-    
+    #this gives you a couple different indices for describing units in the net.
     if layer_names is None:
         layer_names = [ k for k in net.blobs.keys()][1:]#not including first layer, (data)
         
@@ -79,7 +79,8 @@ def get_indices_for_net_unit_vec(net, layer_names = None):
     return resp_descriptor_dict
     
 def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, nimgs_per_pass = 100 ):
-    #takes stim specs, transforms images accordingly, gets their responses 
+    #takes stim_trans_cart_dict, pulls from img_stack and transform accordingly,
+    #gets nets responses.
     
     n_imgs = len( stim_trans_cart_dict[stim_trans_cart_dict.keys()[0]] )
     stack_indices, remainder = dm.sectStrideInds( nimgs_per_pass, n_imgs )
@@ -96,57 +97,42 @@ def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, ni
             stim_trans_cart_dict_sect[key] = stim_trans_cart_dict[key][ stack_ind[0] : stack_ind[1] ]
         
         #produce those images
-        trans_stack = imp.imgStackTransform( stim_trans_cart_dict_sect, img_stack )
+        trans_img_stack = imp.imgStackTransform( stim_trans_cart_dict_sect, img_stack )
         
         #run then and append them
-        all_net_resp.append( net_imgstack_response( net, trans_stack ) )
+        all_net_resp.append(net_imgstack_response( net, trans_img_stack ))
     
-    #stack up all these images    
+    #stack up all these responses   
     response = np.vstack(all_net_resp)
      
     
     return response
 
-def stim_idprestrans_generator(shapes = None, blur= None, scale = None, x = None, y = None, 
-                        rotation = None):
+def stim_trans_generator(shapes = None, blur= None, scale = None, 
+                               x = None, y = None, rotation = None):
 #takes descrptions of ranges for different transformations (start, stop, npoints)
-#produces a cartesian dictionary of those.
-                        
-    stim_trans_dict = ordDict()  
-             
-        
+#produces a cartesian dictionary of those.                   
+    stim_trans_dict = ordDict()              
     if not shapes is None:
-        stim_trans_dict[ 'shapes' ] = np.array( shapes, dtype = float)
-     
+        stim_trans_dict['shapes'] = np.array(shapes, dtype=float)   
     if not blur is None :
-        if isinstance(blur,tuple):
-            
-            stim_trans_dict[ 'blur' ] = np.linspace( *blur )
+        if isinstance(blur,tuple):         
+            stim_trans_dict['blur'] = np.linspace(*blur)
         else:
-            stim_trans_dict[ 'blur' ] = blur
-        
-        
+            stim_trans_dict['blur'] = blur  
     if not scale is None :
-        stim_trans_dict[ 'scale' ] = np.linspace( *scale )
-
+        stim_trans_dict[ 'scale' ] = np.linspace(*scale)
     if not x is None :
-        stim_trans_dict[ 'x' ] = np.linspace( *x )
-    
+        stim_trans_dict['x'] = np.linspace(*x)
     if not y is None :
-        stim_trans_dict[ 'y' ] = np.linspace( *y )
-    
+        stim_trans_dict['y'] = np.linspace(*y)  
     if not rotation is None :
-        stim_trans_dict[ 'rotation' ] = np.linspace( *rotation )
-    
+        stim_trans_dict['rotation'] = np.linspace(*rotation)
     # get all dimensions, into a dict
     stim_trans_cart_dict = dm.cartesian_prod_dicts_lists( stim_trans_dict )
- 
     return stim_trans_cart_dict, stim_trans_dict
-         
 
-    
-
-def load_npy_img_dirs_into_stack( img_dir ):
+def load_npy_img_dirs_into_stack(img_dir):
     #given a directory, loads all the npy images in it, into a stack.
     stack_descriptor_dict = {}
     img_names = dm.load_sorted_dir_numbered_fnms_with_particular_extension( img_dir , 'npy')
@@ -157,118 +143,66 @@ def load_npy_img_dirs_into_stack( img_dir ):
     
     #to do, some descriptor of the images for provenance: commit and input params for base shape gen
     #stack_descriptor_dict['base_shape_gen_inputs'] = [ img_dir + img_name for img_name in img_names ]
-
     return stack, stack_descriptor_dict
 
 
 def net_resp_2d_to_xray_nd(net_resp, stim_trans_dict, indices_for_net_unit_vec):
-    
-    
+    '''your net_resp will be in 2-d (unitXimage), this function takes into acount
+    the stim_trans_dict to organize your responses according to the dimensions 
+    transformation
+    '''
     #get the dimensions of the stimuli in order.
-    dims = tuple([ len( stim_trans_dict[key] ) for key in stim_trans_dict ] ) + tuple( [net_resp.shape[1],])
-    
+    dims = tuple([len( stim_trans_dict[key]) for key in stim_trans_dict]) + tuple([net_resp.shape[1],])
     #reshape into net_resp_xray
-    #this working is dependent on cartesian producing A type cartesian (last index element changes fastest)
-    net_resp_xray = np.reshape( net_resp, dims )
-
+    #this working is dependent on cartesian producing A type cartesian 
+    #(last index element changes fastest)
+    net_resp_xray_vals = np.reshape(net_resp, dims)
     net_dims = [key for key in stim_trans_dict] + ['unit',]
-
-    net_coords =[stim_trans_dict[key] for key in stim_trans_dict] + [range( dims[-1] ),]
-
-    
-    da = xr.DataArray( net_resp_xray, coords = net_coords , dims = net_dims )
+    net_coords =[stim_trans_dict[key] for key in stim_trans_dict] + [range(dims[-1])]
+    da = xr.DataArray(net_resp_xray_vals, coords=net_coords, dims=net_dims)
     
     # adding extra coordinates using indices_for_net_unit_vec
     d = indices_for_net_unit_vec 
     da['layer'] = ('unit', d['layer_ind'])
     da['layer_unit'] = ('unit', d['layer_unit_ind'])
-    layer_label = [ d['layer_names'][ int( layer_num ) ] for layer_num  in d['layer_ind'] ]
+    layer_label = [d['layer_names'][int(layer_num)] for layer_num in d['layer_ind']]
     da['layer_label'] = ('unit', layer_label)
         
     return da
 
-
-import matplotlib.pyplot as plts
-
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-cwd = os.path.dirname(dname)
-sys.path.append( cwd)
-
-#choose a library of images
-baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
-base_image = baseImageList[0] 
-
-
-img_dir = cwd + '/images/baseimgs/' + base_image +'/'  
-dir_filenames = os.listdir(img_dir)
+def get_net_resp(base_image_nm, ann_dir, ann_fn, stim_trans_cart_dict,
+                 require_provenance=True):   
+    img_dir = cwd+'/images/baseimgs/'+base_image_nm+'/'  
+    base_stack, stack_desc = imp.load_npy_img_dirs_into_stack(img_dir) 
+    dir_filenames = os.listdir(img_dir)
+    #get the current sha from the file
+    for name in dir_filenames:
+        if 'sha1.pickle' in name:
+            with open(img_dir + name, 'rb') as f:
+                image_sha = pickle.load(f)            
     
-    #remove existing files
-for name in dir_filenames:
-    if 'sha1.pickle' in name:
-        with open( img_dir + name, 'rb') as f:
-            image_sha = pickle.load( f)
-
-
-stack, stack_desc = imp.load_npy_img_dirs_into_stack( img_dir )
-
-#lets think about provenance now, and make this a little bit more flexible
-stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
-
-blur = None, scale =None,  x = (-50,50,101), y = None, rotation = None)
-
-                             
-#stim_trans_cart_dict, stim_trans_dict = stim_idprestrans_generator(shapes = range(370), 
-#                              blur =(0.25,1000,5), scale =None,  x = (-50,50, 101), y = None, rotation = None)
-#                                                          
-
-#trans_stack = imp.imgStackTransform( stim_trans_cart_dict, stack )
-xray_desc_name = 'caffenet_train_iter_10000'
-for key in stim_trans_dict:
-    xray_desc_name = xray_desc_name + '_' + key +  '_' +  str(np.min(stim_trans_dict[key])) \
-    + '_' + str(np.max(stim_trans_dict[key])) + '_' +  str(len(stim_trans_dict[key]))
-
-xray_desc_name = base_image + xray_desc_name + '.nc'    
-
-
-import caffe
-caffe.set_mode_gpu()
-
-#get the response from the given net
-ANNDir = '/home/dean/caffe/models/bvlc_reference_caffenet/'
-
-ANNFileName='caffenet_train_iter_10000.caffemodel'
-
-net = caffe.Net(ANNDir+'deploy.prototxt', ANNDir+ANNFileName, caffe.TEST)
-
-
-'''
-net = caffe.Net(ANNDir+'deploy.prototxt',ANNDir+ANNFileName, caffe.TEST)
-s = ['conv1', 'conv2', 'conv3', 'conv4',  'conv5',  'fc6', 'fc7', 'fc8'   ]
-b = [ net.params[name][1].data for name in s]
-w = [ net.params[name][0].data for name in s]
-
-import pickle
-pickle.dump( (w,b), open( "alexNetWeights.p", "wb" ) )
-'''
-
-net_resp = identity_preserving_transform_resp( stack, stim_trans_cart_dict, net)
-
-indices_for_net_unit_vec = get_indices_for_net_unit_vec( net )   
-
-da = net_resp_2d_to_xray_nd( net_resp, stim_trans_dict, indices_for_net_unit_vec )
-
-response_file = cwd + '/responses/' + xray_desc_name
-
-require_provenance = True
-ds = xr.Dataset({'resp': da})
-
-if require_provenance == True:
-    #commit the state of the directory and get is sha identification
-    sha = dm.provenance_commit(cwd)
-    ds.attrs['resp_sha'] =sha
-    ds.attrs['img_sha'] = image_sha
-
+    import caffe
+    caffe.set_mode_gpu()
+    net = caffe.Net(ann_dir + 'deploy.prototxt', ann_dir + ann_fn + '.caffemodel', caffe.TEST)
     
-ds.to_netcdf(response_file)
+    net_resp = identity_preserving_transform_resp(base_stack, stim_trans_cart_dict, net)
+    indices_for_net_unit_vec = get_indices_for_net_unit_vec(net)   
+    da = net_resp_2d_to_xray_nd(net_resp, stim_trans_dict, indices_for_net_unit_vec)
+
+    if require_provenance == True:
+        #commit the state of the directory and get is sha identification
+        sha = dm.provenance_commit(cwd)
+        da.attrs['resp_sha'] = sha
+        da.attrs['img_sha'] = image_sha
+    
+    return da
+
+def get_net_resp_name(stim_trans_dict, ann_fn, base_image_nm):
+    #base resp name off of net
+    xray_desc_name = ann_fn
+    for key in stim_trans_dict:
+        xray_desc_name = xray_desc_name +'_'+ key +'_'+  str(np.min(stim_trans_dict[key])) \
+        +'_'+ str(np.max(stim_trans_dict[key])) +'_'+  str(len(stim_trans_dict[key]))
+
+    xray_desc_name = base_image_nm + xray_desc_name + '.nc'
 

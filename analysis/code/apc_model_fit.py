@@ -79,8 +79,8 @@ minAngSD = np.deg2rad(23)
 maxCurSD = 0.98
 minCurSD = 0.09
 
-nMeans = 4
-nSD = 4
+nMeans = 16
+nSD = 16
 
 #make this into a pyramid based on d-prime
 orMeans = np.linspace( 0, 2*np.pi-2*np.pi / nMeans , nMeans )

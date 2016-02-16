@@ -4,27 +4,15 @@ Created on Thu Jan 21 14:54:30 2016
 
 @author: dean
 """
-import numpy as np
 
-
-import pandas as pd
-import matplotlib.pyplot as plt
 import os, sys
-import dask.array as d
-import seaborn as sns
 
 top_dir = os.getcwd().split('net_code')[0] + 'net_code/'
 sys.path.append(top_dir)
 sys.path.append( top_dir + '/xarray')
-
 import xarray as xr
 import d_misc as dm
 
-
-#dm = dm.sel(models = range(100))
-
-#using xray
-#
 def cor_resp_to_model(da, dmod, fn,fit_over_dims = None):
     #typically takes da, data, and dm, a set of linear models, an fn to write to,
     #and finally fit_over_dims which says over what dims is a models fit supposed to hold.
@@ -36,12 +24,12 @@ def cor_resp_to_model(da, dmod, fn,fit_over_dims = None):
     proj_resp_on_model = da.dot(dmod)
 
     if not fit_over_dims == None:
-            resp_norm = resp_n.vnorm(fit_over_dims)
-            proj_resp_on_model_var = proj_resp_on_model.sum(fit_over_dims)
-            n_over = 0
-            #count up how many unit vectors you'll be applying for each r.
-            for dim in fit_over_dims:
-                n_over = n_over + len(da.coords[dim].values)
+        resp_norm = resp_n.vnorm(fit_over_dims)
+        proj_resp_on_model_var = proj_resp_on_model.sum(fit_over_dims)
+        n_over = 0
+        #count up how many unit vectors you'll be applying for each r.
+        for dim in fit_over_dims:
+            n_over = n_over + len(da.coords[dim].values)
     else:
         resp_norm =  resp_n
         proj_resp_on_model_var = proj_resp_on_model

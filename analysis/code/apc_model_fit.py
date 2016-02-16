@@ -103,4 +103,4 @@ sha = dm.provenance_commit(top_dir)
 dam.attrs['resp_sha'] = sha
 
 ds = xr.Dataset({'resp': dam})
-ds.to_netcdf( top_dir +'/responses/apc_models.nc')
+ds.to_netcdf( top_dir +'responses/apc_models.nc')

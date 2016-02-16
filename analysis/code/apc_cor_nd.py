@@ -20,22 +20,12 @@ sys.path.append( top_dir + '/xarray')
 import xarray as xr
 import d_misc as dm
 
-dmod = xr.open_dataset(top_dir + '/data/models/apc_models.nc',chunks = {'models': 1000, 'shapes': 370}  )
-da = xr.open_dataset( top_dir + '/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
-
-
-
-dmod = dmod.sel(models = range(1000), method = 'nearest' )
-#unitsel = np.arange(0, da.dims['unit'], 1000)
-#da = da.sel(unit = unitsel, method = 'nearest' )
-##xsel = np.arange(-da.dims['x'] / 10., da.dims['x'] / 10., 2 )
-da = da.sel(x = [0 , 1], method = 'nearest' )
 
 #dm = dm.sel(models = range(100))
 
 #using xray
 #
-def cor_apc_model(da, dmod, fn,fit_over_dims = None):
+def cor_resp_to_model(da, dmod, fn,fit_over_dims = None):
     #typically takes da, data, and dm, a set of linear models, an fn to write to,
     #and finally fit_over_dims which says over what dims is a models fit supposed to hold.
 
@@ -68,7 +58,14 @@ def cor_apc_model(da, dmod, fn,fit_over_dims = None):
 
     return cor
 
-cor = cor_apc_model(da, dmod, fn = 'test_new_model_fit', fit_over_dims = ('x',))
+
+dmod = xr.open_dataset(top_dir + 'analysis/data/models/apc_models.nc',chunks = {'models': 1000, 'shapes': 370}  )
+da = xr.open_dataset( top_dir + 'analysis/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
+
+dmod = dmod.sel(models = range(1000), method = 'nearest' )
+da = da.sel(x = [0 , 1], method = 'nearest' )
+
+cor = cor_resp_to_model(da, dmod, fn = 'test_new_model_fit', fit_over_dims = ('x',))
 
 #cwd + '/responses/apc_models_r_trans1.nc')
 

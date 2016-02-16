@@ -53,7 +53,7 @@ def cor_resp_to_model(da, dmod, fn,fit_over_dims = None):
 
     sha = dm.provenance_commit(top_dir)
     cor.attrs['analysis'] = sha
-    cor.attrs['model'] = dmod.attrs['model']
+    cor.attrs['model'] = dmod['resp'].attrs['model']
     cor.to_dataset(name='r').to_netcdf(fn)
 
     return cor

@@ -16,15 +16,15 @@ base_image_nm = baseImageList[0]
 stim_trans_cart_dict, stim_trans_dict = cf.stim_trans_generator(shapes=range(370),
                                                              blur=None,
                                                              scale =None,
-                                                             x=(-50, 50, 101),
+                                                             x=(-50, 50, 10),
                                                              y=None,
                                                              rotation = None)
 
 for train_iter in range(10000,990000,50000):
     ann_fn = 'caffenet_train_iter_'
 
-    da = cf.get_net_resp(base_image_nm, ann_dir, ann_fn + str(train_iter), stim_trans_cart_dict,
-                 require_provenance=True)
+    da = cf.get_net_resp(base_image_nm, ann_dir, ann_fn + str(train_iter), 
+                         stim_trans_cart_dict, stim_trans_dict, require_provenance=True)
     ds = da.to_dataset(name = 'resp')
     ds.to_netcdf(top_dir + 'analysis/data/iter_' + str(train_iter) + '.nc')
 

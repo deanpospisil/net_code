@@ -20,11 +20,8 @@ sys.path.append( top_dir + '/xarray')
 import xarray as xr
 import d_misc as dm
 
-dmod = xr.open_dataset(cwd +'/data/apc_models.nc',chunks = {'models': 1000, 'shapes': 370}  )
-#da = xr.open_dataset( cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-100.0_100.0_201.nc',chunks = {'unit': 100, 'x': 100} )
-#da = xr.open_dataset( cwd +'/responses/PC370_shapes_0.0_369.0_370.nc',chunks = {'unit': 100}  )
-#da = xr.open_dataset( cwd +'/responses/PC370_shapes_matlab.nc',chunks = {'unit': 100}  )
-da = xr.open_dataset( cwd +'/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
+dmod = xr.open_dataset(top_dir +'/data/apc_models.nc',chunks = {'models': 1000, 'shapes': 370}  )
+da = xr.open_dataset( top_dir +'/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
 
 
 

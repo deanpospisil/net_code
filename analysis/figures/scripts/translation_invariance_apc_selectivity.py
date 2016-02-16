@@ -5,6 +5,9 @@ Created on Sun Feb 14 18:03:36 2016
 @author: deanpospisil
 """
 
+import os, sys
+top_dir = os.getcwd().split('net_code')[0] + 'net_code/'
+sys.path.append(top_dir + 'xarray')
 import xarray as xr
 import os
 import seaborn as sns

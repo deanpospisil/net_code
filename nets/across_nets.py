@@ -21,7 +21,7 @@ da = cf.get_net_resp(base_image_nm, ann_dir, ann_fn, stim_trans_cart_dict,
                  require_provenance=True)
 
 resp_name = cf.get_net_resp_name(stim_trans_dict, ann_fn, base_image_nm)
-
+'''
 #then you will need to concatenate them into one dataset
 def read_netcdfs(files, dim):
     # glob expands paths with * to a list of files, like the unix shell
@@ -29,3 +29,4 @@ def read_netcdfs(files, dim):
     datasets = [xr.open_dataset(p) for p in paths]
     combined = xr.concat(dataset, dim)
     return combined
+'''

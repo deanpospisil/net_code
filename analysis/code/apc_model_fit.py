@@ -98,6 +98,7 @@ model_params_dict = dm.cartesian_prod_dicts_lists( model_params_dict )
 model_resp = apc_models( shape_dict_list = shape_dict_list, model_params_dict = model_params_dict)
 
 dam =xr.DataArray(model_resp, dims = ['shapes', 'models'])
+
 sha = dm.provenance_commit(top_dir)
 dam.attrs['resp_sha'] = sha
 

@@ -16,4 +16,13 @@ da = xr.open_dataset( top_dir + 'analysis/data/PC370_shapes_0.0_369.0_370_x_-50.
 d_da= da['resp'].data
 
 d_da.shape
-u, s, v = dk.array.linalg.svd(d_da[:,:,1])
+
+ti_ind_arr= dk.array()
+
+for unit in range(d_da.shape[2]):
+    u, s, v = dk.array.linalg.svd(d_da[:,:,unit])
+    ti_ind = dk.array.from_array(dk[0]/sum(s))
+    ti_ind_arr
+
+
+

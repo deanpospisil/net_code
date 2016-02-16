@@ -4,83 +4,56 @@ Created on Thu Jan 21 14:54:30 2016
 
 @author: dean
 """
-import numpy as np
 
-
-import pandas as pd
-import matplotlib.pyplot as plt
 import os, sys
-import dask.array as d
-import seaborn as sns
 
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-cwd = os.path.dirname(dname)
-sys.path.append( cwd)
-sys.path.append( cwd + '/xarray')
+top_dir = os.getcwd().split('net_code')[0] + 'net_code/'
+sys.path.append(top_dir)
+sys.path.append( top_dir + '/xarray')
 import xarray as xr
+import d_misc as dm
 
+def cor_resp_to_model(da, dmod, fn,fit_over_dims = None):
+    #typically takes da, data, and dm, a set of linear models, an fn to write to,
+    #and finally fit_over_dims which says over what dims is a models fit supposed to hold.
 
-''
-dm = xr.open_dataset(cwd +'/responses/apc_models.nc',chunks = {'models': 1000, 'shapes': 370}  )
-#da = xr.open_dataset( cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-100.0_100.0_201.nc',chunks = {'unit': 100, 'x': 100} )
-#da = xr.open_dataset( cwd +'/responses/PC370_shapes_0.0_369.0_370.nc',chunks = {'unit': 100}  )
-#da = xr.open_dataset( cwd +'/responses/PC370_shapes_matlab.nc',chunks = {'unit': 100}  )
-da = xr.open_dataset( cwd +'/responses/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
-da = xr.open_dataset( cwd +'/responses/PC370caffenet_train_iter_10000_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
+    da = da['resp'] - da['resp'].mean(('shapes'))
+    dmod = dmod['resp']
 
+    resp_n = da.vnorm(('shapes'))
+    proj_resp_on_model = da.dot(dmod)
 
+    if not fit_over_dims == None:
+        resp_norm = resp_n.vnorm(fit_over_dims)
+        proj_resp_on_model_var = proj_resp_on_model.sum(fit_over_dims)
+        n_over = 0
+        #count up how many unit vectors you'll be applying for each r.
+        for dim in fit_over_dims:
+            n_over = n_over + len(da.coords[dim].values)
+    else:
+        resp_norm =  resp_n
+        proj_resp_on_model_var = proj_resp_on_model
+        n_over = 1s
 
-#dm = dm.sel(models = range(100), method = 'nearest' )
-#unitsel = np.arange(0, da.dims['unit'], 1000)
-#da = da.sel(unit = unitsel, method = 'nearest' )
-##xsel = np.arange(-da.dims['x'] / 10., da.dims['x'] / 10., 2 )
-#da = da.sel(x = [ 0 ], method = 'nearest' )
+    all_cor = (proj_resp_on_model_var) / (resp_norm*(n_over**0.5))
 
-#dm = dm.sel(models = range(100))
+    cor = all_cor.max('models').load()
 
-#using xray
+    sha = dm.provenance_commit(top_dir)
+    cor.attrs['analysis'] = sha
+    cor.attrs['model'] = dmod.attrs['model']
+    cor.to_dataset(name='r').to_netcdf(fn)
 
-'''
-'''
-da = da['resp'] - da['resp'].mean(('shapes'))
-dm = dm['resp']
-
-resp_n =  da.vnorm(('shapes'))
-proj_resp_on_model = da.dot(dm)
-
-if 'x' in da.dims:
-    resp_norm =  resp_n.vnorm(('x'))
-    proj_resp_on_model_norm =  proj_resp_on_model.sum(('x'))
-    n_x = len(da.coords['x'].values)
-else:
-    resp_norm =  resp_n
-    proj_resp_on_model_norm = proj_resp_on_model
-    n_x = 1
-    
-all_cor = (proj_resp_on_model_norm) / (resp_norm*(n_x**0.5))
-
-cor = all_cor.max('models')
-
-cor.to_dataset('cor').to_netcdf( cwd + '/responses/apc_models_r_trans1.nc')
-
-'''
-imtype = '.eps'
-
-fname = 'apc_models_r_trans101_earlyiter'
-fitm = xr.open_dataset(cwd +'/responses/' + fname + '.nc' )
-b = fitm.to_dataframe()
-b.set_index(['layer_unit', 'layer'], append=True, inplace=True)
+    return cor
 
 
 
-sns.boxplot(x="layer_label", y="cor", data=b)
+dmod = xr.open_dataset(top_dir + 'analysis/data/models/apc_models.nc',chunks = {'models': 1000, 'shapes': 370}  )
+da = xr.open_dataset( top_dir + 'analysis/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
 
-fillb = b.fillna(0)
+dmod = dmod.sel(models = range(1000), method = 'nearest' )
+da = da.sel(x = [0 , 1], method = 'nearest' )
 
-per = b[b>0.5].groupby('layer_label', sort=False).count()/fillb.groupby('layer_label', sort=False).count()
-per.plot(kind = 'bar')
-plt.ylim((0,1))
-plt.title('Percent units > 0.5 Correlation')
+cor = cor_resp_to_model(da, dmod, fn = 'test_new_model_fit', fit_over_dims = ('x',))
 
-plt.savefig(fname=(fname + '_p>5' + imtype ))
+

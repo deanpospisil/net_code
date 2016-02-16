@@ -20,8 +20,8 @@ sys.path.append( top_dir + '/xarray')
 import xarray as xr
 import d_misc as dm
 
-dmod = xr.open_dataset(top_dir +'/data/apc_models.nc',chunks = {'models': 1000, 'shapes': 370}  )
-da = xr.open_dataset( top_dir +'/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
+dmod = xr.open_dataset(top_dir + '/data/models/apc_models.nc',chunks = {'models': 1000, 'shapes': 370}  )
+da = xr.open_dataset( top_dir + '/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
 
 
 
@@ -64,7 +64,7 @@ def cor_apc_model(da, dmod, fn,fit_over_dims = None):
     sha = dm.provenance_commit(top_dir)
     cor.attrs['analysis'] = sha
     cor.attrs['model'] = dmod.attrs['model']
-    cor.to_dataset(name = 'r').to_netcdf(fn)
+    cor.to_dataset(name='r').to_netcdf(fn)
 
     return cor
 

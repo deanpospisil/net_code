@@ -17,7 +17,7 @@ def cor_resp_to_model(da, dmod, fn, fit_over_dims = None):
     #typically takes da, data, and dm, a set of linear models, an fn to write to,
     #and finally fit_over_dims which says over what dims is a models fit supposed to hold.
 
-    da = da['resp'] - da['resp'].mean(('shapes'))
+    da = da - da.mean(('shapes'))
     dmod = dmod['resp']
 
     resp_n = da.vnorm(('shapes'))
@@ -47,12 +47,13 @@ def cor_resp_to_model(da, dmod, fn, fit_over_dims = None):
     return cor
 
 
-"""
 dmod = xr.open_dataset(top_dir + 'analysis/data/models/apc_models.nc',chunks = {'models': 1000, 'shapes': 370}  )
-da = xr.open_dataset( top_dir + 'analysis/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
+#da = xr.open_dataset( top_dir + 'analysis/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
 dmod = dmod.sel(models = range(1000), method = 'nearest' )
-da = da.sel(x = [0 , 1], method = 'nearest' )
+ds = xr.open_mfdataset(top_dir + 'analysis/data/iter_*.nc', concat_dim = 'iter', chunks = {'unit':100, 'shapes': 370})
+da = ds.to_array()
+#da = da.sel(x = [0 , 1], method = 'nearest' )
 cor = cor_resp_to_model(da, dmod, fn = 'test_new_model_fit', fit_over_dims = ('x',))
-"""
+
 
 

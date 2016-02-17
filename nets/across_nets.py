@@ -15,7 +15,8 @@ baseImageList = ['PC370', 'formlet']
 base_image_nm = baseImageList[0]
 
 ann_fn = 'caffenet_train_iter_'
-#get stimuli list
+
+
 stim_trans_cart_dict, stim_trans_dict = cf.stim_trans_generator(shapes=range(370),
                                                              blur=None,
                                                              scale =None,
@@ -23,26 +24,13 @@ stim_trans_cart_dict, stim_trans_dict = cf.stim_trans_generator(shapes=range(370
                                                              y=None,
                                                              rotation = None)
 
-'''
 for train_iter in range(10000,990000,50000):
 
     da = cf.get_net_resp(base_image_nm, ann_dir, ann_fn + str(train_iter), 
                          stim_trans_cart_dict, stim_trans_dict, require_provenance=True)
     ds = da.to_dataset(name = 'resp')
     ds.to_netcdf(top_dir + 'analysis/data/iter_' + str(train_iter) + '.nc')
-'''
 
 resp_name = cf.get_net_resp_name(stim_trans_dict, ann_fn, base_image_nm)
-iter_ind = range(10000, 990000, 50000)
-
-foo = []
-for i, train_iter in enumerate(iter_ind):
-    fn = top_dir + 'analysis/data/iter_' + str(train_iter) + '.nc'
-    foo.append(xr.open_dataset(fn, chunks = {'unit':100, 'shapes': 370})['resp'])
-
-indArr = xr.DataArray(iter_ind, name='train_iter')
-over_iter = xr.concat(foo, indArr)
-ds = over_iter.to_dataset(name = 'resp')
-ds.to_netcdf(top_dir + 'analysis/data/' + 'train_iter_' + resp_name)
 
 

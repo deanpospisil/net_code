@@ -21,8 +21,7 @@ ti_ind_arr= dk.array
 
 for unit in range(d_da.shape[2]):
     u, s, v = dk.array.linalg.svd(d_da[:,:,unit])
-    ti_ind = dk.array.from_array(s[0]/sum(s), chunks={})
-    ti_ind_arr.stack(ti_ind)
+    ti_ind_arr.stack(s)
 
 
 

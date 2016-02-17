@@ -13,7 +13,7 @@ sys.path.append(top_dir)
 import d_img_process as imp
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-
+'''
 #first get an imageset
 #img_dir = top_dir + 'images/baseimgs/PC370/'
 #stack, stack_descriptor_dict = imp.load_npy_img_dirs_into_stack(img_dir)
@@ -38,8 +38,25 @@ while not beg == cur:
     aind = [ (shifts[0]+cur[0], shifts[1] + cur[1]) for shifts in around if shifts[0]+cur[0]>=0 and shifts[1]+cur[1]>=0  ]
     beg = aind[ np.argmax([im[i] for i in aind if not im[i]==last])]
     line.append(beg)
+'''
+pix_ref = np.array([3, 3])
+pix_n = np.array([4, 3])
+cmplx = np.array([1, 1j])
 
+pix_dir = pix_ref - pix_n
 
+ang = np.angle(np.sum(pix_dir*cmplx))
+
+print np.rad2deg(ang)
+
+radius = 5
+arclen = np.pi/2
+npoints = 10
+shifts = np.exp(np.linspace(-arclen/2, arclen/2, npoints)*1j)
+center = np.exp(ang*1j)*-1 #rotate by 180 degrees
+cpoints = radius*(shifts*center)
+
+rpoints = np.array([np.real(cpoints), np.imag(cpoints)]).T
 
 
 

@@ -52,11 +52,17 @@ print np.rad2deg(ang)
 radius = 5
 arclen = np.pi/2
 npoints = 10
-shifts = np.exp(np.linspace(-arclen/2, arclen/2, npoints)*1j)
-center = np.exp(ang*1j)*-1 #rotate by 180 degrees
-cpoints = radius*(shifts*center)
 
-rpoints = np.array([np.real(cpoints), np.imag(cpoints)]).T
+def pixel_arc(pix_ref, pix_n, radius, arclen, npoints):
+    cmplx = np.array([1, 1j])
+    pix_dir = pix_ref - pix_n
+    ang = np.angle(np.sum(pix_dir*cmplx))
+
+    shifts = np.exp(np.linspace(-arclen/2, arclen/2, npoints)*1j)
+    center = np.exp(ang*1j)*-1 #rotate by 180 degrees
+    cpoints = radius*(shifts*center)
+    rpoints = np.array([np.real(cpoints), np.imag(cpoints)]).T
+    return rpoints
 
 
 

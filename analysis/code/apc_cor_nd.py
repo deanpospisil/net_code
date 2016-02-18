@@ -42,6 +42,7 @@ def cor_resp_to_model(da, dmod, fn, fit_over_dims = None):
     sha = dm.provenance_commit(top_dir)
     cor.attrs['analysis'] = sha
     cor.attrs['model'] = dmod.attrs['model']
+    print(fn)
     cor.to_dataset(name='r').to_netcdf(fn)
 
     return cor
@@ -49,11 +50,12 @@ def cor_resp_to_model(da, dmod, fn, fit_over_dims = None):
 
 dmod = xr.open_dataset(top_dir + 'analysis/data/models/apc_models.nc',chunks = {'models': 1000, 'shapes': 370}  )
 #da = xr.open_dataset( top_dir + 'analysis/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
-dmod = dmod.sel(models = range(1000), method = 'nearest' )
-ds = xr.open_mfdataset(top_dir + 'analysis/data/iter_*.nc', concat_dim = 'iter', chunks = {'unit':100, 'shapes': 370})
-da = ds.to_array()
-#da = da.sel(x = [0 , 1], method = 'nearest' )
-cor = cor_resp_to_model(da, dmod, fn = 'test_new_model_fit', fit_over_dims = ('x',))
+#dmod = dmod.sel(models = range(1000), method = 'nearest' )
+ds = xr.open_mfdataset(top_dir + 'analysis/data/iter_*.nc', concat_dim = 'niter', chunks = {'unit':100, 'shapes': 370})
+da = ds.to_array().chunk(chunks = {'niter':1, 'unit':100, 'shapes': 370})
+for iterind in range(da.niter.shape[0]):
+    da_c = da.sel(niter=[iterind])
+    cor = cor_resp_to_model(da, dmod, fn = 'test_new_model_fit_' + str(iterind), fit_over_dims = ('x',))
 
 
 

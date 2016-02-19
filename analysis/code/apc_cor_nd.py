@@ -63,6 +63,6 @@ for iterind in da.niter.values:
     cor = cor_resp_to_model(da_c, dmod, fit_over_dims = ('x',))
     cor.to_dataset(name='r').to_netcdf(top_dir + 'analysis/data/r_iter_' + str(iterind) + '.nc')
 
-ds = xr.open_mfdataset(top_dir + 'analysis/data/r_iter_*.nc', concat_dim = 'niter')
+ds = xr.open_mfdataset(top_dir + 'analysis/data/r_iter_*', concat_dim = 'niter')
 ds.to_netcdf(top_dir + 'analysis/data/r_iter_total_' + str(da.niter.shape[0]) +  '.nc')
 

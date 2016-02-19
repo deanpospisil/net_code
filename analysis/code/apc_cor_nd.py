@@ -54,7 +54,7 @@ dmod = xr.open_dataset(top_dir + 'analysis/data/models/apc_models.nc',chunks = {
 ds = xr.open_mfdataset(top_dir + 'analysis/data/iter_*.nc', concat_dim = 'niter', chunks = {'unit':100, 'shapes': 370})
 da = ds.to_array().chunk(chunks = {'niter':1, 'unit':100, 'shapes': 370})
 da = da.sel(x = np.linspace(-50, 50, 25), method = 'nearest' )
-da = da.sel(niter = np.linspace(0, da.coords['niter'].shape[0], 5),  method = 'nearest')
+da = da.sel(niter = np.linspace(0, da.coords['niter'].shape[0], 10),  method = 'nearest')
 #da = da.sel(unit = range(10),  method = 'nearest')
 
 

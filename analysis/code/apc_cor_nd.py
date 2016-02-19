@@ -33,7 +33,7 @@ def cor_resp_to_model(da, dmod, fn, fit_over_dims = None):
     else:
         resp_norm =  resp_n
         proj_resp_on_model_var = proj_resp_on_model
-        n_over = 1
+        n_over = 1s
 
     all_cor = (proj_resp_on_model_var) / (resp_norm*(n_over**0.5))
 
@@ -53,9 +53,10 @@ dmod = xr.open_dataset(top_dir + 'analysis/data/models/apc_models.nc',chunks = {
 #dmod = dmod.sel(models = range(1000), method = 'nearest' )
 ds = xr.open_mfdataset(top_dir + 'analysis/data/iter_*.nc', concat_dim = 'niter', chunks = {'unit':100, 'shapes': 370})
 da = ds.to_array().chunk(chunks = {'niter':1, 'unit':100, 'shapes': 370})
-for iterind in range(da.niter.shape[0]):
-    da_c = da.sel(niter=[iterind])
-    cor = cor_resp_to_model(da, dmod, fn = 'test_new_model_fit_' + str(iterind), fit_over_dims = ('x',))
+
+#for iterind in range(da.niter.shape[0]):
+#    da_c = da.sel(niter=[iterind])
+#    cor = cor_resp_to_model(da, dmod, fn = 'test_new_model_fit_' + str(iterind), fit_over_dims = ('x',))
 
 
 

@@ -67,8 +67,14 @@ def trace_edge(im, scale, radius, arclen, npts = 100, maxlen = 1000):
 #stack, stack_descriptor_dict = imp.load_npy_img_dirs_into_stack(img_dir)
 #im = stack[0,:,:]
 im = np.load('/Users/dean/Desktop/Modules/net_code/images/baseimgs/formlet/1.npy')
-scale = 10
-line,d = trace_edge(im, scale, radius=5, arclen=np.pi/1.5, npts = 100, maxlen = 2000)
+scale = 1.
+radius = 1.
+
+effective_radius = radius/scale
+arc_len = 2*np.arcsin(effective_radius)
+print(np.rad2deg(arc_len))
+
+line,d = trace_edge(im, scale, radius, arc_len, npts = 100, maxlen = 2000)
 cmplx = np.array([1, 1j])
 
 

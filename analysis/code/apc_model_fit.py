@@ -6,8 +6,6 @@ Created on Wed Jan  6 18:28:57 2016
 """
 
 # analysis
-from collections import OrderedDict as ordDict
-import scipy.io as  l
 import scipy.stats as st
 import numpy as np
 import warnings
@@ -72,7 +70,7 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
 
     return model_resp
 
-shape_dict_list = pickle.load( open( top_dir + 'images/baseimgs/PC370/PC370_params.p', 'r')  )
+shape_dict_list = pickle.load( open(top_dir + 'images/baseimgs/PC370/PC370_params.p', 'r')  )
 
 maxAngSD = np.deg2rad(171)
 minAngSD = np.deg2rad(23)

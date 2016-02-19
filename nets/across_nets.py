@@ -23,13 +23,14 @@ stim_trans_cart_dict, stim_trans_dict = cf.stim_trans_generator(shapes=range(370
                                                              x=(-50, 50, 101),
                                                              y=None,
                                                              rotation = None)
-'''
+
 for train_iter in range(10000,990000,50000):
 
-    da = cf.get_net_resp(base_image_nm, ann_dir, ann_fn + str(train_iter), stim_trans_cart_dict,
-                 require_provenance=True)
+    da = cf.get_net_resp(base_image_nm, ann_dir, ann_fn + str(train_iter), 
+                         stim_trans_cart_dict, stim_trans_dict, require_provenance=True)
     ds = da.to_dataset(name = 'resp')
     ds.to_netcdf(top_dir + 'analysis/data/iter_' + str(train_iter) + '.nc')
+
 
 '''
 
@@ -51,5 +52,6 @@ ds = xr.auto_combine(foo, concat_dim = 'iter')
 
 #over_iter = xr.open_mfdataset(top_dir + 'analysis/data/iter_*.nc', concat_dim = 'iter', chunks = {'unit':100, 'shapes': 370, 'iter':1})
 
+'''
 
 

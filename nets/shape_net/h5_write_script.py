@@ -18,9 +18,17 @@ data = np.zeros((img_width, img_width, n_imgs))
 targets = np.ones((n_imgs, nunits))
 
 
-with h5py.File(top_dir + 'images/imagedb/solver_data.h5', 'w') as f:
+with h5py.File(top_dir + 'images/imagedb/train_data.h5', 'w') as f:
     f['data'] = data
-    f['targets'] = targets
+    f['label'] = targets
 
-with open(top_dir + 'images/imagedb/solver_data_list.txt', 'w') as f:
-    f.write(top_dir + 'images/imagedb/solver_data.h5\n' )
+with open(top_dir + 'images/imagedb/train_data_list.txt', 'w') as f:
+    f.write(top_dir + 'images/imagedb/train_data.h5\n' )
+    
+    
+with h5py.File(top_dir + 'images/imagedb/test_data.h5', 'w') as f:
+    f['data'] = data
+    f['label'] = targets
+
+with open(top_dir + 'images/imagedb/test_data_list.txt', 'w') as f:
+    f.write(top_dir + 'images/imagedb/test_data.h5\n' )

@@ -7,11 +7,6 @@ layer {
   include {
     phase: TRAIN
   }
-  transform_param {
-    mirror: false
-    crop_size: 64
-  }
-
   hdf5_data_param {
     source: "/home/dean/Desktop/net_code/nets/shape_net/train_data_list.txt"
     batch_size: 20
@@ -25,10 +20,6 @@ layer {
   top: "label"
   include {
     phase: TEST
-  }
-  transform_param {
-    mirror: false
-    crop_size: 64
   }
   hdf5_data_param {
     source: "/home/dean/Desktop/net_code/nets/shape_net/test_data_list.txt"

@@ -84,7 +84,7 @@ layer {
 layer {
   name: "conv2"
   type: "Convolution"
-  bottom: "norm1"
+  bottom: "pool1"
   top: "conv2"
   param {
     lr_mult: 1

@@ -17,6 +17,7 @@ layer {
     batch_size: 20
   }
 }
+
 layer {
   name: "data"
   type: "HDF5Data"
@@ -62,6 +63,7 @@ layer {
     }
   }
 }
+
 layer {
   name: "relu1"
   type: "ReLU"
@@ -78,7 +80,7 @@ layer {
     kernel_size: 4
     stride: 0
   }
-
+}
 layer {
   name: "conv2"
   type: "Convolution"

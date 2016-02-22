@@ -19,51 +19,39 @@ sys.path.append( cwd)
 import d_curve as dc
 import d_misc as dm
 import d_img_process as imp
-
+from scipy import ndimage
 
 def boundaryToMat(boundary, n_pix_per_side = 227, fill = True, frac_of_img=1 ):
     n_pix_per_side_old = n_pix_per_side
     if fracOfImage > 1:
-
         n_pix_per_side = round(n_pix_per_side*frac_of_img)
-
     plt.close('all')
     inchOverPix = 2.84/227. #this happens to work because of the dpi of my current screen. 1920X1080
     inches = inchOverPix*n_pix_per_side
-
     if inches<0.81:
         print( 'inches < 0.81, needed to resize')
         tooSmall = True
         inches = 0.85
 
     fig = plt.figure(figsize = ( inches, inches ))#min size seems to be 0.81 in the horizontal, annoying
-
     plt.axis( 'off' )
     plt.gca().set_xlim([-1, 1])
     plt.gca().set_ylim([-1, 1])
-
     if fill is True:
         line = plt.Polygon(boundary, closed=True, fill='k', edgecolor='none',fc='k')
     else:
         line = plt.Polygon(boundary, closed=True, fill='k', edgecolor='k',fc='w')
-
     plt.gca().add_patch(line)
-
     fig.canvas.draw()
-
     data1 = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
     data2 = data1.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-
 
     data2[data2 == data2[0,0,0]] = 255
     ima = - (data2 - 255)[:,:,0]
     ima = imp.centeredCrop(ima, n_pix_per_side_old, n_pix_per_side_old)
-
     if (not np.size( ima, 0 ) == n_pix_per_side_old) or (not np.size(ima,1 ) == n_pix_per_side_old):
         print('had to resize')
         ima = scipy.misc.imresize(ima, (n_pix_per_side_old, n_pix_per_side_old), interp='cubic', mode=None)
-
-
     return ima
 
 
@@ -74,13 +62,9 @@ def save_boundaries_as_image( imlist, save_dir, cwd, n_pix_per_side = 227 ,  fil
     for name in dir_filenames:
         if 'npy' in name or 'png' in name or 'pickle' in name:
             os.remove(save_dir + name)
-
-
     if require_provenance is True:
-
         #commit the state of the directory and get is sha identification
         sha = dm.provenance_commit(cwd)
-
         #now save that identification with the images
         sha_file = save_dir + 'sha1'
         with open( sha_file + '.pickle', 'wb') as f:
@@ -88,10 +72,7 @@ def save_boundaries_as_image( imlist, save_dir, cwd, n_pix_per_side = 227 ,  fil
 
     for boundaryNumber in range(len(imlist)):
         print(boundaryNumber)
-
-
         im = boundaryToMat(imlist[boundaryNumber], n_pix_per_side, fill, fracOfImage  )
-
         sc.misc.imsave( save_dir + str(boundaryNumber) + '.bmp', im)
         np.save( save_dir  + str(boundaryNumber) , im)
 
@@ -114,11 +95,10 @@ def center_boundary(s):
         s[ind][:,1] = y - cy
 
     return s
-def scaleBoundary(s, fracOfImage):
 
+def scaleBoundary(s, fracOfImage):
     if fracOfImage>1:
         fracOfImage =1
-
     #get the furthest point from the center
     ind= -1
     curmax = 0
@@ -127,36 +107,87 @@ def scaleBoundary(s, fracOfImage):
         testmax = np.max(np.sqrt( np.sum(sh**2, 1) ))
         if curmax<testmax:
             curmax = testmax
-
-    #or maybe the furthest x y
-
     #scale the shape so the furthest point from the center is some fraction of 1
     scaling=curmax/fracOfImage
     for ind in range(len(s)):
         s[ind] = s[ind]/scaling
 
     return s
-def flood_fill(image, x, y, value):
-    "Flood fill on a region of non-BORDER_COLOR pixels."
-    if not image.within(x, y) or image.get_pixel(x, y) == value:
-        return
-    edge = [(x, y)]
-    image.set_pixel(x, y, value)
-    while edge:
-        newedge = []
-        for (x, y) in edge:
-            for (s, t) in ((x+1, y), (x-1, y), (x, y+1), (x, y-1)):
-                if image.within(s, t) and \
-                	image.get_pixel(s, t) not in (value):
-                    image.set_pixel(s, t, value)
-                    newedge.append((s, t))
-        edge = newedge
 
+def boundary_to_mat_by_round(s, n_pix_per_side, frac_of_image, max_ext):
+    im = np.zeros((n_pix_per_side, n_pix_per_side))
+    scale = (n_pix_per_side*frac_of_image)/(max_ext*2)
+
+    tr = np.round(s*scale)
+    cx, cy = get_center_boundary(tr[:,1], tr[:,0])
+    tr[:,0] = tr[:,0] + n_pix_per_side/2.- cy + 1
+    tr[:,1] = tr[:,1] + n_pix_per_side/2.- cx + 1
+    tr = tr.astype(int)
+
+    im[tr[:,1],tr[:,0]] = 1
+    im = ndimage.im = ndimage.binary_fill_holes(im).astype(int)
+    if not im[tuple(np.median(tr,0))] == 1:
+        raise ValueError('shape not bounded')
+
+    return im
+
+
+def pixel_arc(pix_ref, pix_n, radius, arclen, npoints):
+    cmplx = np.array([1, 1j])
+    pix_dir = pix_ref - pix_n
+    ang = np.angle(np.sum(pix_dir*cmplx))
+
+    shifts = np.exp(np.linspace(-arclen/2, arclen/2, npoints)*1j)
+    center = np.exp(ang*1j) #rotate by 180 degrees
+    cpoints = radius*(shifts*center)
+    rpoints = np.round(np.array([np.real(cpoints), np.imag(cpoints)]).T)
+    return rpoints
+
+def arc_neigbor_max_2d(im, cur_ind, around):
+    cur_ind = np.array(cur_ind)
+    aind = [cur_ind + shift for shift in around
+            if ((cur_ind + shift)>=0).any() and
+            ((cur_ind[0] + shift[0])<im.shape[0]) and
+            ((cur_ind[1] + shift[1])<im.shape[1])]
+    min_ind = aind[np.argmax([im[i[0], i[1]] for i in aind])]
+    return min_ind
+
+def trace_edge(im, scale, radius, arclen, npts = 100, maxlen = 1000):
+
+    #resample image
+    ims = imp.fft_resample_img(im, im.shape[1]*scale, std_cut_off = None)
+    temp = np.gradient(ims)#get the gradient of the image
+    d = temp[0]**2 + temp[1]**2
+
+    #start at first peak
+    first_peak = np.array(np.unravel_index(np.argmax(d), d.shape))
+    around = pixel_arc(first_peak, first_peak, radius, np.pi*2, npts)
+    cur_peak = arc_neigbor_max_2d(d, first_peak, around)
+
+
+    line = []
+    line.append(first_peak)
+    line.append(cur_peak)
+    i = 0
+    #append to line, till too long, or wraps around
+    while not (line[0]==cur_peak).all() and len(line)<maxlen:
+        around = pixel_arc(line[i+1], line[i], radius, arclen, npts)
+        cur_peak = arc_neigbor_max_2d(d, line[i+1], around)
+        i+=1
+        line.append(cur_peak)
+        if np.sum(np.array(line[0]-cur_peak)**2)**0.5<(radius-1):
+            break
+
+    return np.array(line), d
+
+#first get an imageset
+#img_dir = top_dir + 'images/baseimgs/PC370/'
+#stack, stack_descriptor_dict = imp.load_npy_img_dirs_into_stack(img_dir)
+#im = stack[0,:,:]
 
 #generate base images
 
 saveDir = cwd + '/images/baseimgs/'
-
 dm.ifNoDirMakeDir(saveDir)
 
 baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
@@ -164,10 +195,7 @@ baseImage = baseImageList[1]
 
 pixCirc = 51
 fracOfImage = (pixCirc/135.)
-
-
 dm.ifNoDirMakeDir(saveDir + baseImage +'/')
-
 
 if baseImage is baseImageList[0]:
 
@@ -177,8 +205,8 @@ if baseImage is baseImageList[0]:
 
 elif baseImage is baseImageList[1]:
 
-    s = dc.make_n_natural_formlets( n=10,
-                nPts=2000, radius=1, nFormlets=32, meanFormDir=np.pi/2,
+    s = dc.make_n_natural_formlets(n=1,
+                nPts=5000, radius=1, nFormlets=32, meanFormDir=np.pi/2,
                 stdFormDir=np.pi/3, meanFormDist=1, stdFormDist=0.1,
                 startSigma=3, endSigma=0.1, randseed = np.random.randint(1000))
 elif baseImage is baseImageList[2]:
@@ -187,34 +215,78 @@ elif baseImage is baseImageList[2]:
 elif baseImage is baseImageList[3]:
     print('to do')
 
-
+#save_boundaries_as_image( s, saveDir + baseImage + '/', cwd, n_pix_per_side = 227 ,  fill = True, require_provenance = True, fracOfImage = fracOfImage )
 s = center_boundary(s)
 s = scaleBoundary ( s, fracOfImage )
-#save_boundaries_as_image( s, saveDir + baseImage + '/', cwd, n_pix_per_side = 227 ,  fill = True, require_provenance = True, fracOfImage = fracOfImage )
-m = np.max(np.abs(s))
-n_pix = 64.
-frac_of_image = 0.5
+max_ext = np.max(np.abs(s))
+d_line = []
+d_img = []
+u_line = []
+u_img = []
+for ashape in s:
+    n_pix_per_side = 256.
+    frac_of_image = 0.5
+    im = boundary_to_mat_by_round(ashape, n_pix_per_side, frac_of_image, max_ext)
+    scale = 2.
+    radius = 5.
+    effective_radius = radius/scale
+    arclen = 2*np.arcsin(effective_radius)
+    if arclen>np.pi or np.isnan(arclen):
+        arclen = np.pi
+    npts = 100
+    maxlen = 2000
+    line, d = trace_edge(im, scale, radius, arclen, npts, maxlen)
+    u_line.append(np.array(line))
+    u_img.append(d)
 
-scale = (n_pix*frac_of_image)/(m*2)
-tr = np.round(np.array(s[5])*scale)
+    scale = 2*256/64.
+    radius = 5
+    effective_radius = radius/scale
+    arclen = 2*np.arcsin(effective_radius)
+    n_pix_per_side = 64.
+    frac_of_image = 0.5
+    ims = imp.fft_resample_img(im, n_pix_per_side, std_cut_off = None)
+    line, d = trace_edge(ims, scale, radius, arclen, npts, maxlen)
+    d_line.append(np.array(line))
+    d_img.append(d)
+    '''
+    ims = imp.fft_resample_img(im, im.shape[1]*scale, std_cut_off = None)
+    temp = np.gradient(ims)#get the gradient of the image
+    d = temp[0]**2 + temp[1]**2
 
-h = np.max(abs(tr[:,0]))
-w = np.max(abs(tr[:,1]))
-
-tr[:,0] = tr[:,0] + h + n_pix/4.
-tr[:,1] = tr[:,1] + w + n_pix/4.
-
-get_center_boundary()
-
-tr = tr.astype(int)
-
-im = np.zeros((n_pix,n_pix))
-
-#im = np.zeros((5,5))
-im[tr[:,1],tr[:,0]] = 1
-from scipy import ndimage
-im= ndimage.binary_fill_holes(im).astype(int)
-plt.imshow(im, interpolation = 'none')
-
+    #start at first peak
+    first_peak = np.array(np.unravel_index(np.argmax(d), d.shape))
+    around = pixel_arc(first_peak, first_peak, radius, np.pi*2, npts)
+    cur_peak = arc_neigbor_max_2d(d, first_peak, around)
 
 
+    line = []
+    line.append(first_peak)
+    line.append(cur_peak)
+    i = 0
+    #append to line, till too long, or wraps around
+    while not (line[0]==cur_peak).all() and len(line)<maxlen:
+        around = pixel_arc(line[i+1], line[i], radius, arclen, npts)
+        cur_peak = arc_neigbor_max_2d(d, line[i+1], around)
+        i+=1
+        line.append(cur_peak)
+        if np.sum(np.array(line[0]-cur_peak)**2)**0.5<(radius+1):
+            break
+    '''
+
+
+import matplotlib.cm as cm
+plt.close('all')
+ind = 0
+plt.subplot(221)
+plt.imshow(ims, cmap = cm.Greys_r, interpolation = 'none')
+plt.scatter(d_line[ind][0,1]/scale, d_line[ind][0,0]/scale)
+plt.plot(d_line[ind][:,1]/scale, d_line[ind][:,0]/scale)
+plt.subplot(222)
+plt.imshow(u_img[ind], cmap = cm.Greys_r, interpolation = 'none')
+plt.scatter(u_line[ind][0,1], u_line[ind][0,0])
+plt.plot(u_line[ind][:,1], u_line[ind][:,0])
+plt.subplot(224)
+plt.plot(u_line[ind][:,:])
+plt.subplot(223)
+plt.plot(d_line[ind][:,:])

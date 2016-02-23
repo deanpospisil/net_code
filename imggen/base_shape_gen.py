@@ -114,23 +114,26 @@ def scaleBoundary(s, fracOfImage):
 
     return s
 
-def boundary_to_mat_by_round(s, n_pix_per_side, frac_of_image, max_ext):
-    im = np.zeros((n_pix_per_side, n_pix_per_side))
-    scale = (n_pix_per_side*frac_of_image)/(max_ext*2)
-
+def scale_center_boundary_for_mat(s, n_pix_per_side, frac_of_image, max_ext):
+    scale = (n_pix_per_side*frac_of_image)/(max_ext*2.)
     tr = np.round(s*scale)
     cx, cy = get_center_boundary(tr[:,1], tr[:,0])
     tr[:,0] = tr[:,0] + n_pix_per_side/2.- cy + 1
     tr[:,1] = tr[:,1] + n_pix_per_side/2.- cx + 1
-    tr = tr.astype(int)
 
-    im[tr[:,1],tr[:,0]] = 1
+    return tr
+
+def boundary_to_mat_by_round(s, n_pix_per_side, frac_of_image, max_ext):
+    im = np.zeros((n_pix_per_side, n_pix_per_side))
+
+    tr = scale_center_boundary_for_mat(s, n_pix_per_side, frac_of_image, max_ext)
+    tr = tr.astype(int)
+    im[tr[:,1], tr[:,0]] = 1
+
     im = ndimage.im = ndimage.binary_fill_holes(im).astype(int)
     if not im[tuple(np.median(tr,0))] == 1:
         raise ValueError('shape not bounded')
-
     return im
-
 
 def pixel_arc(pix_ref, pix_n, radius, arclen, npoints):
     cmplx = np.array([1, 1j])
@@ -152,8 +155,11 @@ def arc_neigbor_max_2d(im, cur_ind, around):
     min_ind = aind[np.argmax([im[i[0], i[1]] for i in aind])]
     return min_ind
 
-def trace_edge(im, scale, radius, arclen, npts = 100, maxlen = 1000):
-
+def trace_edge(im, scale, radius, npts = 100, maxlen = 1000):
+    effective_radius = radius/scale
+    arclen = 2*np.arcsin(effective_radius)
+    if arclen>np.pi or np.isnan(arclen):
+        arclen = np.pi
     #resample image
     ims = imp.fft_resample_img(im, im.shape[1]*scale, std_cut_off = None)
     temp = np.gradient(ims)#get the gradient of the image
@@ -163,7 +169,6 @@ def trace_edge(im, scale, radius, arclen, npts = 100, maxlen = 1000):
     first_peak = np.array(np.unravel_index(np.argmax(d), d.shape))
     around = pixel_arc(first_peak, first_peak, radius, np.pi*2, npts)
     cur_peak = arc_neigbor_max_2d(d, first_peak, around)
-
 
     line = []
     line.append(first_peak)
@@ -204,11 +209,11 @@ if baseImage is baseImageList[0]:
     s = np.array(mat['shapes'][0])
 
 elif baseImage is baseImageList[1]:
-
+    nPts = 1000
     s = dc.make_n_natural_formlets(n=1,
-                nPts=5000, radius=1, nFormlets=32, meanFormDir=np.pi/2,
+                nPts=nPts, radius=1, nFormlets=32, meanFormDir=np.pi/2,
                 stdFormDir=np.pi/3, meanFormDist=1, stdFormDist=0.1,
-                startSigma=3, endSigma=0.1, randseed = np.random.randint(1000))
+                startSigma=3, endSigma=0.1, randseed = np.random.randint(10000))
 elif baseImage is baseImageList[2]:
     print('to do')
 
@@ -216,63 +221,95 @@ elif baseImage is baseImageList[3]:
     print('to do')
 
 #save_boundaries_as_image( s, saveDir + baseImage + '/', cwd, n_pix_per_side = 227 ,  fill = True, require_provenance = True, fracOfImage = fracOfImage )
-s = center_boundary(s)
-s = scaleBoundary ( s, fracOfImage )
+ashape = s[0]
+
+from scipy import interpolate
+x = ashape[:-3, 1]
+y = ashape[:-3, 0]
+
+tck,u = interpolate.splprep([x,y], s=0, k=2)
+unew = np.linspace(0, 1, nPts )
+s = np.array(interpolate.splev(unew, tck, der=0))
+x = s[0,:]
+y = s[1,:]
+plt.close('all')
+plt.plot(x, y)
 max_ext = np.max(np.abs(s))
-d_line = []
-d_img = []
-u_line = []
-u_img = []
-for ashape in s:
-    n_pix_per_side = 256.
-    frac_of_image = 0.5
-    im = boundary_to_mat_by_round(ashape, n_pix_per_side, frac_of_image, max_ext)
-    scale = 2.
-    radius = 5.
-    effective_radius = radius/scale
-    arclen = 2*np.arcsin(effective_radius)
-    if arclen>np.pi or np.isnan(arclen):
-        arclen = np.pi
-    npts = 100
-    maxlen = 2000
-    line, d = trace_edge(im, scale, radius, arclen, npts, maxlen)
-    u_line.append(np.array(line))
-    u_img.append(d)
+n_pix_per_side = 64.
+frac_of_image = 0.5
 
-    scale = 2*256/64.
-    radius = 5
-    effective_radius = radius/scale
-    arclen = 2*np.arcsin(effective_radius)
-    n_pix_per_side = 64.
-    frac_of_image = 0.5
-    ims = imp.fft_resample_img(im, n_pix_per_side, std_cut_off = None)
-    line, d = trace_edge(ims, scale, radius, arclen, npts, maxlen)
-    d_line.append(np.array(line))
-    d_img.append(d)
-    '''
-    ims = imp.fft_resample_img(im, im.shape[1]*scale, std_cut_off = None)
-    temp = np.gradient(ims)#get the gradient of the image
-    d = temp[0]**2 + temp[1]**2
+ims = boundary_to_mat_by_round(s.T, n_pix_per_side, frac_of_image, max_ext)
+import matplotlib.cm as cm
+plt.imshow(ims, cmap = cm.Greys_r, interpolation = 'none')
 
-    #start at first peak
-    first_peak = np.array(np.unravel_index(np.argmax(d), d.shape))
-    around = pixel_arc(first_peak, first_peak, radius, np.pi*2, npts)
-    cur_peak = arc_neigbor_max_2d(d, first_peak, around)
+'''
+dists = np.sum((np.diff(ashape).T)**2, axis=0)**0.5
+xp = np.cumsum(dists)
+mindx = np.median(dists)
+print(mindx)
+x = np.interp(np.linspace(0, xp[-1], nPts), xp, ashape[:, 1])
+y = np.interp(np.linspace(0, xp[-1], nPts), xp, ashape[:, 0])
+dists = np.sum((np.diff(np.array([x,y])))**2, axis=0)**0.5
 
 
-    line = []
-    line.append(first_peak)
+plt.close('all')
+plt.plot(x,y)
+
+print(len(x))
+
+s = center_boundary(s)
+s = scaleBoundary (s, fracOfImage)
+
+max_ext = np.max(np.abs(s))
+n_pix_per_side = 256.
+frac_of_image = 0.5
+ashape = scale_center_boundary_for_mat(ashape, n_pix_per_side, frac_of_image, max_ext)
+
+'''
+
+#im = boundary_to_mat_by_round(ashape, n_pix_per_side, frac_of_image, max_ext)
+
+
+'''
+npts = 100
+maxlen = 2000
+line, d = trace_edge(im, scale, radius, arclen, npts, maxlen)
+u_line.append(np.array(line))
+u_img.append(d)
+
+scale = 2*256/64.
+radius = 5
+effective_radius = radius/scale
+arclen = 2*np.arcsin(effective_radius)
+n_pix_per_side = 64.
+frac_of_image = 0.5
+ims = imp.fft_resample_img(im, n_pix_per_side, std_cut_off = None)
+line, d = trace_edge(ims, scale, radius, arclen, npts, maxlen)
+d_line.append(np.array(line))
+d_img.append(d)
+
+ims = imp.fft_resample_img(im, im.shape[1]*scale, std_cut_off = None)
+temp = np.gradient(ims)#get the gradient of the image
+d = temp[0]**2 + temp[1]**2
+
+#start at first peak
+first_peak = np.array(np.unravel_index(np.argmax(d), d.shape))
+around = pixel_arc(first_peak, first_peak, radius, np.pi*2, npts)
+cur_peak = arc_neigbor_max_2d(d, first_peak, around)
+
+
+line = []
+line.append(first_peak)
+line.append(cur_peak)
+i = 0
+#append to line, till too long, or wraps around
+while not (line[0]==cur_peak).all() and len(line)<maxlen:
+    around = pixel_arc(line[i+1], line[i], radius, arclen, npts)
+    cur_peak = arc_neigbor_max_2d(d, line[i+1], around)
+    i+=1
     line.append(cur_peak)
-    i = 0
-    #append to line, till too long, or wraps around
-    while not (line[0]==cur_peak).all() and len(line)<maxlen:
-        around = pixel_arc(line[i+1], line[i], radius, arclen, npts)
-        cur_peak = arc_neigbor_max_2d(d, line[i+1], around)
-        i+=1
-        line.append(cur_peak)
-        if np.sum(np.array(line[0]-cur_peak)**2)**0.5<(radius+1):
-            break
-    '''
+    if np.sum(np.array(line[0]-cur_peak)**2)**0.5<(radius+1):
+        break
 
 
 import matplotlib.cm as cm
@@ -290,3 +327,4 @@ plt.subplot(224)
 plt.plot(u_line[ind][:,:])
 plt.subplot(223)
 plt.plot(d_line[ind][:,:])
+'''

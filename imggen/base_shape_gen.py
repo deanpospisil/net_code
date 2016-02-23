@@ -204,7 +204,7 @@ w = np.max(abs(tr[:,1]))
 tr[:,0] = tr[:,0] + h + n_pix/4.
 tr[:,1] = tr[:,1] + w + n_pix/4.
 
-get_center_boundary()
+#get_center_boundary()
 
 tr = tr.astype(int)
 

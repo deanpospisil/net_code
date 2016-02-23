@@ -13,7 +13,6 @@ pi=np.pi
 import scipy as sc
 
 
-
 def saveToPNGDir(directory, fileName, img):
     import os
     if not os.path.isdir(directory):

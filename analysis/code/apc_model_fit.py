@@ -75,14 +75,14 @@ minAngSD = np.deg2rad(23)
 maxCurSD = 0.98
 minCurSD = 0.09
 
-nMeans = 10
-nSD = 10
+nMeans = 5
+nSD = 5
 
 #make this into a pyramid based on d-prime
-orMeans = np.linspace( 0, 2*np.pi-2*np.pi / nMeans , nMeans )
-orSDs = np.logspace( np.log10( minAngSD ) , np.log10( maxAngSD ) ,  nSD )
+orMeans = np.linspace(0, 2*np.pi - 2*np.pi / nMeans, nMeans)
+orSDs = np.logspace(np.log10( minAngSD ), np.log10( maxAngSD ), nSD )
 curvMeans = np.linspace( -0.5, 1, nMeans )
-curvSDs = np.logspace( np.log10(minCurSD),  np.log10(maxCurSD),  nSD )
+curvSDs = np.logspace( np.log10(minCurSD), np.log10(maxCurSD), nSD )
 
 
 model_params_dict = ord_d({'or_sd': orSDs, 'or_mean':orMeans,
@@ -91,12 +91,19 @@ model_params_dict = ord_d({'or_sd': orSDs, 'or_mean':orMeans,
 model_params_dict = dm.cartesian_prod_dicts_lists( model_params_dict )
 
 
-model_resp = apc_models(shape_dict_list=shape_dict_list, model_params_dict=model_params_dict)
+model_resp = apc_models(shape_dict_list=shape_dict_list, 
+                        model_params_dict=model_params_dict)
 
-dam =xr.DataArray(model_resp, dims = ['shapes', 'models'])
+dam = xr.DataArray(model_resp, dims = ['shapes', 'models'])
 
+for key in model_params_dict.keys():
+    dam[key] = ('models', np.squeeze(model_params_dict[key]))
+
+'''
 sha = dm.provenance_commit(top_dir)
 dam.attrs['model'] = sha
 
+
 ds = xr.Dataset({'resp': dam})
 #ds.to_netcdf(top_dir + 'analysis/data/models/apc_models.nc')
+'''

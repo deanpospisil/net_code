@@ -220,6 +220,9 @@ elif baseImage is baseImageList[2]:
 elif baseImage is baseImageList[3]:
     print('to do')
 
+
+s = center_boundary(s)
+s = scaleBoundary (s, fracOfImage)
 save_boundaries_as_image(s, saveDir + baseImage + '/', cwd, n_pix_per_side = 64 ,  
                          fill = True, require_provenance = True, 
                          fracOfImage = fracOfImage )

@@ -100,7 +100,7 @@ def boundary_to_mat_via_plot(boundary, n_pix_per_side=227, frac_of_img=1, fill=T
 
 def save_boundaries_as_image(imlist, save_dir, cwd, n_pix_per_side=227,  
                              fill=True, require_provenance=False, 
-                             fracOfImage=1, use_round=True):
+                             frac_of_image=1, use_round=True):
     dir_filenames = os.listdir(save_dir)
     #remove existing files
     for name in dir_filenames:
@@ -207,7 +207,7 @@ dm.ifNoDirMakeDir(saveDir)
 baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
 baseImage = baseImageList[0]
 
-fracOfImage = 0.5
+frac_of_image = 0.5
 dm.ifNoDirMakeDir(saveDir + baseImage +'/')
 
 if baseImage is baseImageList[0]:
@@ -234,7 +234,7 @@ s = center_boundary(s)
 s = scaleBoundary (s, fracOfImage)
 save_boundaries_as_image(s, saveDir + baseImage + '/', cwd, n_pix_per_side=227 ,  
                          fill = True, require_provenance = True, 
-                         fracOfImage = fracOfImage )
+                         frac_of_image=frac_of_image )
 '''
 ashape = s[0]
 

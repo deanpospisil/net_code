@@ -75,8 +75,8 @@ minAngSD = np.deg2rad(23)
 maxCurSD = 0.98
 minCurSD = 0.09
 
-nMeans = 5
-nSD = 5
+nMeans = 16
+nSD = 16
 
 #make this into a pyramid based on d-prime
 orMeans = np.linspace(0, 2*np.pi - 2*np.pi / nMeans, nMeans)
@@ -99,11 +99,11 @@ dam = xr.DataArray(model_resp, dims = ['shapes', 'models'])
 for key in model_params_dict.keys():
     dam[key] = ('models', np.squeeze(model_params_dict[key]))
 
-'''
+
 sha = dm.provenance_commit(top_dir)
 dam.attrs['model'] = sha
 
 
 ds = xr.Dataset({'resp': dam})
 #ds.to_netcdf(top_dir + 'analysis/data/models/apc_models.nc')
-'''
+

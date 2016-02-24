@@ -50,17 +50,17 @@ def scale_center_boundary_for_mat(s, n_pix_per_side, frac_of_image, max_ext):
 
     return tr
 
-def boundary_to_mat_by_round(s, n_pix_per_side, frac_of_image, fill=True):
+def boundary_to_mat_by_round(s, n_pix_per_side, frac_of_image, max_ext, fill=True):
     im = np.zeros((n_pix_per_side, n_pix_per_side))
-    max_ext = np.max(np.abs(s))
     tr = scale_center_boundary_for_mat(s, n_pix_per_side, frac_of_image, max_ext)
     tr = tr.astype(int)
     im[tr[:,1], tr[:,0]] = 1
+    
     if fill:
         im = ndimage.binary_fill_holes(im).astype(int)
         
-    if not im[tuple(np.median(tr,0))] == 1:
-        raise ValueError('shape not bounded')
+#        if not im[tuple(np.median(tr,0))] == 1:
+#            raise ValueError('shape not bounded')
     return im
 
 
@@ -81,7 +81,7 @@ def boundary_to_mat_via_plot(boundary, n_pix_per_side=227, frac_of_img=1, fill=T
     plt.gca().set_xlim([-1, 1])
     plt.gca().set_ylim([-1, 1])
     if fill is True:
-        line = plt.Polygon(boundary, closed=True, fill='k', edgecolor='none',fc='k')
+        line = plt.Polygon(boundary, closed=True, fill='k', edgecolor='none', fc='k')
     else:
         line = plt.Polygon(boundary, closed=True, fill='k', edgecolor='k',fc='w')
     plt.gca().add_patch(line)
@@ -98,7 +98,7 @@ def boundary_to_mat_via_plot(boundary, n_pix_per_side=227, frac_of_img=1, fill=T
     return ima
 
 
-def save_boundaries_as_image(imlist, save_dir, cwd, n_pix_per_side=227,  
+def save_boundaries_as_image(imlist, save_dir, cwd, max_ext, n_pix_per_side=227,  
                              fill=True, require_provenance=False, 
                              frac_of_image=1, use_round=True):
     dir_filenames = os.listdir(save_dir)
@@ -118,10 +118,10 @@ def save_boundaries_as_image(imlist, save_dir, cwd, n_pix_per_side=227,
         print(n_boundary)
         if not use_round:
             im = boundary_to_mat_via_plot(boundary, n_pix_per_side, 
-                                          frac_of_image, fill)
+                                          frac_of_image, fill=fill)
         else:
             im = boundary_to_mat_by_round(boundary, n_pix_per_side, 
-                                          frac_of_image, fill)
+                                          frac_of_image, max_ext, fill=fill)
         
         sc.misc.imsave(save_dir + str(n_boundary) + '.bmp', im)
         np.save(save_dir + str(n_boundary), im)
@@ -205,7 +205,7 @@ saveDir = cwd + '/images/baseimgs/'
 dm.ifNoDirMakeDir(saveDir)
 
 baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
-baseImage = baseImageList[0]
+baseImage = baseImageList[2]
 
 frac_of_image = 0.25
 dm.ifNoDirMakeDir(saveDir + baseImage +'/')
@@ -222,18 +222,25 @@ elif baseImage is baseImageList[1]:
                 nPts=nPts, radius=1, nFormlets=32, meanFormDir=np.pi,
                 stdFormDir=2*np.pi, meanFormDist=1, stdFormDist=0.1,
                 startSigma=3, endSigma=0.1, randseed=1, min_n_pix=32, 
-                frac_image=fracOfImage)
+                frac_image=frac_of_image)
 elif baseImage is baseImageList[2]:
-    print('to do')
+    #    os.chdir( saveDir + baseImageList[0])
+    mat = l.loadmat(cwd + '/imggen/'+ 'PC3702001ShapeVerts.mat')
+    s = np.array(mat['shapes'][0])
+    #adjustment for repeats [ 14, 15, 16,17, 318, 319, 320, 321] 
+    a = np.hstack((range(14), range(18,318)))
+    a = np.hstack((a, range(322, 370)))
+    s = s[a]
 
 elif baseImage is baseImageList[3]:
     print('to do')
 
 
 s = center_boundary(s)
+max_ext = np.max([np.max(np.abs(a_s)) for a_s in s])
 #s = scaleBoundary (s, frac_of_image)
-save_boundaries_as_image(s, saveDir + baseImage + '/', cwd, n_pix_per_side=227 ,  
-                         fill = True, require_provenance = True, 
+save_boundaries_as_image(s, saveDir + baseImage + '/', cwd, max_ext, n_pix_per_side=227,  
+                         fill=True, require_provenance=False, 
                          frac_of_image=frac_of_image )
 '''
 ashape = s[0]

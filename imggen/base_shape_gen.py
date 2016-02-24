@@ -232,7 +232,7 @@ elif baseImage is baseImageList[3]:
 
 s = center_boundary(s)
 s = scaleBoundary (s, fracOfImage)
-save_boundaries_as_image(s, saveDir + baseImage + '/', cwd, n_pix_per_side = 227 ,  
+save_boundaries_as_image(s, saveDir + baseImage + '/', cwd, n_pix_per_side=227 ,  
                          fill = True, require_provenance = True, 
                          fracOfImage = fracOfImage )
 '''

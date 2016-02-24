@@ -15,7 +15,7 @@ import xarray as xr
 import d_misc as dm
 
 
-def cor_resp_to_model(da, dmod, fit_over_dims = None):
+def cor_resp_to_model(da, dmod, fit_over_dims=None):
     #typically takes da, data, and dm, a set of linear models, an fn to write to,
     #and finally fit_over_dims which says over what dims is a models fit supposed to hold.
 
@@ -48,17 +48,20 @@ def cor_resp_to_model(da, dmod, fit_over_dims = None):
     return cor
 
 
-dmod = xr.open_dataset(top_dir + 'analysis/data/models/apc_models.nc',chunks = {'models': 1000, 'shapes': 370}  )
+dmod = xr.open_dataset(top_dir + 'analysis/data/models/apc_models.nc',
+                       chunks = {'models': 1000, 'shapes': 370}  )
 #da = xr.open_dataset( top_dir + 'analysis/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
-#dmod = dmod.sel(models = range(10), method = 'nearest' )
-ds = xr.open_mfdataset(top_dir + 'analysis/data/iter_*.nc', concat_dim = 'niter', chunks = {'unit':100, 'shapes': 370})
+dmod = dmod.sel(models = range(10), method = 'nearest' )
+ds = xr.open_mfdataset(top_dir + 'analysis/data/iter_*.nc', 
+                       concat_dim = 'niter', chunks = {'unit':100, 'shapes': 370})
 da = ds.to_array().chunk(chunks = {'niter':1, 'unit':100, 'shapes': 370})
-da = da.sel(x = np.linspace(-50, 50, 51), method = 'nearest' )
-da = da.sel(niter = np.linspace(0, da.coords['niter'].shape[0], 20),  method = 'nearest')
+da = da.sel(x = np.linspace(-50, 50, 2), method = 'nearest' )
+da = da.sel(niter = np.linspace(0, da.coords['niter'].shape[0], 2),  
+                                method = 'nearest')
 #da = da.sel(unit = range(10),  method = 'nearest')
 
 
-for iterind in da.niter.values:
+for iterind in ds.niter.values:
     da_c = da.sel(niter=iterind)
     cor = cor_resp_to_model(da_c, dmod, fit_over_dims = ('x',))
     cor.to_dataset(name='r').to_netcdf(top_dir + 'analysis/data/r_iter_' + str(iterind) + '.nc')

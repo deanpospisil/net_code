@@ -11,13 +11,11 @@ import numpy as np
 import warnings
 import os
 import sys
-
+from collections import OrderedDict as ord_d
 import matplotlib.pyplot as plt
 
 top_dir = os.getcwd().split('net_code')[0] + 'net_code/'
 sys.path.append(top_dir)
-
-#sys.path.append('/home/dean/caffe/python')
 import xarray as xr
 import d_misc as dm
 import pickle
@@ -69,16 +67,16 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
     model_resp = model_resp / magnitude
 
     return model_resp
-
-shape_dict_list = pickle.load( open(top_dir + 'images/baseimgs/PC370/PC370_params.p', 'r')  )
+with open(top_dir + 'images/baseimgs/PC370/PC370_params.p', 'rb') as f:
+    shape_dict_list = pickle.load(f)
 
 maxAngSD = np.deg2rad(171)
 minAngSD = np.deg2rad(23)
 maxCurSD = 0.98
 minCurSD = 0.09
 
-nMeans = 16
-nSD = 16
+nMeans = 10
+nSD = 10
 
 #make this into a pyramid based on d-prime
 orMeans = np.linspace( 0, 2*np.pi-2*np.pi / nMeans , nMeans )
@@ -87,13 +85,13 @@ curvMeans = np.linspace( -0.5, 1, nMeans )
 curvSDs = np.logspace( np.log10(minCurSD),  np.log10(maxCurSD),  nSD )
 
 
-model_params_dict = ordDict({ 'or_sd': orSDs, 'or_mean':orMeans,
-                     'cur_mean' : curvMeans, 'cur_sd': curvSDs})
+model_params_dict = ord_d({'or_sd': orSDs, 'or_mean':orMeans,
+                     'cur_mean' :curvMeans, 'cur_sd':curvSDs})
 
 model_params_dict = dm.cartesian_prod_dicts_lists( model_params_dict )
 
 
-model_resp = apc_models( shape_dict_list = shape_dict_list, model_params_dict = model_params_dict)
+model_resp = apc_models(shape_dict_list=shape_dict_list, model_params_dict=model_params_dict)
 
 dam =xr.DataArray(model_resp, dims = ['shapes', 'models'])
 
@@ -101,4 +99,4 @@ sha = dm.provenance_commit(top_dir)
 dam.attrs['model'] = sha
 
 ds = xr.Dataset({'resp': dam})
-ds.to_netcdf(top_dir + 'analysis/data/models/apc_models.nc')
+#ds.to_netcdf(top_dir + 'analysis/data/models/apc_models.nc')

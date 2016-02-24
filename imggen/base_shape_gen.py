@@ -116,7 +116,7 @@ def save_boundaries_as_image(imlist, save_dir, cwd, n_pix_per_side=227,
 
     for n_boundary, boundary in enumerate(imlist):
         print(n_boundary)
-        if use_round:
+        if not use_round:
             im = boundary_to_mat_via_plot(boundary, n_pix_per_side, 
                                           frac_of_image, fill)
         else:

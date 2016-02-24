@@ -55,7 +55,7 @@ def boundaryToMat(boundary, n_pix_per_side = 227, fill = True, frac_of_img=1 ):
     return ima
 
 
-def save_boundaries_as_image( imlist, save_dir, cwd, n_pix_per_side = 227 ,  fill = True, require_provenance = False, fracOfImage=1 ):
+def save_boundaries_as_image(imlist, save_dir, cwd, n_pix_per_side = 227 ,  fill = True, require_provenance = False, fracOfImage=1 ):
     dir_filenames = os.listdir(save_dir)
 
     #remove existing files
@@ -70,11 +70,11 @@ def save_boundaries_as_image( imlist, save_dir, cwd, n_pix_per_side = 227 ,  fil
         with open( sha_file + '.pickle', 'wb') as f:
             pickle.dump( sha, f )
 
-    for boundaryNumber in range(len(imlist)):
+    for n_boundary, boundary in enumerate(imlist):
         print(boundaryNumber)
-        im = boundaryToMat(imlist[boundaryNumber], n_pix_per_side, fill, fracOfImage  )
-        sc.misc.imsave( save_dir + str(boundaryNumber) + '.bmp', im)
-        np.save( save_dir  + str(boundaryNumber) , im)
+        im = boundaryToMat(boundary, n_pix_per_side, fill, fracOfImage  )
+        sc.misc.imsave( save_dir + str(n_boundary) + '.bmp', im)
+        np.save( save_dir  + str(n_boundary) , im)
 
 def get_center_boundary(x, y):
     minusone = np.arange(-1, np.size(x)-1)
@@ -223,7 +223,7 @@ elif baseImage is baseImageList[3]:
 
 s = center_boundary(s)
 s = scaleBoundary (s, fracOfImage)
-save_boundaries_as_image(s, saveDir + baseImage + '/', cwd, n_pix_per_side = 64 ,  
+save_boundaries_as_image(s, saveDir + baseImage + '/', cwd, n_pix_per_side = 227 ,  
                          fill = True, require_provenance = True, 
                          fracOfImage = fracOfImage )
 '''

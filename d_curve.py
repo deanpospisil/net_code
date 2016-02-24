@@ -155,7 +155,7 @@ def applyGaborFormlet(cShape, center, alpha, sigma):
         warnings.warn('alpha is outside of the bounds for which Jordan curves are guaranteed')
     
    cShapeUnitVectors = (cShape-center)/r
-   newcShape = center + cShapeUnitVectors * ( r + alpha * np.exp( (-r**2.0) / sigma**2.0  ) * np.sin(( 2.0 * pi * r) / sigma))
+   newcShape = center + cShapeUnitVectors * (r + alpha * np.exp( (-r**2.0) / sigma**2.0  ) * np.sin(( 2.0 * pi * r) / sigma))
    
    return newcShape
    

@@ -209,7 +209,7 @@ if baseImage is baseImageList[0]:
 
 elif baseImage is baseImageList[1]:
     nPts = 1000
-    s = dc.make_n_natural_formlets(n=1,
+    s = dc.make_n_natural_formlets(n=10,
                 nPts=nPts, radius=1, nFormlets=32, meanFormDir=np.pi,
                 stdFormDir=2*np.pi, meanFormDist=1, stdFormDist=0.1,
                 startSigma=3, endSigma=0.1, randseed=1, min_n_pix=32, 

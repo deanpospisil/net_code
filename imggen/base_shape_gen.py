@@ -207,7 +207,7 @@ dm.ifNoDirMakeDir(saveDir)
 baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
 baseImage = baseImageList[0]
 
-frac_of_image = 0.5
+frac_of_image = 0.25
 dm.ifNoDirMakeDir(saveDir + baseImage +'/')
 
 if baseImage is baseImageList[0]:

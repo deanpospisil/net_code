@@ -4,11 +4,19 @@ Created on Thu Sep  3 10:02:24 2015
 
 @author: dean
 """
-
+from scipy import interpolate
 import warnings
 import numpy as np
 pi=np.pi
 
+def get_center_boundary(x, y):
+    minusone = np.arange(-1, np.size(x)-1)
+    A = 0.5*np.sum( x[minusone]*y[:] - x[:]*y[minusone])
+    normalize= (1/(A*6.))
+    cx = normalize * np.sum( (x[minusone] + x[:] ) * (x[minusone]*y[:] - x[:]*y[minusone]) )
+    cy = normalize * np.sum( (y[minusone] + y[:] ) * (x[minusone]*y[:] - x[:]*y[minusone]) )
+    return cx, cy
+    
 def curveDists(cShape):
     nPts=np.size(cShape)
     dists=np.ones([nPts])*100j
@@ -85,6 +93,16 @@ def makeNaturalFormlet(nPts=1000, radius=1, nFormlets=32, meanFormDir=-pi, stdFo
     
     if cShape[0] is not cShape[-1]:
         cShape[-1] = cShape[0]
+    
+    x = np.real(cShape)
+    y = np.imag(cShape)
+    
+    tck,u = interpolate.splprep([x, y], s=0, k=2)
+    unew = np.linspace(0, 1, nPts )
+    resample = np.array(interpolate.splev(unew, tck, der=0))
+    
+    
+    cShape = np.sum(np.array([1,1j]) * resample.T, axis=1)
         
     return cShape, np.real(cShape), np.imag(cShape), sigma, alpha
 
@@ -103,9 +121,25 @@ def make_n_natural_formlets( **args ):
                                                     startSigma = args['startSigma'], 
                                                     endSigma = args['endSigma'], 
                                                     randomstate = rng )
-                        
-
-        s.append( np.array( [x, y]).T )
+                                                    
+        a_s = np.array([x, y]).T
+        max_ext = np.max(np.abs(a_s))
+        n_pix_per_side = args['min_n_pix']
+        frac_of_image = args['frac_image']
+        dists = np.sum((np.diff(a_s.T))**2, axis=0)**0.5
+        scale = (n_pix_per_side*frac_of_image)/(max_ext*2.)
+        dx = np.median(dists)*scale
+        freqs = np.fft.fftfreq(len(x), dx)
+        low_pass = np.zeros(np.shape(a_s))*1j
+        low_pass[np.abs(freqs)<((0.5**0.5)/2.), :] = 1.
+        ft = np.fft.fft(a_s, axis=0) * low_pass
+        lp = np.real_if_close(np.fft.ifft(ft, axis=0)) 
+        lp = lp * scale
+        cx, cy = get_center_boundary(lp[:,1], lp[:,0])
+        lp[:, 1] = lp[:, 1] + (n_pix_per_side/2.0 - cx)
+        lp[:, 0] = lp[:, 0] + (n_pix_per_side/2.0 - cy)
+        
+        s.append(lp)
         
     return s
 

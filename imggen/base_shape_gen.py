@@ -76,23 +76,23 @@ def save_boundaries_as_image( imlist, save_dir, cwd, n_pix_per_side = 227 ,  fil
         sc.misc.imsave( save_dir + str(boundaryNumber) + '.bmp', im)
         np.save( save_dir  + str(boundaryNumber) , im)
 
-def get_center_boundary(x,y):
+def get_center_boundary(x, y):
     minusone = np.arange(-1, np.size(x)-1)
     A = 0.5*np.sum( x[minusone]*y[:] - x[:]*y[minusone])
     normalize= (1/(A*6.))
     cx = normalize * np.sum( (x[minusone] + x[:] ) * (x[minusone]*y[:] - x[:]*y[minusone]) )
     cy = normalize * np.sum( (y[minusone] + y[:] ) * (x[minusone]*y[:] - x[:]*y[minusone]) )
     return cx, cy
+    
 def center_boundary(s):
 
     #centroid, center of mass, https://en.wikipedia.org/wiki/Centroid#Centroid_of_polygon
     for ind in range(len(s)):
-        minusone = np.arange(-1, np.size(s[ind],0)-1)
         y = s[ind][:,1]
         x = s[ind][:,0]
         cx, cy = get_center_boundary(x,y)
-        s[ind][:,0] = x - cx
-        s[ind][:,1] = y - cy
+        s[ind][:, 0] = x - cx
+        s[ind][:, 1] = y - cy
 
     return s
 
@@ -198,8 +198,7 @@ dm.ifNoDirMakeDir(saveDir)
 baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
 baseImage = baseImageList[1]
 
-pixCirc = 51
-fracOfImage = (pixCirc/135.)
+fracOfImage = 0.5
 dm.ifNoDirMakeDir(saveDir + baseImage +'/')
 
 if baseImage is baseImageList[0]:
@@ -211,36 +210,57 @@ if baseImage is baseImageList[0]:
 elif baseImage is baseImageList[1]:
     nPts = 1000
     s = dc.make_n_natural_formlets(n=1,
-                nPts=nPts, radius=1, nFormlets=32, meanFormDir=np.pi/2,
-                stdFormDir=np.pi/3, meanFormDist=1, stdFormDist=0.1,
-                startSigma=3, endSigma=0.1, randseed = np.random.randint(10000))
+                nPts=nPts, radius=1, nFormlets=32, meanFormDir=np.pi,
+                stdFormDir=2*np.pi, meanFormDist=1, stdFormDist=0.1,
+                startSigma=3, endSigma=0.1, randseed=1, min_n_pix=32, 
+                frac_image=fracOfImage)
 elif baseImage is baseImageList[2]:
     print('to do')
 
 elif baseImage is baseImageList[3]:
     print('to do')
 
-#save_boundaries_as_image( s, saveDir + baseImage + '/', cwd, n_pix_per_side = 227 ,  fill = True, require_provenance = True, fracOfImage = fracOfImage )
+save_boundaries_as_image(s, saveDir + baseImage + '/', cwd, n_pix_per_side = 227 ,  
+                         fill = True, require_provenance = True, 
+                         fracOfImage = fracOfImage )
+'''
 ashape = s[0]
 
-from scipy import interpolate
-x = ashape[:-3, 1]
-y = ashape[:-3, 0]
 
-tck,u = interpolate.splprep([x,y], s=0, k=2)
-unew = np.linspace(0, 1, nPts )
-s = np.array(interpolate.splev(unew, tck, der=0))
-x = s[0,:]
-y = s[1,:]
+x = s[0][:, 0]
+y = s[0][:, 1]
 plt.close('all')
 plt.plot(x, y)
-max_ext = np.max(np.abs(s))
-n_pix_per_side = 64.
+max_ext = np.max(np.abs(s[0]))
+n_pix_per_side = 16.
 frac_of_image = 0.5
+dists = np.sum((np.diff(s[0].T))**2, axis=0)**0.5
 
-ims = boundary_to_mat_by_round(s.T, n_pix_per_side, frac_of_image, max_ext)
+#s = scale_center_boundary_for_mat(s.T, n_pix_per_side, frac_of_image, max_ext)
+scale = (n_pix_per_side*frac_of_image)/(max_ext*2.)
+dx = np.median(dists)*scale
+freqs = np.fft.fftfreq(len(x), dx)
+low_pass = np.zeros(np.shape(s[0]))*1j
+low_pass[np.abs(freqs)<((0.5**0.5)/2.), :] = 1.
+
+ft = np.fft.fft(s[0], axis=0) * low_pass
+
+lp = np.real_if_close(np.fft.ifft(ft, axis=0))
+plt.plot(lp[:, 0], lp[:, 1])
+
+lp = lp * scale
+cx, cy = get_center_boundary(lp[:,1], lp[:,0])
+lp[:, 1] = lp[:, 1] + (n_pix_per_side/2.0 - cx)
+lp[:, 0] = lp[:, 0] + (n_pix_per_side/2.0 - cy)
+
+u_scale = 500
+im = boundary_to_mat_by_round(s[0], u_scale, frac_of_image, max_ext)
+ims = imp.fft_resample_img(im, n_pix_per_side)
+ims = imp.fft_resample_img(ims, u_scale)
 import matplotlib.cm as cm
 plt.imshow(ims, cmap = cm.Greys_r, interpolation = 'none')
+plt.plot(lp[:, 0] * (u_scale/n_pix_per_side), lp[:, 1] * (u_scale/n_pix_per_side),  '#FA8072', linewidth=1.0)
+'''
 
 '''
 dists = np.sum((np.diff(ashape).T)**2, axis=0)**0.5

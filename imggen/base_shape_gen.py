@@ -21,10 +21,53 @@ import d_misc as dm
 import d_img_process as imp
 from scipy import ndimage
 
-def boundaryToMat(boundary, n_pix_per_side = 227, fill = True, frac_of_img=1 ):
+
+def get_center_boundary(x, y):
+    minusone = np.arange(-1, np.size(x)-1)
+    A = 0.5*np.sum( x[minusone]*y[:] - x[:]*y[minusone])
+    normalize= (1/(A*6.))
+    cx = normalize * np.sum( (x[minusone] + x[:] ) * (x[minusone]*y[:] - x[:]*y[minusone]) )
+    cy = normalize * np.sum( (y[minusone] + y[:] ) * (x[minusone]*y[:] - x[:]*y[minusone]) )
+    return cx, cy
+    
+def center_boundary(s):
+    #centroid, center of mass, https://en.wikipedia.org/wiki/Centroid#Centroid_of_polygon
+    for ind in range(len(s)):
+        y = s[ind][:, 1]
+        x = s[ind][:, 0]
+        cx, cy = get_center_boundary(x,y)
+        s[ind][:, 0] = x - cx
+        s[ind][:, 1] = y - cy
+
+    return s
+
+def scale_center_boundary_for_mat(s, n_pix_per_side, frac_of_image, max_ext):
+    scale = (n_pix_per_side*frac_of_image)/(max_ext*2.)
+    tr = np.round(s*scale)
+    cx, cy = get_center_boundary(tr[:,1], tr[:,0])
+    tr[:,0] = tr[:,0] + n_pix_per_side/2.- cy + 1
+    tr[:,1] = tr[:,1] + n_pix_per_side/2.- cx + 1
+
+    return tr
+
+def boundary_to_mat_by_round(s, n_pix_per_side, frac_of_image, fill=True):
+    im = np.zeros((n_pix_per_side, n_pix_per_side))
+    max_ext = np.max(np.abs(s))
+    tr = scale_center_boundary_for_mat(s, n_pix_per_side, frac_of_image, max_ext)
+    tr = tr.astype(int)
+    im[tr[:,1], tr[:,0]] = 1
+    if fill:
+        im = ndimage.binary_fill_holes(im).astype(int)
+        
+    if not im[tuple(np.median(tr,0))] == 1:
+        raise ValueError('shape not bounded')
+    return im
+
+
+def boundary_to_mat_via_plot(boundary, n_pix_per_side=227, frac_of_img=1, fill=True):
     n_pix_per_side_old = n_pix_per_side
     if fracOfImage > 1:
-        n_pix_per_side = round(n_pix_per_side*frac_of_img)
+        n_pix_per_side = round(n_pix_per_side * frac_of_img)
     plt.close('all')
     inchOverPix = 2.84/227. #this happens to work because of the dpi of my current screen. 1920X1080
     inches = inchOverPix*n_pix_per_side
@@ -55,7 +98,9 @@ def boundaryToMat(boundary, n_pix_per_side = 227, fill = True, frac_of_img=1 ):
     return ima
 
 
-def save_boundaries_as_image(imlist, save_dir, cwd, n_pix_per_side = 227 ,  fill = True, require_provenance = False, fracOfImage=1 ):
+def save_boundaries_as_image(imlist, save_dir, cwd, n_pix_per_side=227,  
+                             fill=True, require_provenance=False, 
+                             fracOfImage=1, use_round=True):
     dir_filenames = os.listdir(save_dir)
     #remove existing files
     for name in dir_filenames:
@@ -71,29 +116,15 @@ def save_boundaries_as_image(imlist, save_dir, cwd, n_pix_per_side = 227 ,  fill
 
     for n_boundary, boundary in enumerate(imlist):
         print(n_boundary)
-        im = boundaryToMat(boundary, n_pix_per_side, fill, fracOfImage)
+        if use_round:
+            im = boundary_to_mat_via_plot(boundary, n_pix_per_side, 
+                                          frac_of_image, fill)
+        else:
+            im = boundary_to_mat_by_round(boundary, n_pix_per_side, 
+                                          frac_of_image, fill)
+        
         sc.misc.imsave(save_dir + str(n_boundary) + '.bmp', im)
         np.save(save_dir + str(n_boundary), im)
-
-def get_center_boundary(x, y):
-    minusone = np.arange(-1, np.size(x)-1)
-    A = 0.5*np.sum( x[minusone]*y[:] - x[:]*y[minusone])
-    normalize= (1/(A*6.))
-    cx = normalize * np.sum( (x[minusone] + x[:] ) * (x[minusone]*y[:] - x[:]*y[minusone]) )
-    cy = normalize * np.sum( (y[minusone] + y[:] ) * (x[minusone]*y[:] - x[:]*y[minusone]) )
-    return cx, cy
-    
-def center_boundary(s):
-
-    #centroid, center of mass, https://en.wikipedia.org/wiki/Centroid#Centroid_of_polygon
-    for ind in range(len(s)):
-        y = s[ind][:,1]
-        x = s[ind][:,0]
-        cx, cy = get_center_boundary(x,y)
-        s[ind][:, 0] = x - cx
-        s[ind][:, 1] = y - cy
-
-    return s
 
 def scaleBoundary(s, fracOfImage):
     if fracOfImage>1:
@@ -112,27 +143,6 @@ def scaleBoundary(s, fracOfImage):
         s[ind] = s[ind]/scaling
 
     return s
-
-def scale_center_boundary_for_mat(s, n_pix_per_side, frac_of_image, max_ext):
-    scale = (n_pix_per_side*frac_of_image)/(max_ext*2.)
-    tr = np.round(s*scale)
-    cx, cy = get_center_boundary(tr[:,1], tr[:,0])
-    tr[:,0] = tr[:,0] + n_pix_per_side/2.- cy + 1
-    tr[:,1] = tr[:,1] + n_pix_per_side/2.- cx + 1
-
-    return tr
-
-def boundary_to_mat_by_round(s, n_pix_per_side, frac_of_image, max_ext):
-    im = np.zeros((n_pix_per_side, n_pix_per_side))
-
-    tr = scale_center_boundary_for_mat(s, n_pix_per_side, frac_of_image, max_ext)
-    tr = tr.astype(int)
-    im[tr[:,1], tr[:,0]] = 1
-
-    im = ndimage.im = ndimage.binary_fill_holes(im).astype(int)
-    if not im[tuple(np.median(tr,0))] == 1:
-        raise ValueError('shape not bounded')
-    return im
 
 def pixel_arc(pix_ref, pix_n, radius, arclen, npoints):
     cmplx = np.array([1, 1j])

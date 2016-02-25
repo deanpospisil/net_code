@@ -112,5 +112,5 @@ nMeans = 4
 nSD = 4
 fn = 'apc_models.nc'
 dam = make_apc_models(shape_dict_list, fn, nMeans, nSD, maxAngSD, minAngSD, maxCurSD, minCurSD,
-                prov_commit = False)
+                prov_commit=True)
                 

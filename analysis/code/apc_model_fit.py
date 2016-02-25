@@ -110,7 +110,7 @@ minCurSD = 0.09
 
 nMeans = 16
 nSD = 16
-fn = 'apc_models.nc'
+fn = 'apc_models_test.nc'
 dam = make_apc_models(shape_dict_list, fn, nMeans, nSD, maxAngSD, minAngSD, maxCurSD, minCurSD,
                 prov_commit=True)
                 

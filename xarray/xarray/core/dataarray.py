@@ -1369,106 +1369,64 @@ class DataArray(AbstractArray, BaseDataObject):
     @property
     def imag(self):
         return self._replace(self.variable.imag)
-    
-    def dot( self, other):
-        """Perform sum product of two DataArrays along their shared dims. 
-        Equivalent to taking taking tensor dot over all shared dims'''
+
+    def dot(self, other):
+        """Perform dot product of two DataArrays along their shared dims.
+        
+        Equivalent to taking taking tensordot over all shared dims.
 
         Parameters
         ----------
-        other: the DataArray with which the DataArray calling this function 
-        will perform dot with.
-
+        other : DataArray
+            The other array with which the dot product is performed.
+            
         Returns
         -------
-        DataArray(new_data, new_coords, new_dims) : DataArray
-            new_data: dot performed over shared DataArrays dims
-            new_dims: the dims that were not shared between DataArrays and 
-                      thus were not summed over.
-            new_coords: coords corresponding to those original unique dims.
+        result : DataArray
+            Array resulting from the dot product over all shared dimensions.
             
         See also
         --------
-        np.tensordot(a,b, axes)
+        np.tensordot(a, b, axes)
 
         Examples
         --------
-        
-        >>> da.dims
-        ('x_trans', 'y_trans', 'imgID')  
+
+        >>> da_vals = np.arange(6 * 5 * 4).reshape((6, 5, 4))
+        >>> da = DataArray(da_vals, dims=['x', 'y', 'z'])    
+        >>> dm_vals = np.arange(4)
+        >>> dm = DataArray(dm_vals, dims=['z'])
+                
         >>> dm.dims
-        ('models', 'y_trans_m', 'imgID')
-   
-        >>> t = da.dot( dm )
-        >>> t.dims
-        ('x_trans', 'y_trans', 'models', 'y_trans_m')
-
-        """
-        s = self
-
-        if not ( isinstance(other, DataArray) ):
-            raise TypeError('dot only operates on DataArrays.')
-        
-        #sum over the common dims
-        dims = list(set(s.dims) & set(other.dims) )
-    
-        s, other = align(s, other, join='inner', copy=False)
-    
-        axes = (s.get_axis_num(dims), other.get_axis_num(dims))
-        f = ops._dask_or_eager_func('tensordot', n_array_args=2)
-        new_data = f(s.data, other.data, axes=axes)
-    
-        new_coords = s.coords.merge(other.coords).drop(dims)
-    
-        new_dims = ([d for d in s.dims if d not in dims] +
-                    [d for d in other.dims if d not in dims])
-    
-        return type(self)(new_data, new_coords, new_dims)
-        
-    def vnorm( self, dims):
-        """Get the vector norm of a data array along specificed dims'''
-
-        Parameters
-        ----------
-        dims: over which dims to get the vectornorm
-
-        Returns
-        -------
-        DataArray(new_data, new_coords, new_dims) : DataArray
-            new_data: vector norm of the data
-            new_dims: the dims that were not summed over by vecnorm.
-            new_coords: coords corresponding to those original dims.
-            
-        See also
-        --------
-        np.norm(a,b, axes)
-
-        Examples
-        --------
-        
+        ('z')
         >>> da.dims
-        ('x_trans', 'y_trans', 'imgID')  
-   
-        >>> t = da.vecnorm( 'imgID' )
-        >>> t.dims
-        ('x_trans', 'y_trans')
+        ('x', 'y', 'z')
 
+        >>> dot_result = da.dot(dm)
+        >>> dot_result.dims
+        ('x', 'y')
         """
-        s = self
-        if isinstance(dims, basestring):
-            dims = (dims,)
-        for d in dims:
-            if not isinstance(d, basestring):
-                raise TypeError('dimension %s is not a string' % d)
+        if isinstance(other, Dataset):
+            raise NotImplementedError('dot products are not yet supported '
+                                      'with Dataset objects.')
+        if not isinstance(other, DataArray):
+            raise TypeError('dot only operates on DataArrays.')
 
-        axes = (s.get_axis_num(dims))
-        f = ops._dask_or_eager_func('vnorm', n_array_args=1)
-        new_data = f(s.data,  axis=axes)
-        
-        new_coords = s.coords.merge(s.coords).drop(dims)
-    
-        new_dims = ([d for d in s.dims if d not in dims])
-    
+        #sum over the common dims
+        dims = set(self.dims) & set(other.dims)
+        if len(dims) == 0:
+            raise ValueError('DataArrays have no shared dimensions over which '
+                             'to perform dot.')
+
+        self, other = align(self, other, join='inner', copy=False)
+
+        axes = (self.get_axis_num(dims), other.get_axis_num(dims))
+        new_data = ops.tensordot(self.data, other.data, axes=axes)
+
+        new_coords = self.coords.merge(other.coords).drop(dims)
+        new_dims = ([d for d in self.dims if d not in dims] +
+                    [d for d in other.dims if d not in dims])
+
         return type(self)(new_data, new_coords, new_dims)
 
 # priority most be higher than Variable to properly work with binary ufuncs

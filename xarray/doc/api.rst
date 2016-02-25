@@ -281,7 +281,6 @@ Computation
 :py:attr:`~DataArray.round`
 :py:attr:`~DataArray.real`
 :py:attr:`~DataArray.T`
-:py:attr:`~DataArray.dot`
 
 **Grouped operations**:
 :py:attr:`~core.groupby.DataArrayGroupBy.assign_coords`

@@ -635,6 +635,13 @@ class TestDataArray(TestCase):
         actual = expected.reindex(time=time2)
         self.assertDataArrayIdentical(actual, expected)
 
+        # regression test for #736, reindex can not change complex nums dtype
+        x = np.array([1, 2, 3], dtype=np.complex)
+        x = DataArray(x, coords=[[0.1, 0.2, 0.3]])
+        y = DataArray([2, 5, 6, 7, 8], coords=[[-1.1, 0.21, 0.31, 0.41, 0.51]])
+        re_dtype = x.reindex_like(y, method='pad').dtype
+        self.assertEqual(x.dtype, re_dtype)
+
     def test_reindex_method(self):
         x = DataArray([10, 20], dims='y')
         y = [-0.1, 0.5, 1.1]
@@ -1599,30 +1606,39 @@ class TestDataArray(TestCase):
             array.other = 2
 
     def test_dot(self):
-        x_trans = np.linspace(-3,3,6)
-        y_trans = np.linspace(-3,3,5)
-        imgID = range(4)
-        da_vals = np.arange(6*5*4).reshape(( 6, 5, 4 ))
-        da = DataArray( da_vals, 
-                        coords = [ x_trans, y_trans, imgID ], 
-                        dims = ['x_trans', 'y_trans', 'imgID'] )
-           
-        models = range(20)  
-        dm_vals = np.arange(20*5*4).reshape(( 20, 5, 4 ))
-        dm = DataArray( dm_vals , 
-                        coords = [ models, y_trans, imgID], 
-                        dims = [ 'models', 'y_trans_m', 'imgID' ] )
-                        
-        #test call on dask DataArray produces same result as call on DataArray
-        actual_DataArray = da.dot(dm)
-      
-
-        expected_vals = np.tensordot( da_vals, dm_vals, [2,2])
-        expected_DataArray = DataArray( expected_vals , 
-                coords = [ x_trans, y_trans, models, y_trans], 
-                dims = [ 'x_trans', 'y_trans', 'models', 'y_trans_m' ] )
-        self.assertDataArrayEqual(expected_DataArray, actual_DataArray) 
+        x = np.linspace(-3, 3, 6)
+        y = np.linspace(-3, 3, 5)
+        z = range(4) 
+        da_vals = np.arange(6 * 5 * 4).reshape((6, 5, 4))
+        da = DataArray(da_vals, coords=[x, y, z], dims=['x', 'y', 'z'])
         
+        dm_vals = range(4)
+        dm = DataArray(dm_vals, coords=[z], dims=['z'])
         
+        #nd dot 1d
+        actual = da.dot(dm)
+        expected_vals = np.tensordot(da_vals, dm_vals, [2, 0])
+        expected = DataArray(expected_vals, coords=[x, y], dims=['x', 'y'])
+        self.assertDataArrayEqual(expected, actual)
         
+        #all shared dims
+        actual = da.dot(da)
+        expected_vals = np.tensordot(da_vals, da_vals, axes=([0, 1, 2], [0, 1, 2]))
+        expected = DataArray(expected_vals)
+        self.assertDataArrayEqual(expected, actual)
         
+        #multiple shared dims
+        dm_vals = np.arange(20 * 5 * 4).reshape((20, 5, 4))
+        j = np.linspace(-3, 3, 20)
+        dm = DataArray(dm_vals, coords=[j, y, z], dims=['j', 'y', 'z'])
+        actual = da.dot(dm)
+        expected_vals = np.tensordot(da_vals, dm_vals, axes=([1, 2], [1, 2]))
+        expected = DataArray(expected_vals, coords=[x, j], dims=['x', 'j'])
+        self.assertDataArrayEqual(expected, actual)
+        
+        with self.assertRaises(NotImplementedError):
+            da.dot(dm.to_dataset(name='dm'))
+        with self.assertRaises(TypeError):
+            da.dot(dm.values)
+        with self.assertRaises(ValueError):
+            da.dot(DataArray(1))

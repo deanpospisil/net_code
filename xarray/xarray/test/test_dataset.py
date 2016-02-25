@@ -1101,6 +1101,12 @@ class TestDataset(TestCase):
         with self.assertRaises(UnexpectedDataAccess):
             renamed['renamed_var1'].values
 
+    def test_rename_same_name(self):
+        data = create_test_data()
+        newnames = {'var1': 'var1', 'dim2': 'dim2'}
+        renamed = data.rename(newnames)
+        self.assertDatasetIdentical(renamed, data)
+
     def test_rename_inplace(self):
         times = pd.date_range('2000-01-01', periods=3)
         data = Dataset({'z': ('x', [2, 3, 4]), 't': ('t', times)})
@@ -2252,6 +2258,15 @@ class TestDataset(TestCase):
             ds.transpose('dim1', 'dim2', 'dim3')
         with self.assertRaisesRegexp(ValueError, 'arguments to transpose'):
             ds.transpose('dim1', 'dim2', 'dim3', 'time', 'extra_dim')
+
+    def test_dataset_retains_period_index_on_transpose(self):
+
+        ds = create_test_data()
+        ds['time'] = pd.period_range('2000-01-01', periods=20)
+
+        transposed = ds.transpose()
+
+        self.assertIsInstance(transposed.time.to_index(), pd.PeriodIndex)
 
     def test_dataset_diff_n1_simple(self):
         ds = Dataset({'foo': ('x', [5, 5, 6, 6])})

@@ -14,9 +14,11 @@ mat = l.loadmat(top_dir + 'analysis/data/models/PC2001370Params.mat')
 s = mat['orcurv'][0]
 
 #adjustment for repeats [ 14, 15, 16,17, 318, 319, 320, 321]
+
 a = np.hstack((range(14), range(18,318)))
 a = np.hstack((a, range(322, 370)))
 s = s[a]
+'''
 
 shape_dict_list = [{'curvature':None, 'orientation':None} ]
 

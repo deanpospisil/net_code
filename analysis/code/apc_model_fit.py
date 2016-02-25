@@ -105,5 +105,4 @@ dam.attrs['model'] = sha
 
 
 ds = xr.Dataset({'resp': dam})
-#ds.to_netcdf(top_dir + 'analysis/data/models/apc_models.nc')
-
+ds.to_netcdf(top_dir + 'analysis/data/models/apc_models.nc')

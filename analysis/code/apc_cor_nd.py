@@ -36,9 +36,10 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None):
         proj_resp_on_model_var = proj_resp_on_model
         n_over = 1
 
-    all_cor = (proj_resp_on_model_var) / (resp_norm*(n_over**0.5))
-
-    corarg = all_cor.argmax('models').load()
+    all_cor = (proj_resp_on_model_var) / (resp_norm * (n_over**0.5))
+    all_cor = all_cor.load()
+    
+    corarg = all_cor.argmax('models')
     model_fit_params = dmod.coords['models'][corarg]
     cor = all_cor['models'][corarg]
     for key in model_fit_params.coords.keys():

@@ -6,7 +6,7 @@ Created on Thu Jan 21 14:54:30 2016
 """
 
 import os, sys
-
+import numpy as np
 top_dir = os.getcwd().split('net_code')[0] + 'net_code/'
 sys.path.append(top_dir)
 sys.path.append( top_dir + 'xarray')
@@ -38,8 +38,12 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None):
 
     all_cor = (proj_resp_on_model_var) / (resp_norm*(n_over**0.5))
 
-    cor = all_cor.max('models').load()
-
+    corarg = all_cor.argmax('models').load()
+    model_fit_params = dmod.coords['models'][corarg]
+    cor = all_cor['models'][corarg]
+    for key in model_fit_params.coords.keys():
+        cor[key] = ('unit', np.squeeze(model_fit_params[key]))
+    
     sha = dm.provenance_commit(top_dir)
     cor.attrs['analysis'] = sha
     cor.attrs['model'] = dmod.attrs['model']

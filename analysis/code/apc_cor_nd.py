@@ -6,11 +6,10 @@ Created on Thu Jan 21 14:54:30 2016
 """
 
 import os, sys
-import numpy as np
 
 top_dir = os.getcwd().split('net_code')[0] + 'net_code/'
 sys.path.append(top_dir)
-sys.path.append( top_dir + '/xarray')
+sys.path.append( top_dir + 'xarray')
 import xarray as xr
 import d_misc as dm
 
@@ -50,14 +49,21 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None):
 
 dmod = xr.open_dataset(top_dir + 'analysis/data/models/apc_models.nc',
                        chunks = {'models': 1000, 'shapes': 370}  )
+
+da = xr.open_dataset( top_dir + 'analysis/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks={'unit': 100})
+da = da.sel(x=0, method='nearest')
+da = da.sel(unit = range(10),  method = 'nearest')
+cor = cor_resp_to_model(da['resp'], dmod, fit_over_dims = None)
+
+'''
 #da = xr.open_dataset( top_dir + 'analysis/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
-dmod = dmod.sel(models = range(10), method = 'nearest' )
-ds = xr.open_mfdataset(top_dir + 'analysis/data/iter_*.nc', 
-                       concat_dim = 'niter', chunks = {'unit':100, 'shapes': 370})
-da = ds.to_array().chunk(chunks = {'niter':1, 'unit':100, 'shapes': 370})
-da = da.sel(x = np.linspace(-50, 50, 2), method = 'nearest' )
-da = da.sel(niter = np.linspace(0, da.coords['niter'].shape[0], 2),  
-                                method = 'nearest')
+#dmod = dmod.sel(models = range(10), method = 'nearest' )
+#ds = xr.open_mfdataset(top_dir + 'analysis/data/iter_*.nc', 
+#                       concat_dim = 'niter', chunks = {'unit':100, 'shapes': 370})
+#da = ds.to_array().chunk(chunks = {'niter':1, 'unit':100, 'shapes': 370})
+#da = da.sel(x = np.linspace(-50, 50, 2), method = 'nearest' )
+#da = da.sel(niter = np.linspace(0, da.coords['niter'].shape[0], 2),  
+#                                method = 'nearest')
 #da = da.sel(unit = range(10),  method = 'nearest')
 
 
@@ -68,3 +74,4 @@ for iterind in ds.niter.values:
 
 ds = xr.open_mfdataset(top_dir + 'analysis/data/r_iter_*.nc', concat_dim = 'niter')
 ds.to_netcdf(top_dir + 'analysis/data/r_iter_total_' + str(da.niter.shape[0]) +  '.nc')
+'''

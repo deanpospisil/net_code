@@ -40,8 +40,7 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None):
     all_cor = all_cor.load()
     
     corarg = all_cor.argmax('models')
-    model_fit_params = dmod.coords['models'][corarg]
-    
+    model_fit_params = dmod.coords['models'][corarg]    
     cor = all_cor.max('models')
         
     for key in model_fit_params.coords.keys():

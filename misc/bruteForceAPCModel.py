@@ -25,7 +25,7 @@ import pandas as pd
 def apc370models(nMeans=10, nSD=10, perc=5):
     #the parameters of the shapes
 
-    mat = l.loadmat('/Users/deanpospisil/Desktop/net_code/imggen/PC2001370Params.mat')
+    mat = l.loadmat('/Users/deanpospisil/Desktop/net_code/analysis/data/models/PC2001370Params.mat')
     s = mat['orcurv'][0]
     
     #adjustment for repeats [ 14, 15, 16,17, 318, 319, 320, 321] 

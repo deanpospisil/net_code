@@ -67,6 +67,7 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
     model_resp = model_resp / magnitude
 
     return model_resp
+
 with open(top_dir + 'images/baseimgs/PC370/PC370_params.p', 'rb') as f:
     shape_dict_list = pickle.load(f)
 

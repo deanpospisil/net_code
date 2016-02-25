@@ -111,9 +111,9 @@ minAngSD = np.deg2rad(23)
 maxCurSD = 0.98
 minCurSD = 0.09
 
-nMeans = 3
-nSD = 3
-fn = 'apc_models_test.nc'
+nMeans = 16
+nSD = 16
+fn = 'apc_models.nc'
 dam = make_apc_models(shape_dict_list, fn, nMeans, nSD, maxAngSD, minAngSD, maxCurSD, minCurSD,
                 prov_commit=True)
 

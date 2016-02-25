@@ -16,6 +16,10 @@ import matplotlib.pyplot as plt
 
 top_dir = os.getcwd().split('net_code')[0] + 'net_code/'
 sys.path.append(top_dir)
+
+top_dir = os.getcwd().split('net_code')[0] + 'net_code/'
+sys.path.append(top_dir + 'xarray')
+
 import xarray as xr
 import d_misc as dm
 import pickle
@@ -68,7 +72,7 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
 
     return model_resp
 
-with open(top_dir + 'images/baseimgs/PC370/PC370_params.p', 'rb') as f:
+with open(top_dir + 'analysis/data/models/PC370_params.p', 'rb') as f:
     shape_dict_list = pickle.load(f)
 
 maxAngSD = np.deg2rad(171)
@@ -76,8 +80,8 @@ minAngSD = np.deg2rad(23)
 maxCurSD = 0.98
 minCurSD = 0.09
 
-nMeans = 16
-nSD = 16
+nMeans = 5
+nSD = 5
 
 #make this into a pyramid based on d-prime
 orMeans = np.linspace(0, 2*np.pi - 2*np.pi / nMeans, nMeans)
@@ -92,7 +96,7 @@ model_params_dict = ord_d({'or_sd': orSDs, 'or_mean':orMeans,
 model_params_dict = dm.cartesian_prod_dicts_lists( model_params_dict )
 
 
-model_resp = apc_models(shape_dict_list=shape_dict_list, 
+model_resp = apc_models(shape_dict_list=shape_dict_list,
                         model_params_dict=model_params_dict)
 
 dam = xr.DataArray(model_resp, dims = ['shapes', 'models'])

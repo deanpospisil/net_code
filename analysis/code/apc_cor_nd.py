@@ -41,7 +41,9 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None):
     
     corarg = all_cor.argmax('models')
     model_fit_params = dmod.coords['models'][corarg]
-    cor = all_cor['models'][corarg]
+    
+    cor = all_cor.max('models')
+        
     for key in model_fit_params.coords.keys():
         cor[key] = ('unit', np.squeeze(model_fit_params[key]))
     

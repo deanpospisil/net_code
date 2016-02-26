@@ -12,22 +12,13 @@ What's New
 
 .. _whats-new.0.7.1:
 
-
-v0.7.1 (forthcoming)
---------------------
+v0.7.1 (TBA)
+------------------------
 
 Enhancements
-------------
+~~~~~~~~~~~~
+-xarray version of np.dot :py:meth:`~DataArray.dot`. Takes the sum product over the shared dimensions of two DataArrays. Can be useful for measuring correlation over common dimensions of two DataArrays.
 
-- ``Dataset.rename`` and ``DataArray.rename`` support the old and new names being the same.  This had been supported prior to v0.7.0 but was broken in 0.7.0.
-- ``DataArray.reindex_like`` now maintains the dtype of complex numbers when reindexing leads to na values.
-- ``xarray`` version of ``np.dot``  :py:meth:`~DataArray.dot`. Takes the dot product over the shared dimensions of two ``DataArrays```.
-
-Bug fixes
-~~~~~~~~~
-
-- Single dimension variables no longer transpose as part of a broader ``.transpose``. This behavior
-  was causing ``pandas.PeriodIndex`` dimensions to lose their type
 
 .. _whats-new.0.7.0:
 

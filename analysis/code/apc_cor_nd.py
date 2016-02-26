@@ -38,14 +38,14 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None):
 
     all_cor = (proj_resp_on_model_var) / (resp_norm * (n_over**0.5))
     all_cor = all_cor.load()
-    
+    all_cor = all_cor.dropna('unit')
     corarg = all_cor.argmax('models', skipna=True)
-    model_fit_params = dmod.coords['models'][corarg]    
+    model_fit_params = dmod.coords['models'][corarg]
     cor = all_cor.max('models')
-        
+
     for key in model_fit_params.coords.keys():
         cor[key] = ('unit', np.squeeze(model_fit_params[key]))
-    
+
     sha = dm.provenance_commit(top_dir)
     cor.attrs['analysis'] = sha
     cor.attrs['model'] = dmod.attrs['model']
@@ -55,20 +55,21 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None):
 
 dmod = xr.open_dataset(top_dir + 'analysis/data/models/apc_models.nc',
                        chunks = {'models': 1000, 'shapes': 370}  )
-
+dmod = dmod.sel(models = range(10), method = 'nearest' )
 da = xr.open_dataset( top_dir + 'analysis/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks={'unit': 100})
 da = da.sel(x=0, method='nearest')
 da = da.sel(unit = range(109),  method = 'nearest')
+da = da.dropna('unit')
 cor = cor_resp_to_model(da['resp'], dmod, fit_over_dims = None)
 
 '''
 #da = xr.open_dataset( top_dir + 'analysis/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
 #dmod = dmod.sel(models = range(10), method = 'nearest' )
-#ds = xr.open_mfdataset(top_dir + 'analysis/data/iter_*.nc', 
+#ds = xr.open_mfdataset(top_dir + 'analysis/data/iter_*.nc',
 #                       concat_dim = 'niter', chunks = {'unit':100, 'shapes': 370})
 #da = ds.to_array().chunk(chunks = {'niter':1, 'unit':100, 'shapes': 370})
 #da = da.sel(x = np.linspace(-50, 50, 2), method = 'nearest' )
-#da = da.sel(niter = np.linspace(0, da.coords['niter'].shape[0], 2),  
+#da = da.sel(niter = np.linspace(0, da.coords['niter'].shape[0], 2),
 #                                method = 'nearest')
 #da = da.sel(unit = range(10),  method = 'nearest')
 

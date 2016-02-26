@@ -16,14 +16,10 @@ import matplotlib.pyplot as plt
 
 top_dir = os.getcwd().split('net_code')[0] + 'net_code/'
 sys.path.append(top_dir)
-<<<<<<< HEAD
 
 
 sys.path.append(top_dir + 'xarray')
-=======
-sys.path.append(top_dir + 'xarray')
 
->>>>>>> 6789ab6c1a4d6d1d23bf50a0e8d263b6b39de031
 import xarray as xr
 import d_misc as dm
 import pickle

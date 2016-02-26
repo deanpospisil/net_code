@@ -15,15 +15,25 @@ import d_misc as dm
 import pandas as pd
 import matplotlib.pyplot as plt
 
-dmod = xr.open_dataset(top_dir + 'analysis/data/r_iter_total_10.nc' ).load()
-dmod = xr.open_dataset(top_dir + 'analysis/data/apc_models_r_trans.nc' ).load()
-dmod = dmod.reindex( { 'niter': np.sort(dmod.coords['niter'].values )})
 
 
-r=[]
-for niter in dmod.coords['niter'].values:
-    r.append(np.sum(np.squeeze(dmod.sel(niter=niter).to_array().values>0.5)))
+da = xr.open_dataset( top_dir + 'analysis/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
 
-plt.stem(r)
+dmod = dmod.sel(models = range(10), method = 'nearest' )
+ds = xr.open_mfdataset(top_dir + 'analysis/data/iter_*.nc',
+                       concat_dim = 'niter', chunks = {'unit':100, 'shapes': 370})
+da = ds.to_array().chunk(chunks = {'niter':1, 'unit':100, 'shapes': 370})
+da = da.sel(x = np.linspace(-50, 50, 2), method = 'nearest' )
+da = da.sel(niter = np.linspace(0, da.coords['niter'].shape[0], 2),
+                                method = 'nearest')
+da = da.sel(unit = range(10),  method = 'nearest')
 
-np.sum(dmod['cor'].values>0.5)
+
+for iterind in ds.niter.values:
+    da_c = da.sel(niter=iterind)
+    cor = cor_resp_to_model(da_c, dmod, fit_over_dims = ('x',))
+    cor.to_dataset(name='r').to_netcdf(top_dir + 'analysis/data/r_iter_' + str(iterind) + '.nc')
+
+ds = xr.open_mfdataset(top_dir + 'analysis/data/r_iter_*.nc', concat_dim = 'niter')
+ds.to_netcdf(top_dir + 'analysis/data/r_iter_total_' + str(da.niter.shape[0]) +  '.nc')
+

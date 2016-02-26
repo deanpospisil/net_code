@@ -40,6 +40,7 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None):
     all_cor = all_cor.load()
     all_cor = all_cor.dropna('unit')
     corarg = all_cor.argmax('models', skipna=True)
+
     model_fit_params = dmod.coords['models'][corarg]
     cor = all_cor.max('models')
 
@@ -59,7 +60,7 @@ dmod = dmod.sel(models = range(10), method = 'nearest' )
 da = xr.open_dataset( top_dir + 'analysis/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks={'unit': 100})
 da = da.sel(x=0, method='nearest')
 da = da.sel(unit = range(109),  method = 'nearest')
-da = da.dropna('unit')
+
 cor = cor_resp_to_model(da['resp'], dmod, fit_over_dims = None)
 
 '''

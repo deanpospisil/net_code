@@ -16,9 +16,14 @@ import matplotlib.pyplot as plt
 
 top_dir = os.getcwd().split('net_code')[0] + 'net_code/'
 sys.path.append(top_dir)
+<<<<<<< HEAD
 
 
 sys.path.append(top_dir + 'xarray')
+=======
+sys.path.append(top_dir + 'xarray')
+
+>>>>>>> 6789ab6c1a4d6d1d23bf50a0e8d263b6b39de031
 import xarray as xr
 import d_misc as dm
 import pickle
@@ -39,7 +44,7 @@ def get_2d_dims_right(vec, dims_order=(1,0)):
 
 #takes a set of points in apc plane and makes prediction based on different receptive fields
 def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
-                                   model_params_dict = { 'or_sd': [3.14], 'or_mean':[3.14], 'cur_mean':[1], 'cur_sd':[0.1]} ):
+                                   model_params_dict={'or_sd': [3.14], 'or_mean':[3.14], 'cur_mean':[1], 'cur_sd':[0.1]}):
 
      # make sure everything has the right dimensionality for broadcating
     for key in model_params_dict:
@@ -103,7 +108,7 @@ def make_apc_models(shape_dict_list, fn, nMeans, nSD, maxAngSD, minAngSD, maxCur
     ds.to_netcdf(top_dir + 'analysis/data/models/' + fn)
     return dam
 
-with open(top_dir + 'images/baseimgs/PC370/PC370_params.p', 'rb') as f:
+with open(top_dir + 'analysis/data/models/PC370_params.p', 'rb') as f:
     shape_dict_list = pickle.load(f)
 
 maxAngSD = np.deg2rad(171)
@@ -116,4 +121,5 @@ nSD = 16
 fn = 'apc_models.nc'
 dam = make_apc_models(shape_dict_list, fn, nMeans, nSD, maxAngSD, minAngSD, maxCurSD, minCurSD,
                 prov_commit=True)
+
 

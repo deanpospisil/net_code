@@ -9,7 +9,12 @@ import os, sys
 import numpy as np
 top_dir = os.getcwd().split('net_code')[0] + 'net_code/'
 sys.path.append(top_dir)
+<<<<<<< HEAD
+sys.path.append( top_dir + '/xarray')
+
+=======
 sys.path.append( top_dir + 'xarray')
+>>>>>>> 45af669ebc1ee3e81d2d4bee4fe99effd8dbcf5d
 import xarray as xr
 import d_misc as dm
 
@@ -38,8 +43,10 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None):
 
     all_cor = (proj_resp_on_model_var) / (resp_norm * (n_over**0.5))
     all_cor = all_cor.load()
+
     all_cor = all_cor.dropna('unit')
     corarg = all_cor.argmax('models', skipna=True)
+
 
     model_fit_params = dmod.coords['models'][corarg]
     cor = all_cor.max('models')
@@ -65,6 +72,7 @@ cor = cor_resp_to_model(da['resp'], dmod, fit_over_dims = None)
 
 '''
 #da = xr.open_dataset( top_dir + 'analysis/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
+
 #dmod = dmod.sel(models = range(10), method = 'nearest' )
 #ds = xr.open_mfdataset(top_dir + 'analysis/data/iter_*.nc',
 #                       concat_dim = 'niter', chunks = {'unit':100, 'shapes': 370})

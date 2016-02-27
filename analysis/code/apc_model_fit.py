@@ -107,6 +107,12 @@ def make_apc_models(shape_dict_list, fn, nMeans, nSD, maxAngSD, minAngSD, maxCur
 with open(top_dir + 'analysis/data/models/PC370_params.p', 'rb') as f:
     shape_dict_list = pickle.load(f)
 
+da = xr.open_dataset(top_dir + 'analysis/data/alex_bowl.nc', chunks = {'shapes': 370})['resp']
+
+shape_id = da.coords['shapes'].values
+
+shape_dict_list = [shape_dict_list[sn] for sn in shape_id.astype(int)]
+
 maxAngSD = np.deg2rad(171)
 minAngSD = np.deg2rad(23)
 maxCurSD = 0.98
@@ -114,7 +120,7 @@ minCurSD = 0.09
 
 nMeans = 16
 nSD = 16
-fn = 'apc_models.nc'
+fn = 'apc_models_bowl.nc'
 dam = make_apc_models(shape_dict_list, fn, nMeans, nSD, maxAngSD, minAngSD, maxCurSD, minCurSD,
                 prov_commit=True)
 

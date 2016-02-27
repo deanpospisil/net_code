@@ -72,7 +72,7 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
 
     return model_resp
 
-def make_apc_models(shape_dict_list, fn, nMeans, nSD, maxAngSD, minAngSD, maxCurSD, minCurSD,
+def make_apc_models(shape_dict_list, shape_id, fn, nMeans, nSD, maxAngSD, minAngSD, maxCurSD, minCurSD,
                     prov_commit = False):
     #make this into a pyramid based on d-prime
     orMeans = np.linspace(0, 2*np.pi - 2*np.pi / nMeans, nMeans)
@@ -107,7 +107,7 @@ def make_apc_models(shape_dict_list, fn, nMeans, nSD, maxAngSD, minAngSD, maxCur
 with open(top_dir + 'analysis/data/models/PC370_params.p', 'rb') as f:
     shape_dict_list = pickle.load(f)
 
-da = xr.open_dataset(top_dir + 'analysis/data/alex_bowl.nc', chunks = {'shapes': 370})['resp']
+da = xr.open_dataset(top_dir + 'analysis/data/alex_bowl.nc', chunks = {'shapes':370})['resp']
 
 shape_id = da.coords['shapes'].values
 
@@ -121,7 +121,7 @@ minCurSD = 0.09
 nMeans = 16
 nSD = 16
 fn = 'apc_models_bowl.nc'
-dam = make_apc_models(shape_dict_list, fn, nMeans, nSD, maxAngSD, minAngSD, maxCurSD, minCurSD,
-                prov_commit=True)
+dam = make_apc_models(shape_dict_list, shape_id, fn, nMeans, nSD, maxAngSD, minAngSD,
+                      maxCurSD, minCurSD, prov_commit=False)
 
 

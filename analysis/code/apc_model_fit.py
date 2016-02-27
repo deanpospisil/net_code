@@ -90,7 +90,7 @@ def make_apc_models(shape_dict_list, shape_id, fn, nMeans, nSD, maxAngSD, minAng
     model_resp = apc_models(shape_dict_list=shape_dict_list,
                             model_params_dict=model_params_dict)
 
-    dam = xr.DataArray(model_resp, dims = ['shapes', 'models'])
+    dam = xr.DataArray(model_resp, dims = ['shapes', 'models'], coords=[shape_id, range(model_resp.shape[1])])
 
     for key in model_params_dict.keys():
         dam[key] = ('models', np.squeeze(model_params_dict[key]))

@@ -51,7 +51,8 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None):
     cor.attrs['model'] = dmod.attrs['model']
 
     return cor
-
+    
+'''
 
 dmod = xr.open_dataset(top_dir + 'analysis/data/models/apc_models.nc',
                        chunks = {'models': 1000, 'shapes': 370}  )
@@ -61,7 +62,7 @@ da = da.sel(x=0, method='nearest')
 da = da.sel(unit = range(109),  method = 'nearest')
 cor = cor_resp_to_model(da['resp'], dmod, fit_over_dims = None)
 
-'''
+
 #da = xr.open_dataset( top_dir + 'analysis/data/PC370_shapes_0.0_369.0_370_x_-50.0_50.0_101.nc', chunks = {'unit': 100}  )
 #dmod = dmod.sel(models = range(10), method = 'nearest' )
 #ds = xr.open_mfdataset(top_dir + 'analysis/data/iter_*.nc', 

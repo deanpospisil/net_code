@@ -16,6 +16,10 @@ import matplotlib.pyplot as plt
 
 top_dir = os.getcwd().split('net_code')[0] + 'net_code/'
 sys.path.append(top_dir)
+
+
+sys.path.append(top_dir + 'xarray')
+
 import xarray as xr
 import d_misc as dm
 import pickle
@@ -36,7 +40,7 @@ def get_2d_dims_right(vec, dims_order=(1,0)):
 
 #takes a set of points in apc plane and makes prediction based on different receptive fields
 def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
-                                   model_params_dict = { 'or_sd': [3.14], 'or_mean':[3.14], 'cur_mean':[1], 'cur_sd':[0.1]} ):
+                                   model_params_dict={'or_sd': [3.14], 'or_mean':[3.14], 'cur_mean':[1], 'cur_sd':[0.1]}):
 
      # make sure everything has the right dimensionality for broadcating
     for key in model_params_dict:
@@ -67,50 +71,57 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
     model_resp = model_resp / magnitude
 
     return model_resp
-    
-def make_apc_models(shape_dict_list, fn, nMeans, nSD, maxAngSD, minAngSD, maxCurSD, minCurSD,
+
+def make_apc_models(shape_dict_list, shape_id, fn, nMeans, nSD, maxAngSD, minAngSD, maxCurSD, minCurSD,
                     prov_commit = False):
     #make this into a pyramid based on d-prime
     orMeans = np.linspace(0, 2*np.pi - 2*np.pi / nMeans, nMeans)
     orSDs = np.logspace(np.log10( minAngSD ), np.log10( maxAngSD ), nSD )
     curvMeans = np.linspace( -0.5, 1, nMeans )
     curvSDs = np.logspace( np.log10(minCurSD), np.log10(maxCurSD), nSD )
-    
-    
+
+
     model_params_dict = ord_d({'or_sd': orSDs, 'or_mean':orMeans,
                          'cur_mean' :curvMeans, 'cur_sd':curvSDs})
-    
+
     model_params_dict = dm.cartesian_prod_dicts_lists( model_params_dict )
-    
-    
-    model_resp = apc_models(shape_dict_list=shape_dict_list, 
+
+
+    model_resp = apc_models(shape_dict_list=shape_dict_list,
                             model_params_dict=model_params_dict)
-    
-    dam = xr.DataArray(model_resp, dims = ['shapes', 'models'])
-    
+
+    dam = xr.DataArray(model_resp, dims = ['shapes', 'models'], coords=[shape_id, range(model_resp.shape[1])])
+
     for key in model_params_dict.keys():
         dam[key] = ('models', np.squeeze(model_params_dict[key]))
-    
+
     if prov_commit:
         sha = dm.provenance_commit(top_dir)
         dam.attrs['model'] = sha
-    
-    
+
+
     ds = xr.Dataset({'resp': dam})
     ds.to_netcdf(top_dir + 'analysis/data/models/' + fn)
     return dam
 
-with open(top_dir + 'images/baseimgs/PC370/PC370_params.p', 'rb') as f:
+with open(top_dir + 'analysis/data/models/PC370_params.p', 'rb') as f:
     shape_dict_list = pickle.load(f)
+
+da = xr.open_dataset(top_dir + 'analysis/data/alex_bowl.nc', chunks = {'shapes':370})['resp']
+
+shape_id = da.coords['shapes'].values
+
+shape_dict_list = [shape_dict_list[sn] for sn in shape_id.astype(int)]
 
 maxAngSD = np.deg2rad(171)
 minAngSD = np.deg2rad(23)
 maxCurSD = 0.98
 minCurSD = 0.09
 
-nMeans = 3
-nSD = 3
-fn = 'apc_models_test.nc'
-dam = make_apc_models(shape_dict_list, fn, nMeans, nSD, maxAngSD, minAngSD, maxCurSD, minCurSD,
-                prov_commit=True)
-                
+nMeans = 16
+nSD = 16
+fn = 'apc_models_bowl.nc'
+dam = make_apc_models(shape_dict_list, shape_id, fn, nMeans, nSD, maxAngSD, minAngSD,
+                      maxCurSD, minCurSD, prov_commit=False)
+
+

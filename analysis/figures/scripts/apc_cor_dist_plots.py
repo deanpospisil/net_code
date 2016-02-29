@@ -10,5 +10,5 @@ top_dir = os.getcwd().split('net_code')[0] + 'net_code/'
 sys.path.append(top_dir + 'xarray')
 import xarray as xr
 fname = 'apc_models_r_trans101'
-fitm = xr.open_dataset(top_dir +'analysis/data/' + fname + '.nc' )
+fitm = xr.open_dataset(top_dir +'data/an_results/' + fname + '.nc' )
 

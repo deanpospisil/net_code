@@ -26,3 +26,6 @@ da = xr.open_dataset(top_dir + data + '/responses/'
 cor = ac.cor_resp_to_model(da, dmod, fit_over_dims=('x',))
 ds = xr.Dataset({'r':cor})
 ds.to_netcdf(top_dir + data + 'an_results/apc_model_fit_over_trans.nc')
+
+
+

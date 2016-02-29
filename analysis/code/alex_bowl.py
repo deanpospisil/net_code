@@ -54,3 +54,5 @@ dmod = xr.open_dataset(top_dir + 'net_code/data/models/apc_models_bowl.nc',
 da = xr.open_dataset(top_dir + 'net_code/data/responses/alex_bowl.nc', 
                      chunks = {'shapes': 370})['resp']
 cor = ac.cor_resp_to_model(da, dmod, fit_over_dims=None, prov_commit=False)
+ds = xr.Dataset({'r':cor})
+ds.to_netcdf(top_dir + 'net_code/data/an_results/apc_model_fit_alex_bowl.nc')

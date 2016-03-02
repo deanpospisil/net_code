@@ -37,7 +37,7 @@ def net_imgstack_response(net, stack):
         stack = np.tile(stack, (3,1,1,1))
         stack = np.swapaxes(stack, 0, 1)
 
-    layer_names = [ k for k in net.blobs.keys()]
+    layer_names = [k for k in net.blobs.keys()]
 
     #shape the data layer, (first layer) to the input
     net.blobs[ layer_names[0] ].reshape(*tuple([stack.shape[0],]) + net.blobs['data'].data.shape[1:])

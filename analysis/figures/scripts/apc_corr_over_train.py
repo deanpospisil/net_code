@@ -11,19 +11,25 @@ top_dir = os.getcwd().split('net_code')[0] + 'net_code/'
 sys.path.append(top_dir)
 sys.path.append( top_dir + '/xarray')
 import xarray as xr
-import d_misc as dm
-import pandas as pd
-import matplotlib.pyplot as plt
-
-dmod = xr.open_dataset(top_dir + 'analysis/data/r_iter_total_10.nc' ).load()
-dmod = xr.open_dataset(top_dir + 'analysis/data/apc_models_r_trans.nc' ).load()
-dmod = dmod.reindex( { 'niter': np.sort(dmod.coords['niter'].values )})
+import apc_cor_nd as ac
 
 
-r=[]
-for niter in dmod.coords['niter'].values:
-    r.append(np.sum(np.squeeze(dmod.sel(niter=niter).to_array().values>0.5)))
 
-plt.stem(r)
+dmod = xr.open_dataset(top_dir + 'analysis/data/models/apc_models.nc',
+                       chunks = {'models': 1000, 'shapes': 370}  )
+dmod = dmod.sel(models = range(10), method = 'nearest' )
+dmod = dmod['resp']
 
-np.sum(dmod['cor'].values>0.5)
+ds = xr.open_mfdataset(top_dir + 'analysis/data/iter_*.nc',
+                       concat_dim = 'niter', chunks = {'unit':100, 'shapes': 370})
+ds = ds.sel(unit = range(10),  method = 'nearest')
+
+
+for iterind in ds.niter.values:
+    da_c = da.sel(niter=iterind)
+    cor = ac.cor_resp_to_model(da_c, dmod, fit_over_dims = ('x',))
+    cor.to_dataset(name='r').to_netcdf(top_dir + 'analysis/data/r_iter_' + str(iterind) + '.nc')
+
+ds = xr.open_mfdataset(top_dir + 'analysis/data/r_iter_*.nc', concat_dim = 'niter')
+ds.to_netcdf(top_dir + 'analysis/data/r_iter_total_' + str(da.niter.shape[0]) +  '.nc')
+

@@ -32,6 +32,8 @@ def vis_square(data):
     data = data.reshape((n * data.shape[1], n * data.shape[3]) + data.shape[4:])
     
     plt.imshow(data); plt.axis('off')
+    
+    
 caffe_root = '/home/dean/caffe/'
 ann_dir = '/home/dean/caffe/models/bvlc_reference_caffenet/'
 ann_fn = 'bvlc_reference_caffenet'
@@ -54,7 +56,8 @@ transformer.set_channel_swap('data', (2,1,0))  # swap channels from RGB to BGR
 image = caffe.io.load_image(caffe_root + 'examples/images/cat.jpg')
 ti = transformer.preprocess('data', image)
 #f = open('/home/dean/cat.txt', 'w')
-
+ti[:,:,:]=0
+ti[0,:,:]=255 
 #for dim in np.shape(ti):
  #   f.write(str(dim) + ' ')
 #f.write('\n')
@@ -72,7 +75,7 @@ for layer_name, param in net.params.iteritems():
     if not ('fc' in layer_name or 'prob' in layer_name):
         mid=np.ceil(param[0].data.shape[-1]/2.)
         print(mid)
-        print(param[0].data[0,0,0, 0])
+        print(param[0].data[0,0,0,0])
         print('weight')
         print(param[1].data[0])
         print('bias')
@@ -83,24 +86,22 @@ for layer_name, param in net.params.iteritems():
         print('bias')
     
 #outputs
+layer_names = []
 print('response')
 for layer_name, blob in net.blobs.iteritems():
+    layer_names.append(layer_name)
     print layer_name + '\t' + str(blob.data.shape)
     if not ('fc' in layer_name or 'prob' in layer_name):
-        mid=np.ceil(blob.data.shape[-1]/2.)
-        print(mid)
-
-        print(blob.data[0,0,0, 0] )
+        print(blob.data[0,0,0,0] )
     else:
         print(blob.data[0,0])
-    
-
-
-#getting kernels
-#filters = net.params['conv1'][0].data #zero is kernel 1 is bias
-#vis_square(filters.transpose(0, 2, 3, 1))
-
-plt.imshow(net.params['conv1'][0].data[0,0,:,:])
-##getting features
-#feat = net.blobs['conv1'].data[0, :36] #first
-#vis_square(feat)
+ln=['data', 'conv1', 'pool1', 'norm1', 'conv2', 'pool2', 'norm2', 'conv3', 'conv4',
+ 'conv5', 'pool5', 'fc6', 'fc7', 'fc8', 'prob']    
+for k in [0,1,2]:
+    a = net.params[ln[1]][0].data[0,k,:,:]
+    print(np.sum(a))
+#b = net.params[ln[1]][1].data[0]
+#print(a)
+#print(np.sum(a))
+#print(np.sum(a)*255)+ b
+#print(b)

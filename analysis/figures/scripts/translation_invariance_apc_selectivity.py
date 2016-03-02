@@ -27,7 +27,7 @@ plt.close('all')
 
 #sns.boxplot(x="layer_label", y="r", data=b[['r', 'layer_label']])
 b_t=b[b['r']>0.5]
-'''
+
 sns.jointplot(kind='kde', x="cur_mean", y="cur_sd", data=b_t[['cur_mean', 'cur_sd']])
 
 g=sns.jointplot(kind='kde', x="or_mean", y="or_sd", data=b_t[['or_mean', 'or_sd']])
@@ -35,13 +35,13 @@ g.plot_joint(plt.scatter, alpha=0.01)
 
 g = sns.PairGrid(b_t[['cur_mean','cur_sd', 'or_mean', 'or_sd','r']])
 g.map_diag(sns.kdeplot)
-g.map_offdiag(sns.kdeplot, cmap="Blues_d", n_levels=6)
+g.map_offdiag(sns.kdeplot, cmap="Blues_d", n_levels=30)
 
-'''
+
 
 fillb = b[['r','layer_label']]
 
-per = b[['r','layer_label']][b['r']>0.5].groupby('layer_label', sort=False).count() / fillb.groupby('layer_label', sort=False).count()
+per = b[['r','layer_label']][b['r']>0.5].groupby('layer_label', sort=False).count()/ fillb.groupby('layer_label', sort=False).count()
 per.plot(kind = 'bar')
 plt.ylim((0,1))
 plt.title('Percent units > 0.5 Correlation')

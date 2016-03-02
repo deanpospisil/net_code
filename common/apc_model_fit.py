@@ -54,7 +54,7 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
     norm_rv = st.norm( scale = model_params_dict['cur_sd'] , loc = model_params_dict['cur_mean'] )
 
     #get responses to all points for each axis ap and c then their product, then the max of all those points as the resp
-    model_resp_all_apc_points = [von_rv.pdf( apc_points['orientation']) * norm_rv.pdf( apc_points['curvature'] ) for apc_points in shape_dict_list]
+    model_resp_all_apc_points = [von_rv.pdf(apc_points['orientation']) * norm_rv.pdf( apc_points['curvature'] ) for apc_points in shape_dict_list]
     model_resp = np.array([ np.max( a_shape, axis = 0 ) for a_shape in model_resp_all_apc_points])
 
     #mean subtract

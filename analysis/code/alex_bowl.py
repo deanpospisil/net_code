@@ -16,6 +16,8 @@ sys.path.append( top_dir + 'xarray/')
 
 import xarray as xr
 import apc_model_fit as ac
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 #put responses into xarray
 m = l.loadmat(top_dir + '/net_code/data/responses/pyresponses.mat')
@@ -56,3 +58,19 @@ da = xr.open_dataset(top_dir + 'net_code/data/responses/alex_bowl.nc',
 cor = ac.cor_resp_to_model(da, dmod, fit_over_dims=None, prov_commit=False)
 ds = xr.Dataset({'r':cor})
 ds.to_netcdf(top_dir + 'net_code/data/an_results/apc_model_fit_alex_bowl.nc')
+
+
+b = ds.to_dataframe(name='r')
+plt.close('all')
+
+#sns.boxplot(x="layer_label", y="r", data=b[['r', 'layer_label']])
+b_t=b[b['r']>0.5]
+
+sns.jointplot(kind='kde', x="cur_mean", y="cur_sd", data=b_t[['cur_mean', 'cur_sd']])
+
+g=sns.jointplot(kind='kde', x="or_mean", y="or_sd", data=b_t[['or_mean', 'or_sd']])
+g.plot_joint(plt.scatter, alpha=0.01)
+
+g = sns.PairGrid(b_t[['cur_mean','cur_sd', 'or_mean', 'or_sd','r']])
+g.map_diag(sns.kdeplot)
+g.map_offdiag(sns.kdeplot, cmap="Blues_d", n_levels=6)

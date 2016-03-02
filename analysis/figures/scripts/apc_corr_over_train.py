@@ -13,8 +13,6 @@ sys.path.append( top_dir + '/xarray')
 import xarray as xr
 import apc_cor_nd as ac
 
-
-
 dmod = xr.open_dataset(top_dir + 'analysis/data/models/apc_models.nc',
                        chunks = {'models': 1000, 'shapes': 370}  )
 dmod = dmod.sel(models = range(10), method = 'nearest' )

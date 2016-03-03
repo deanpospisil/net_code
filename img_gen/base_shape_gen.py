@@ -12,10 +12,10 @@ import scipy as sc
 import matplotlib.pyplot as plt
 import os
 import pickle
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-cwd = os.path.dirname(dname)
-sys.path.append( cwd)
+top_dir = os.getcwd().split('net_code')[0]
+sys.path.append(top_dir + 'net_code/common')
+sys.path.append( top_dir + 'xarray/')
+
 import d_curve as dc
 import d_misc as dm
 import d_img_process as imp
@@ -29,7 +29,7 @@ def get_center_boundary(x, y):
     cx = normalize * np.sum( (x[minusone] + x[:] ) * (x[minusone]*y[:] - x[:]*y[minusone]) )
     cy = normalize * np.sum( (y[minusone] + y[:] ) * (x[minusone]*y[:] - x[:]*y[minusone]) )
     return cx, cy
-    
+
 def center_boundary(s):
     #centroid, center of mass, https://en.wikipedia.org/wiki/Centroid#Centroid_of_polygon
     for ind in range(len(s)):
@@ -55,10 +55,10 @@ def boundary_to_mat_by_round(s, n_pix_per_side, frac_of_image, max_ext, fill=Tru
     tr = scale_center_boundary_for_mat(s, n_pix_per_side, frac_of_image, max_ext)
     tr = tr.astype(int)
     im[tr[:,1], tr[:,0]] = 1
-    
+
     if fill:
         im = ndimage.binary_fill_holes(im).astype(int)
-        
+
 #        if not im[tuple(np.median(tr,0))] == 1:
 #            raise ValueError('shape not bounded')
     return im
@@ -66,7 +66,7 @@ def boundary_to_mat_by_round(s, n_pix_per_side, frac_of_image, max_ext, fill=Tru
 
 def boundary_to_mat_via_plot(boundary, n_pix_per_side=227, frac_of_img=1, fill=True):
     n_pix_per_side_old = n_pix_per_side
-    if fracOfImage > 1:
+    if frac_of_img > 1:
         n_pix_per_side = round(n_pix_per_side * frac_of_img)
     plt.close('all')
     inchOverPix = 2.84/227. #this happens to work because of the dpi of my current screen. 1920X1080
@@ -98,8 +98,8 @@ def boundary_to_mat_via_plot(boundary, n_pix_per_side=227, frac_of_img=1, fill=T
     return ima
 
 
-def save_boundaries_as_image(imlist, save_dir, cwd, max_ext, n_pix_per_side=227,  
-                             fill=True, require_provenance=False, 
+def save_boundaries_as_image(imlist, save_dir, cwd, max_ext, n_pix_per_side=227,
+                             fill=True, require_provenance=False,
                              frac_of_image=1, use_round=True):
     dir_filenames = os.listdir(save_dir)
     #remove existing files
@@ -108,21 +108,21 @@ def save_boundaries_as_image(imlist, save_dir, cwd, max_ext, n_pix_per_side=227,
             os.remove(save_dir + name)
     if require_provenance is True:
         #commit the state of the directory and get is sha identification
-        sha = dm.provenance_commit(cwd)
+        sha = dm.provenance_commit(top_dir)
         #now save that identification with the images
         sha_file = save_dir + 'sha1'
         with open( sha_file + '.pickle', 'wb') as f:
             pickle.dump( sha, f )
-
+    imlist = scaleBoundary (imlist, frac_of_image)
     for n_boundary, boundary in enumerate(imlist):
         print(n_boundary)
         if not use_round:
-            im = boundary_to_mat_via_plot(boundary, n_pix_per_side, 
+            im = boundary_to_mat_via_plot(boundary, n_pix_per_side,
                                           frac_of_image, fill=fill)
         else:
-            im = boundary_to_mat_by_round(boundary, n_pix_per_side, 
+            im = boundary_to_mat_by_round(boundary, n_pix_per_side,
                                           frac_of_image, max_ext, fill=fill)
-        
+
         sc.misc.imsave(save_dir + str(n_boundary) + '.bmp', im)
         np.save(save_dir + str(n_boundary), im)
 
@@ -201,7 +201,7 @@ def trace_edge(im, scale, radius, npts = 100, maxlen = 1000):
 
 #generate base images
 
-saveDir = cwd + '/images/baseimgs/'
+saveDir = top_dir + 'net_code/images/baseimgs/'
 dm.ifNoDirMakeDir(saveDir)
 
 baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
@@ -213,7 +213,7 @@ dm.ifNoDirMakeDir(saveDir + baseImage +'/')
 if baseImage is baseImageList[0]:
 
 #    os.chdir( saveDir + baseImageList[0])
-    mat = l.loadmat(cwd + '/imggen/'+ 'PC3702001ShapeVerts.mat')
+    mat = l.loadmat(cwd + '/img_gen/'+ 'PC3702001ShapeVerts.mat')
     s = np.array(mat['shapes'][0])
 
 elif baseImage is baseImageList[1]:
@@ -221,13 +221,13 @@ elif baseImage is baseImageList[1]:
     s = dc.make_n_natural_formlets(n=100,
                 nPts=nPts, radius=1, nFormlets=32, meanFormDir=np.pi,
                 stdFormDir=2*np.pi, meanFormDist=1, stdFormDist=0.1,
-                startSigma=3, endSigma=0.1, randseed=1, min_n_pix=32, 
+                startSigma=3, endSigma=0.1, randseed=1, min_n_pix=32,
                 frac_image=frac_of_image)
 elif baseImage is baseImageList[2]:
     #    os.chdir( saveDir + baseImageList[0])
-    mat = l.loadmat(cwd + '/imggen/'+ 'PC3702001ShapeVerts.mat')
+    mat = l.loadmat(top_dir + 'net_code' + '/img_gen/'+ 'PC3702001ShapeVerts.mat')
     s = np.array(mat['shapes'][0])
-    #adjustment for repeats [ 14, 15, 16,17, 318, 319, 320, 321] 
+    #adjustment for repeats [ 14, 15, 16,17, 318, 319, 320, 321]
     a = np.hstack((range(14), range(18,318)))
     a = np.hstack((a, range(322, 370)))
     s = s[a]
@@ -238,10 +238,10 @@ elif baseImage is baseImageList[3]:
 
 s = center_boundary(s)
 max_ext = np.max([np.max(np.abs(a_s)) for a_s in s])
-#s = scaleBoundary (s, frac_of_image)
-save_boundaries_as_image(s, saveDir + baseImage + '/', cwd, max_ext, n_pix_per_side=227,  
-                         fill=True, require_provenance=False, 
-                         frac_of_image=frac_of_image )
+
+save_boundaries_as_image(s, saveDir + baseImage + '/', top_dir, max_ext,
+                         n_pix_per_side=227, fill=True, require_provenance=False,
+                         frac_of_image=frac_of_image, use_round=False)
 '''
 ashape = s[0]
 

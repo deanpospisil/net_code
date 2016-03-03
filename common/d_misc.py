@@ -9,7 +9,7 @@ import os
 pi = np.pi
 from collections import OrderedDict as ordDict
 import warnings
-
+from glob import glob
 import collections
 
 
@@ -53,11 +53,17 @@ import collections
 #
 #    return sizeof(o)
 
+def list_files(paths):
+    if isinstance(paths, basestring):
+        paths = sorted(glob(paths))
+    if not paths:
+        raise IOError('no files to open')
+    return paths
 
 class OrderedSet(collections.MutableSet):
 
     def __init__(self, iterable=None):
-        self.end = end = [] 
+        self.end = end = []
         end += [None, end, end]         # sentinel node for doubly linked list
         self.map = {}                   # key --> [key, prev, next]
         if iterable is not None:
@@ -76,7 +82,7 @@ class OrderedSet(collections.MutableSet):
             curr[2] = end[1] = self.map[key] = [key, curr, end]
 
     def discard(self, key):
-        if key in self.map:        
+        if key in self.map:
             key, prev, next = self.map.pop(key)
             prev[2] = next
             next[1] = prev
@@ -112,24 +118,24 @@ class OrderedSet(collections.MutableSet):
             return len(self) == len(other) and list(self) == list(other)
         return set(self) == set(other)
 
-            
+
 if __name__ == '__main__':
     s = OrderedSet('abracadaba')
     t = OrderedSet('simsalabim')
     print(s | t)
     print(s & t)
     print(s - t)
-    
+
 def circPoints(center, radius, theta):
     circ = center[:,None] + radius * np.array([np.cos(theta), np.sin(theta)])
-    return circ 
+    return circ
 
 def nonNormalizedVonMises(x, mean, spread):
     # zeros is uniform, mean starts out centered at 0
     #x=np.array(x)
-    
+
     return np.exp((spread**-1)*np.cos(x-mean))#dont need to normalize this as my measure of fit is correlation
-    
+
 def myGuassian(x,mu,sig):
     #x=np.array(x)
     return np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.)))
@@ -142,11 +148,11 @@ def numericalWrappedGaussian(x,mean,std, stdWrapLim):
     k=0
     y = myGuassian( x, mean, std)
     while k<nIter:
-        
+
         #add up unwrapping left and right simultaneously
         k+=1
         y += myGuassian( x - 2*pi*k, mean, std) + myGuassian( x + 2*pi*k, mean, std)
-        
+
     return y
 
 def sectStrideInds(stackSize, length):
@@ -156,7 +162,7 @@ def sectStrideInds(stackSize, length):
     a = np.arange( 0, length, stackSize)
     b = np.append(np.arange( stackSize, length, stackSize ), length)
     stackInd = np.intp(np.vstack((a,b))).T
-    
+
     return stackInd, remainder
 
 def ifNoDirMakeDir(dirname):
@@ -166,42 +172,42 @@ def ifNoDirMakeDir(dirname):
         dname = dname + '/' +d
         if not os.path.exists(dname):
             os.mkdir(dname)
-    
+
 def provenance_commit(cwd):
-    
+
     from os import system
     from git import Repo
     from datetime import datetime
-    
+
     repo = Repo( cwd )
     assert not repo.bare
-    
+
     #making a message. of when the commit was made
     time_str = str(datetime.now())
     time_str = 'provenance commit ' + time_str
-    
+
     commit_message = "git commit -a -m  %r." %time_str
     system(commit_message)
     sha = repo.head.commit.hexsha
-    
+
     return sha
-    
+
 def cartesian_prod_dicts_lists(the_dict):
     #takes a dictionary and produces a dictionary of the cartesian product of the input
     if not type(the_dict) is type(ordDict()):
         warnings.warn('An ordered dict was not used. Thus if this function is called again with the same dict it might not produce the same results.')
-        
+
     from sklearn.utils.extmath import cartesian
-    
+
     stim_list = []
     stim_list = tuple([ list(the_dict[ key_name ]) for key_name in the_dict ])
-        
+
     #cartesian has the last column change the fastest, thus is like c-indexing
     stim_cart_array = cartesian(stim_list)
-    
+
     cart_dict = ordDict()
     #load up the vectors assosciated with keys to cart_dict
     for key_name, key_num in zip(the_dict, range(len(the_dict))):
         cart_dict[key_name] = stim_cart_array[:, key_num]
-    
+
     return cart_dict

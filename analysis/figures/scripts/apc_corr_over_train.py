@@ -52,7 +52,7 @@ for fn in all_iter:
         dmod = dmod.sel(models=range(10), method='nearest')
         da_c = da_c.sel(unit=range(30),  method='nearest')
         da_c = da_c.sel(x=[0, 2],  method='nearest')
-
+    print(fn)     
     cor = ac.cor_resp_to_model(da_c, dmod, fit_over_dims = ('x',))
     cor.to_dataset(name='r').to_netcdf(top_dir + 'data/an_results/r_apc_models_unique' + str(fn.split('iter')[1]) )
 

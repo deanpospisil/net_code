@@ -10,7 +10,7 @@ import os, sys
 import numpy as np
 import pickle
 
-top_dir = os.getcwd().split('net_code')[0] 
+top_dir = os.getcwd().split('net_code')[0]
 sys.path.append(top_dir + 'net_code/common/')
 sys.path.append( top_dir + 'xarray/')
 
@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 #put responses into xarray
-m = l.loadmat(top_dir + '/net_code/data/responses/pyresponses.mat')
+m = l.loadmat(top_dir + 'net_code/data/responses/pyresponses.mat')
 m = m['pyresponses']
 
 shape_id = m[:, 0]
@@ -37,7 +37,6 @@ with open(top_dir + 'net_code/data/models/PC370_params.p', 'rb') as f:
 da = xr.open_dataset(top_dir + 'net_code/data/responses/alex_bowl.nc', chunks = {'shapes':370})['resp']
 
 shape_id = da.coords['shapes'].values
-
 shape_dict_list = [shape_dict_list[sn] for sn in shape_id.astype(int)]
 
 maxAngSD = np.deg2rad(171)
@@ -53,14 +52,14 @@ dam = ac.make_apc_models(shape_dict_list, shape_id, fn, nMeans, nSD, maxAngSD, m
 #load the models you made, and fit them to the cells responses
 dmod = xr.open_dataset(top_dir + 'net_code/data/models/apc_models_bowl.nc',
                        chunks = {'models': 1000, 'shapes': 370}  )['resp']
-da = xr.open_dataset(top_dir + 'net_code/data/responses/alex_bowl.nc', 
+da = xr.open_dataset(top_dir + 'net_code/data/responses/alex_bowl.nc',
                      chunks = {'shapes': 370})['resp']
 cor = ac.cor_resp_to_model(da, dmod, fit_over_dims=None, prov_commit=False)
 ds = xr.Dataset({'r':cor})
 ds.to_netcdf(top_dir + 'net_code/data/an_results/apc_model_fit_alex_bowl.nc')
 
 
-b = ds.to_dataframe(name='r')
+b = ds.to_dataframe()
 plt.close('all')
 
 #sns.boxplot(x="layer_label", y="r", data=b[['r', 'layer_label']])

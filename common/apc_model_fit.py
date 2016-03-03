@@ -11,7 +11,7 @@ import warnings
 import os, sys
 from collections import OrderedDict as ord_d
 
-top_dir = os.getcwd().split('net_code')[0] 
+top_dir = os.getcwd().split('net_code')[0]
 sys.path.append(top_dir + 'net_code/')
 sys.path.append(top_dir + 'xarray')
 
@@ -69,7 +69,7 @@ def make_apc_models(shape_dict_list, shape_id, fn, nMeans, nSD, maxAngSD, minAng
                     prov_commit = False):
     #make this into a pyramid based on d-prime
     fn = top_dir + 'net_code/data/models/' + fn
-                    
+
     orMeans = np.linspace(0, 2*np.pi - 2*np.pi / nMeans, nMeans)
     orSDs = np.logspace(np.log10( minAngSD ), np.log10( maxAngSD ), nSD )
     curvMeans = np.linspace( -0.5, 1, nMeans )
@@ -85,24 +85,28 @@ def make_apc_models(shape_dict_list, shape_id, fn, nMeans, nSD, maxAngSD, minAng
         model_resp = apc_models(shape_dict_list=shape_dict_list,
                                 model_params_dict=model_params_dict)
         dam = xr.DataArray(model_resp, dims = ['shapes', 'models'], coords=[shape_id, range(model_resp.shape[1])])
-    
+
         for key in model_params_dict.keys():
             dam[key] = ('models', np.squeeze(model_params_dict[key]))
-    
+
         if prov_commit:
             sha = dm.provenance_commit(top_dir)
-            dam.attrs['model'] = sha    
+            dam.attrs['model'] = sha
         ds = xr.Dataset({'resp': dam})
         ds.to_netcdf(fn)
         return ds
     else:
         warnings.warn('Model File has Already Been Written.')
         return xr.open_dataset(fn)
-          
+
 def cor_resp_to_model(da, dmod, fit_over_dims=None, prov_commit=False):
     #typically takes da, data, and dm, a set of linear models, an fn to write to,
     #and finally fit_over_dims which says over what dims is a models fit supposed to hold.
     da = da - da.mean(('shapes'))
+
+    dmod = dmod - dmod.mean(('shapes'))
+    dmod = dmod/dmod.vnorm(('shapes'))
+
     resp_n = da.vnorm(('shapes'))
     proj_resp_on_model = da.dot(dmod)
 
@@ -119,16 +123,17 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None, prov_commit=False):
         n_over = 1
 
     all_cor = (proj_resp_on_model_var) / (resp_norm * (n_over**0.5))
-    all_cor = all_cor.load()
     all_cor = all_cor.dropna('unit')
-    
+    all_cor = all_cor.load()
+
+
     corarg = all_cor.argmax('models')
-    model_fit_params = dmod.coords['models'][corarg]    
+    model_fit_params = dmod.coords['models'][corarg]
     cor = all_cor.max('models')
-        
+
     for key in model_fit_params.coords.keys():
         cor[key] = ('unit', np.squeeze(model_fit_params[key]))
-    
+
     if prov_commit==True and hasattr(dmod.attrs, 'model'):
         sha = dm.provenance_commit(top_dir)
         cor.attrs['analysis'] = sha

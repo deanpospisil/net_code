@@ -17,7 +17,7 @@ import pickle
 import d_misc as dm
 import xarray as xr
 import apc_model_fit as ac
-quick = True
+quick = False
 
 
 

@@ -44,7 +44,7 @@ dmod = dmod.drop(set(range(370)) - set(shape_id), dim='shapes').chunk({'models':
 all_iter = dm.list_files(top_dir + 'data/responses/iter_*.nc')
 
 for fn in all_iter:
-    da_c = xr.open_dataset(fn, chunks = {'unit':100, 'shapes': 370})['resp']
+    da_c = xr.open_dataset(fn, chunks = {'unit':100})['resp']
     da_c = da_c.drop(set(range(370)) - set(shape_id) , dim='shapes')
 
     if quick:

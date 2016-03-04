@@ -136,7 +136,7 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None, prov_commit=False):
     for key in model_fit_params.coords.keys():
         cor[key] = ('unit', np.squeeze(model_fit_params[key]))
 
-    if prov_commit==True and hasattr(dmod.attrs, 'model'):
+    if prov_commit==True and ('model' in dmod.attrs.keys()):
         sha = dm.provenance_commit(top_dir)
         cor.attrs['analysis'] = sha
         cor.attrs['model'] = dmod.attrs['model']

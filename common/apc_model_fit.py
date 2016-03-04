@@ -12,8 +12,10 @@ import os, sys
 from collections import OrderedDict as ord_d
 
 top_dir = os.getcwd().split('net_code')[0]
-sys.path.append(top_dir + 'net_code/')
 sys.path.append(top_dir + 'xarray')
+top_dir = top_dir+ 'net_code/'
+sys.path.append(top_dir)
+top_dir = top_dir+ 'common'
 
 import xarray as xr
 import d_misc as dm
@@ -138,6 +140,7 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None, prov_commit=False):
         sha = dm.provenance_commit(top_dir)
         cor.attrs['analysis'] = sha
         cor.attrs['model'] = dmod.attrs['model']
+    
     return cor
 
 

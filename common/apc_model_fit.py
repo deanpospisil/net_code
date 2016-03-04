@@ -70,7 +70,7 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
 def make_apc_models(shape_dict_list, shape_id, fn, nMeans, nSD, maxAngSD, minAngSD, maxCurSD, minCurSD,
                     prov_commit = False):
     #make this into a pyramid based on d-prime
-    fn = top_dir + 'net_code/data/models/' + fn
+    fn = top_dir + 'data/models/' + fn
 
     orMeans = np.linspace(0, 2*np.pi - 2*np.pi / nMeans, nMeans)
     orSDs = np.logspace(np.log10( minAngSD ), np.log10( maxAngSD ), nSD )

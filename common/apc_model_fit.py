@@ -105,7 +105,7 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None, prov_commit=False):
     #typically takes da, data, and dm, a set of linear models, an fn to write to,
     #and finally fit_over_dims which says over what dims is a models fit supposed to hold.
     da = da - da.mean(('shapes'))
-
+    ats = dmod.attrs
     dmod = dmod - dmod.mean(('shapes'))
     dmod = dmod/dmod.vnorm(('shapes'))
 
@@ -136,10 +136,10 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None, prov_commit=False):
     for key in model_fit_params.coords.keys():
         cor[key] = ('unit', np.squeeze(model_fit_params[key]))
 
-    if prov_commit==True and ('model' in dmod.attrs.keys()):
+    if prov_commit==True and ('model' in ats.keys()):
         sha = dm.provenance_commit(top_dir)
         cor.attrs['analysis'] = sha
-        cor.attrs['model'] = dmod.attrs['model']
+        cor.attrs['model'] = ats['model']
     
     return cor
 

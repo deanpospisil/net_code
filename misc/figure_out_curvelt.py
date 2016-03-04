@@ -28,7 +28,7 @@ z_cut = 3
 first_lp = (1/(n_scale*3))*upper
 
 #center dist
-sd_first_lp  = first_lp / z_cut_r
+sd_first_lp  = first_lp / z_cut
 init_lp = st.norm(scale=sd_first_lp, loc=0).pdf(r).reshape(np.shape(im))
 
 #the scale filter
@@ -55,66 +55,48 @@ for scale, r_mean in enumerate(r_means):
     curv_dict['theta_sd'].append(np.ones(np.shape(angle_subset))*(2**(scale/2))*sd_theta)
     curv_dict['r_sd'].append(np.ones(np.shape(angle_subset))*r_sd[scale])
     curv_dict['r_mean'].append(np.ones(np.shape(angle_subset))*r_mean)
-    
+
 for key in curv_dict.keys():
     curv_dict[key] = np.vstack(curv_dict[key])
 
 norm_r = st.norm(scale=curv_dict['r_sd'], loc=curv_dict['r_mean'])
 norm_theta = st.norm(scale=curv_dict['theta_sd'], loc=curv_dict['theta_mean'])
 filts = (norm_r.pdf(r)*norm_theta.pdf(theta)).reshape((np.size(curv_dict['r_mean']),) + np.shape(im))
+#
+#norm_r = st.norm(scale=0.09, loc=0.25)
+#norm_theta = st.norm(scale=0.12, loc=np.pi/2.)
+#
+#filts = (norm_r.pdf(r)*norm_theta.pdf(theta)).reshape((np.shape(im)))
 
-norm_r = st.norm(scale=0.09, loc=0.25)
-norm_theta = st.norm(scale=0.12, loc=np.pi/2.)
 
-filts = (norm_r.pdf(r)*norm_theta.pdf(theta)).reshape((np.shape(im)))
-
-
-print(np.hstack([curv_dict['r_mean'], curv_dict['r_sd'], 
-                np.rad2deg(curv_dict['theta_mean']), 
+print(np.hstack([curv_dict['r_mean'], curv_dict['r_sd'],
+                np.rad2deg(curv_dict['theta_mean']),
                 np.rad2deg(curv_dict['theta_sd'])]))
 
-'''
-#the orientaton filter
-angle_list = []
-sd_theta_list = []
-
-
-for scale in np.arange(n_scale):
-    
-    angle_set = angles[::2**scale]
-    angle_list.append(angle_set)
-    
-    sd_theta_set = np.ones(np.shape(angle_set))*(2**scale)*sd_theta
-    sd_theta_list.append(sd_theta_set)
-
-sd_theta_list = np.vstack(sd_theta_list)
-angle_list = np.vstack(angle_list)
-norm_theta = st.norm(scale=np.vstack(sd_theta_list), loc=np.vstack(angle_list))
-theta_wind = norm_theta.pdf(theta).reshape(np.shape(angle_list) + np.shape(im))
 
 nfilts = np.size(filts,0)
 for ind in range(1,np.size(filts,0)):
     plt.subplot(1, nfilts, ind)
     plt.imshow(np.fft.fftshift(abs(filts[ind,:,:])), interpolation ='none')
-    '''
 
 
-plt.subplot(2,1,1)
-kern = np.real(np.fft.ifft2(filts[:,:]))
-plt.imshow(np.fft.fftshift(kern), interpolation ='none')
-
-plt.subplot(2,1,2)
-plt.imshow(np.fft.fftshift(abs(filts)), interpolation ='none')
-
-'''
-plt.subplot(1, 2,1)
-kern = np.real(np.fft.ifft2(filts[0,:,:]))
-plt.imshow(np.fft.fftshift(kern), interpolation ='none')
-
-plt.subplot(1,2, 2)
-allfilts = np.sum(filts,axis=0)
-plt.imshow(np.fft.fftshift(abs(allfilts)), interpolation ='none')
+#
+#plt.subplot(2,1,1)
+#kern = np.real(np.fft.ifft2(filts[:,:]))
+#plt.imshow(np.fft.fftshift(kern), interpolation ='none')
+#
+#plt.subplot(2,1,2)
+#plt.imshow(np.fft.fftshift(abs(filts)), interpolation ='none')
+#
+#
+#plt.subplot(1, 2,1)
+#kern = np.real(np.fft.ifft2(filts[0,:,:]))
+#plt.imshow(np.fft.fftshift(kern), interpolation ='none')
+#
+#plt.subplot(1,2, 2)
+#allfilts = np.sum(filts,axis=0)
+#plt.imshow(np.fft.fftshift(abs(allfilts)), interpolation ='none')
 
 #plt.imshow(np.fft.fftshift(np.squeeze(abs(theta_wind[1,0,:,:]))))
-'''
+
 #

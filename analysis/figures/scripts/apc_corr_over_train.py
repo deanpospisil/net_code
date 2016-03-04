@@ -6,6 +6,8 @@ Created on Tue Feb 23 11:39:42 2016
 """
 import os, sys
 import numpy as np
+import warnings
+import pickle
 
 top_dir = os.getcwd().split('net_code')[0]
 sys.path.append( top_dir + '/xarray')
@@ -13,14 +15,10 @@ top_dir = top_dir + 'net_code/'
 sys.path.append(top_dir)
 sys.path.append(top_dir +'common')
 
-import pickle
 import d_misc as dm
 import xarray as xr
 import apc_model_fit as ac
-quick = False
-
-
-
+quick = True
 #open those responses, and build apc models for their shapes
 with open(top_dir + 'data/models/PC370_params.p', 'rb') as f:
     shape_dict_list = pickle.load(f)
@@ -42,6 +40,12 @@ dmod = ac.make_apc_models(shape_dict_list, range(370), fn, nMeans, nSD, maxAngSD
 dmod = dmod.drop(set(range(370)) - set(shape_id), dim='shapes').chunk({'models':100})
 
 all_iter = dm.list_files(top_dir + 'data/responses/iter_*.nc')
+it_num = []
+for fn in all_iter:
+    it_num.append( int(fn.split('iter_')[1].split('.')[0] ))
+all_iter = [all_iter[ind] for ind in  np.argsort(it_num)]
+all_iter = [all_iter[ind.astype(int)] for ind in dm.grad_aprx_ind(len(it_num))]
+
 
 for fn in all_iter:
     da_c = xr.open_dataset(fn, chunks = {'unit':100})['resp']
@@ -52,10 +56,16 @@ for fn in all_iter:
         dmod = dmod.sel(models=range(10), method='nearest')
         da_c = da_c.sel(unit=range(30),  method='nearest')
         da_c = da_c.sel(x=[0, 2],  method='nearest')
-    print(fn)     
-    cor = ac.cor_resp_to_model(da_c, dmod, fit_over_dims = ('x',), prov_commit=True)
-    cor.to_dataset(name='r').to_netcdf(top_dir + 'data/an_results/r_apc_models_unique' + str(fn.split('iter')[1]) )
+    print(fn)
+    fn = top_dir + 'data/an_results/r_apc_models_unique' + str(fn.split('iter')[1])
+    if not os.path.isfile(fn):
+        cor = ac.cor_resp_to_model(da_c, dmod, fit_over_dims = ('x',), prov_commit=True)
+        cor.to_dataset(name='r').to_netcdf(fn)
+    else:
+        print('already written')
+        warnings.warn('Fit  File has Already Been Written.')
+        cor = xr.open_dataset(fn)
+
 
 #ds = xr.open_mfdataset(top_dir + 'data/responses/r_iter_*.nc', concat_dim = 'niter')
 #ds.to_netcdf(top_dir + 'data/r_iter_total_' + str(fn.split('iter')[0].split('.')[0]) +  '.nc')
-

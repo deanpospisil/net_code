@@ -15,7 +15,7 @@ top_dir = os.getcwd().split('net_code')[0]
 sys.path.append(top_dir + 'xarray')
 top_dir = top_dir+ 'net_code/'
 sys.path.append(top_dir)
-top_dir = top_dir+ 'common'
+sys.path.append(top_dir + 'common')
 
 import xarray as xr
 import d_misc as dm

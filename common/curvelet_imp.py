@@ -21,11 +21,11 @@ def polar_rect_func(f_ind, up_r, down_r, up_ang, down_ang):
 ang_list = [np.array([[   0. ,   22.5,   45. ,   67.5,   90. ,  112.5,  135. ,  157.5],
                       [  22.5,   45. ,   67.5,   90. ,  112.5,  135. ,  157.5,  180. ]])]
 theta_dif = ang_list[0][0,1] - ang_list[0][0,0]
-ls = 0.01
+
 f_cuts_list = [np.array([ls, ls*2])]
 
 n_scale = 3
-
+ls = 0.01
 r_dif = ls
 
 for scale in range(1, n_scale):

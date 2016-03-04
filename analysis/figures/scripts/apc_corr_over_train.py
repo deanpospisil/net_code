@@ -37,7 +37,7 @@ nMeans = 16
 nSD = 16
 fn = 'apc_models.nc'
 dmod = ac.make_apc_models(shape_dict_list, range(370), fn, nMeans, nSD, maxAngSD, minAngSD,
-                      maxCurSD, minCurSD, prov_commit=False)['resp']
+                      maxCurSD, minCurSD, prov_commit=True)['resp']
 
 dmod = dmod.drop(set(range(370)) - set(shape_id), dim='shapes').chunk({'models':100})
 
@@ -53,7 +53,7 @@ for fn in all_iter:
         da_c = da_c.sel(unit=range(30),  method='nearest')
         da_c = da_c.sel(x=[0, 2],  method='nearest')
     print(fn)     
-    cor = ac.cor_resp_to_model(da_c, dmod, fit_over_dims = ('x',))
+    cor = ac.cor_resp_to_model(da_c, dmod, fit_over_dims = ('x',), prov_commit=True)
     cor.to_dataset(name='r').to_netcdf(top_dir + 'data/an_results/r_apc_models_unique' + str(fn.split('iter')[1]) )
 
 #ds = xr.open_mfdataset(top_dir + 'data/responses/r_iter_*.nc', concat_dim = 'niter')

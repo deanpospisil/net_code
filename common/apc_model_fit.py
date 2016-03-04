@@ -12,8 +12,10 @@ import os, sys
 from collections import OrderedDict as ord_d
 
 top_dir = os.getcwd().split('net_code')[0]
-sys.path.append(top_dir + 'net_code/')
 sys.path.append(top_dir + 'xarray')
+top_dir = top_dir+ 'net_code/'
+sys.path.append(top_dir)
+sys.path.append(top_dir + 'common')
 
 import xarray as xr
 import d_misc as dm
@@ -68,7 +70,7 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
 def make_apc_models(shape_dict_list, shape_id, fn, nMeans, nSD, maxAngSD, minAngSD, maxCurSD, minCurSD,
                     prov_commit = False):
     #make this into a pyramid based on d-prime
-    fn = top_dir + 'net_code/data/models/' + fn
+    fn = top_dir + 'data/models/' + fn
 
     orMeans = np.linspace(0, 2*np.pi - 2*np.pi / nMeans, nMeans)
     orSDs = np.logspace(np.log10( minAngSD ), np.log10( maxAngSD ), nSD )
@@ -103,7 +105,7 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None, prov_commit=False):
     #typically takes da, data, and dm, a set of linear models, an fn to write to,
     #and finally fit_over_dims which says over what dims is a models fit supposed to hold.
     da = da - da.mean(('shapes'))
-
+    ats = dmod.attrs
     dmod = dmod - dmod.mean(('shapes'))
     dmod = dmod/dmod.vnorm(('shapes'))
 
@@ -134,10 +136,11 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None, prov_commit=False):
     for key in model_fit_params.coords.keys():
         cor[key] = ('unit', np.squeeze(model_fit_params[key]))
 
-    if prov_commit==True and hasattr(dmod.attrs, 'model'):
+    if prov_commit==True and ('model' in ats.keys()):
         sha = dm.provenance_commit(top_dir)
         cor.attrs['analysis'] = sha
-        cor.attrs['model'] = dmod.attrs['model']
+        cor.attrs['model'] = ats['model']
+    
     return cor
 
 

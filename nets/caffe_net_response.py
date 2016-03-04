@@ -13,11 +13,11 @@ import sys
 import warnings
 
 #make the working directory two above this one
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-cwd = os.path.dirname(dname)
-sys.path.append(cwd)
-sys.path.append( cwd+'/xarray')
+top_dir = os.getcwd().split('net_code')[0]
+sys.path.append( top_dir + '/xarray')
+top_dir = top_dir + 'net_code/'
+sys.path.append(top_dir)
+sys.path.append(top_dir +'common')
 
 sys.path.append('/home/dean/caffe/python')
 
@@ -78,7 +78,7 @@ def get_indices_for_net_unit_vec(net, layer_names = None):
 
     return resp_descriptor_dict
 
-def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, nimgs_per_pass = 100 ):
+def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, nimgs_per_pass = 260 ):
     #takes stim_trans_cart_dict, pulls from img_stack and transform accordingly,
     #gets nets responses.
 
@@ -172,7 +172,7 @@ def net_resp_2d_to_xray_nd(net_resp, stim_trans_dict, indices_for_net_unit_vec):
 
 def get_net_resp(base_image_nm, ann_dir, ann_fn, stim_trans_cart_dict, 
                  stim_trans_dict, require_provenance=True):   
-    img_dir = cwd+'/images/baseimgs/'+base_image_nm+'/'  
+    img_dir = top_dir+'/images/baseimgs/'+base_image_nm+'/'  
     base_stack, stack_desc = imp.load_npy_img_dirs_into_stack(img_dir) 
     dir_filenames = os.listdir(img_dir)
     #get the current sha from the file
@@ -191,7 +191,7 @@ def get_net_resp(base_image_nm, ann_dir, ann_fn, stim_trans_cart_dict,
 
     if require_provenance == True:
         #commit the state of the directory and get is sha identification
-        sha = dm.provenance_commit(cwd)
+        sha = dm.provenance_commit(top_dir)
         da.attrs['resp_sha'] = sha
         da.attrs['img_sha'] = image_sha
 

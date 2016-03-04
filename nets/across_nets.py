@@ -32,7 +32,7 @@ for fn in all_iter:
 
     da = cf.get_net_resp(base_image_nm, ann_dir, fn.split('ce_caffenet/')[1].split('.')[0], 
                          stim_trans_cart_dict, stim_trans_dict, require_provenance=True)
-    tn = int(all_iter[0].split('iter_')[1].split('.')[0])   
+    tn = int(fn.split('iter_')[1].split('.')[0])   
     da.attrs['train']= tn
     ds = da.to_dataset(name ='resp')
     ds.to_netcdf(top_dir + 'data/responses/iter_' + str(tn) + '.nc')

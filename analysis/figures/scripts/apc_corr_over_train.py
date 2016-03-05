@@ -18,7 +18,7 @@ sys.path.append(top_dir +'common')
 import d_misc as dm
 import xarray as xr
 import apc_model_fit as ac
-quick = True
+quick = False
 #open those responses, and build apc models for their shapes
 with open(top_dir + 'data/models/PC370_params.p', 'rb') as f:
     shape_dict_list = pickle.load(f)

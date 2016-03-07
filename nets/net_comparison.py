@@ -67,7 +67,7 @@ ti[0,:,:]=255
 
 net.blobs['data'].data[...] = ti
 output = net.forward()
-
+'''
 #kernels ()
 print('kernel')
 for layer_name, param in net.params.iteritems():
@@ -105,3 +105,4 @@ for k in [0,1,2]:
 #print(np.sum(a))
 #print(np.sum(a)*255)+ b
 #print(b)
+'''

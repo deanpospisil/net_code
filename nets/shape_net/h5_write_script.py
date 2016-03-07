@@ -11,7 +11,7 @@ import h5py
 top_dir = os.getcwd().split('net_code')[0] + 'net_code/'
 
 nunits = 100
-img_width = 32s
+img_width = 32
 n_imgs = 200
 data = np.zeros((n_imgs, 1, img_width, img_width))
 data = data.astype('float32')

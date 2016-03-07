@@ -12,6 +12,7 @@ import scipy as sc
 import matplotlib.pyplot as plt
 import os
 import pickle
+
 top_dir = os.getcwd().split('net_code')[0]
 sys.path.append(top_dir + 'net_code/common')
 sys.path.append( top_dir + 'xarray/')
@@ -21,10 +22,9 @@ import d_misc as dm
 import d_img_process as imp
 from scipy import ndimage
 
-
 def get_center_boundary(x, y):
     minusone = np.arange(-1, np.size(x)-1)
-    A = 0.5*np.sum( x[minusone]*y[:] - x[:]*y[minusone])
+    A = 0.5*np.sum(x[minusone]*y[:] - x[:]*y[minusone])
     normalize= (1/(A*6.))
     cx = normalize * np.sum( (x[minusone] + x[:] ) * (x[minusone]*y[:] - x[:]*y[minusone]) )
     cy = normalize * np.sum( (y[minusone] + y[:] ) * (x[minusone]*y[:] - x[:]*y[minusone]) )
@@ -205,7 +205,7 @@ saveDir = top_dir + 'net_code/images/baseimgs/'
 dm.ifNoDirMakeDir(saveDir)
 
 baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
-baseImage = baseImageList[2]
+baseImage = baseImageList[1]
 
 frac_of_image = 0.25
 dm.ifNoDirMakeDir(saveDir + baseImage +'/')
@@ -218,10 +218,10 @@ if baseImage is baseImageList[0]:
 
 elif baseImage is baseImageList[1]:
     nPts = 1000
-    s = dc.make_n_natural_formlets(n=100,
+    s = dc.make_n_natural_formlets(n=1000,
                 nPts=nPts, radius=1, nFormlets=32, meanFormDir=np.pi,
                 stdFormDir=2*np.pi, meanFormDist=1, stdFormDist=0.1,
-                startSigma=3, endSigma=0.1, randseed=1, min_n_pix=32,
+                startSigma=3, endSigma=0.1, randseed=1, min_n_pix=64,
                 frac_image=frac_of_image)
 elif baseImage is baseImageList[2]:
     #    os.chdir( saveDir + baseImageList[0])
@@ -238,10 +238,12 @@ elif baseImage is baseImageList[3]:
 
 s = center_boundary(s)
 max_ext = np.max([np.max(np.abs(a_s)) for a_s in s])
+#
+#save_boundaries_as_image(s, saveDir + baseImage + '/', top_dir, max_ext,
+#                         n_pix_per_side=227, fill=True, require_provenance=False,
+#                         frac_of_image=frac_of_image, use_round=False)
+#
 
-save_boundaries_as_image(s, saveDir + baseImage + '/', top_dir, max_ext,
-                         n_pix_per_side=227, fill=True, require_provenance=False,
-                         frac_of_image=frac_of_image, use_round=False)
 '''
 ashape = s[0]
 

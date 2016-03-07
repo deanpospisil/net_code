@@ -214,3 +214,15 @@ def cartesian_prod_dicts_lists(the_dict):
         cart_dict[key_name] = stim_cart_array[:, key_num]
 
     return cart_dict
+
+def grad_aprx_ind(it_num_len):
+    npts = 1
+    nums_used = set()
+    grad_aprx_l = np.array([])
+    while not len(nums_used)==it_num_len:
+        npts += 1
+        ds = set(np.linspace(0, it_num_len-1, npts, dtype=int))
+        ds = ds - nums_used
+        nums_used = ds | nums_used
+        grad_aprx_l = np.hstack( (grad_aprx_l, np.array(list(ds))))
+    return grad_aprx_l

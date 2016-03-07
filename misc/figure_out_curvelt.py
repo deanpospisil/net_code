@@ -10,7 +10,7 @@ import scipy.stats as st
 import numpy as np
 import matplotlib.pyplot as plt
 
-imdim = 256
+imdim = 512
 im = np.zeros((imdim,imdim))
 f_ind = np.expand_dims(np.fft.fftfreq(imdim), axis=1)
 f_ind = f_ind.T + np.flipud(f_ind*1j)
@@ -28,7 +28,7 @@ z_cut = 3
 first_lp = (1/(n_scale*3))*upper
 
 #center dist
-sd_first_lp  = first_lp / z_cut_r
+sd_first_lp  = first_lp / z_cut
 init_lp = st.norm(scale=sd_first_lp, loc=0).pdf(r).reshape(np.shape(im))
 
 #the scale filter
@@ -64,7 +64,7 @@ norm_theta = st.norm(scale=curv_dict['theta_sd'], loc=curv_dict['theta_mean'])
 filts = (norm_r.pdf(r)*norm_theta.pdf(theta)).reshape((np.size(curv_dict['r_mean']),) + np.shape(im))
 
 norm_r = st.norm(scale=0.09, loc=0.25)
-norm_theta = st.norm(scale=0.12, loc=np.pi/2.)
+norm_theta = st.norm(scale=0.05, loc=np.pi/2.)
 
 filts = (norm_r.pdf(r)*norm_theta.pdf(theta)).reshape((np.shape(im)))
 
@@ -106,7 +106,12 @@ plt.imshow(np.fft.fftshift(kern), interpolation ='none')
 plt.subplot(2,1,2)
 plt.imshow(np.fft.fftshift(abs(filts)), interpolation ='none')
 
+
 '''
+plt.subplot(3,1,3)
+plt.plot(np.log10(abs(kern[:,0])))
+
+
 plt.subplot(1, 2,1)
 kern = np.real(np.fft.ifft2(filts[0,:,:]))
 plt.imshow(np.fft.fftshift(kern), interpolation ='none')

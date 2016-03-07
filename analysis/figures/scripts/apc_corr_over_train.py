@@ -19,8 +19,6 @@ import xarray as xr
 import apc_model_fit as ac
 quick = True
 
-
-
 #open those responses, and build apc models for their shapes
 with open(top_dir + 'data/models/PC370_params.p', 'rb') as f:
     shape_dict_list = pickle.load(f)
@@ -40,7 +38,7 @@ dmod = ac.make_apc_models(shape_dict_list, range(370), fn, nMeans, nSD, maxAngSD
                       maxCurSD, minCurSD, prov_commit=False)['resp']
 
 dmod = dmod.drop(set(range(370)) - set(shape_id), dim='shapes').chunk({'models':100})
-
+'''
 all_iter = dm.list_files(top_dir + 'data/responses/iter_*.nc')
 
 for fn in all_iter:
@@ -55,7 +53,11 @@ for fn in all_iter:
 
     cor = ac.cor_resp_to_model(da_c, dmod, fit_over_dims = ('x',))
     cor.to_dataset(name='r').to_netcdf(top_dir + 'data/an_results/r_apc_models_unique' + str(fn.split('iter')[1]) )
+'''
 
-#ds = xr.open_mfdataset(top_dir + 'data/responses/r_iter_*.nc', concat_dim = 'niter')
-#ds.to_netcdf(top_dir + 'data/r_iter_total_' + str(fn.split('iter')[0].split('.')[0]) +  '.nc')
+#ds = xr.open_mfdataset(top_dir + 'data/an_results/r_over_train/r_*.nc', concat_dim = 'niter')
+all_iter = dm.list_files(top_dir + 'data/an_results/r_over_train/r_*.nc')
+
+for fn in all_iter:
+     da = xr.open_dataset(fn)['r']
 

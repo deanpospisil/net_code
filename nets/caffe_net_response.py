@@ -78,7 +78,7 @@ def get_indices_for_net_unit_vec(net, layer_names = None):
 
     return resp_descriptor_dict
 
-def identity_preserving_transform_resp( img_stack, stim_trans_cart_dict, net, nimgs_per_pass = 260 ):
+def identity_preserving_transform_resp(img_stack, stim_trans_cart_dict, net, nimgs_per_pass=260):
     #takes stim_trans_cart_dict, pulls from img_stack and transform accordingly,
     #gets nets responses.
 
@@ -170,10 +170,10 @@ def net_resp_2d_to_xray_nd(net_resp, stim_trans_dict, indices_for_net_unit_vec):
 
     return da
 
-def get_net_resp(base_image_nm, ann_dir, ann_fn, stim_trans_cart_dict, 
-                 stim_trans_dict, require_provenance=True):   
-    img_dir = top_dir+'/images/baseimgs/'+base_image_nm+'/'  
-    base_stack, stack_desc = imp.load_npy_img_dirs_into_stack(img_dir) 
+def get_net_resp(base_image_nm, ann_dir, ann_fn, stim_trans_cart_dict,
+                 stim_trans_dict, require_provenance=True):
+    img_dir = top_dir+'/images/baseimgs/'+base_image_nm+'/'
+    base_stack, stack_desc = imp.load_npy_img_dirs_into_stack(img_dir)
     dir_filenames = os.listdir(img_dir)
     #get the current sha from the file
     for name in dir_filenames:

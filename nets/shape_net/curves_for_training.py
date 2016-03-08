@@ -17,7 +17,6 @@ sys.path.append( top_dir + 'xarray/')
 
 import d_curve as dc
 import d_misc as dm
-import d_img_process as imp
 import base_shape_gen as bg
 
 saveDir = top_dir + 'net_code/images/baseimgs/'
@@ -57,21 +56,81 @@ elif baseImage is baseImageList[3]:
     print('to do')
 
 s = bg.center_boundary(s)
-shape_dict_list = [{'curvature': dc.curve_curvature(cs),
-                    'orientation': dc.curveAngularPos(cs)}
+
+adjust_c = 4 # cuvature values weren't matching files I got so I scaled them
+shape_dict_list = [{'curvature': -((2. / (1 + np.exp(-0.125*dc.curve_curvature(cs)*adjust_c)))-1),
+                    'orientation': (np.angle(dc.curveAngularPos(cs)))%(np.pi*2)}
                     for cs in
-                    map(lambda shape: shape[:, 1] + shape[:, 0]*1j, s)]
+                    map(lambda shape: shape[:, 1]*1j + shape[:, 0], s)]
 
+import apc_model_fit as ac
+maxAngSD = np.deg2rad(171)
+minAngSD = np.deg2rad(23)
+maxCurSD = 0.98
+minCurSD = 0.09
+nMeans = 16
+nSD = 16
+fn = 'apc_models_mycurve.nc'
+dmod = ac.make_apc_models(shape_dict_list, range(370), fn, nMeans, nSD, maxAngSD, minAngSD,
+                      maxCurSD, minCurSD, prov_commit=False)['resp']
+
+#import pickle
+#ind = -1
+#def key_event(e):
 #
-#comb=(magnitude)*direction
+#    global ind
+#    ind = ind+1
+#    print(ind)
+#    plt.gca().cla()
+#    plt.scatter( np.rad2deg(shape_dict_list[ind]['orientation']), shape_dict_list[ind]['curvature'])
+#    plt.scatter( np.rad2deg(shape_dict_list[ind]['orientation'][0]), shape_dict_list[ind]['curvature'][0], color='g')
+#    plt.scatter( np.rad2deg(shape_dict_list[ind]['orientation'][20]), shape_dict_list[ind]['curvature'][20], color='y')
+#    with open(top_dir + 'net_code/data/models/PC370_params.p', 'rb') as f:
+#        shape_dict_list2 = pickle.load(f)
+#    plt.scatter( np.rad2deg(shape_dict_list2[ind]['orientation']), shape_dict_list2[ind]['curvature'], color='r')
+#    plt.show()
+#
+##
+#fig = plt.figure()
+#fig.canvas.mpl_connect('key_press_event', key_event)
+#ax = fig.add_subplot(111)
+#
+#plt.show()
+#
+#ind = 155
+#for ind in range(370):
+#
+#    plt.close('all')
+#    plt.subplot(3,1,1)
+#    plt.scatter( np.rad2deg(shape_dict_list[ind]['orientation']), shape_dict_list[ind]['curvature'])
+#    plt.scatter( np.rad2deg(shape_dict_list[ind]['orientation'][0]), shape_dict_list[ind]['curvature'][0], color='g')
+#    plt.scatter( np.rad2deg(shape_dict_list[ind]['orientation'][20]), shape_dict_list[ind]['curvature'][20], color='y')
+#    import pickle
+#    #open those responses, and build apc models for their shapes
+#    with open(top_dir + 'net_code/data/models/PC370_params.p', 'rb') as f:
+#        shape_dict_list2 = pickle.load(f)
+#
+#    plt.scatter( np.rad2deg(shape_dict_list2[ind]['orientation']), shape_dict_list2[ind]['curvature'], color='r')
+#
+#    plt.subplot(3,1,2)
+#    perc_num = int(np.shape(s[ind])[0]/1.5)
+#    plt.scatter(s[ind][1:perc_num,0],s[ind][1:perc_num,1])
+#    plt.scatter(s[ind][0,0],s[ind][0,1], color='g')
+#    x, y = dc.get_center_boundary(s[ind][:,0], s[ind][:,1])
+#    plt.scatter(x, y, color='b')
+#    plt.axis('equal')
+#    plt.subplot(3,1,3)
+#    plt.imshow(np.load(top_dir + 'net_code/images/baseimgs/PC370/' + str(int(ind)) +'.npy' ))
+#
+#    plt.show()
+
+#comb=(dc.curve_curvature(cs))*dc.curveAngularPos(cs)
 #comb = comb
-#cshape = cs
-#plt.quiver(np.real(cshape),np.imag(cshape), np.real(comb),np.imag(comb),width=0.001,)
-#plt.scatter(np.real(cshape),np.imag(cshape))
+#
+#plt.quiver(np.real(cs),np.imag(cs), np.real(comb),np.imag(comb),width=0.001,)
+#plt.scatter(np.real(cs),np.imag(cs))
 #plt.axis('equal')
-
-#max_ext = np.max([np.max(np.abs(a_s)) for a_s in s])
-
+#
 
 
 #

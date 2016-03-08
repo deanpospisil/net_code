@@ -29,9 +29,11 @@ def curve_curvature(cShape):
     nPts=np.size(cShape)
     curvature=np.ones([nPts])*np.nan
     for ind in range(nPts):
-        oldDir = (cShape[(ind-1)]) - (cShape[(ind-2) ])
+        oldDir = (cShape[(ind-1)]) - (cShape[(ind-2)])
         newDir = (cShape[ind]) - (cShape[(ind-1) ])
-        curvature[ind] = np.angle(newDir * np.conj(oldDir))/abs(newDir)
+        curvature[ind] = np.angle(newDir * np.conj(oldDir))/(abs(newDir))
+    if np.isnan(curvature).any():
+        warnings.warn('Did not fill all orientation values')
     return curvature
 
 def curveOrientations(cShape):
@@ -43,15 +45,17 @@ def curveOrientations(cShape):
         #get the direction then rotate by 90 degrees clockwise for it to point outward, since points are in counterclockwise order
         orientation[ind] = (((cShape[(ind)]) - (cShape[(ind-1) ])))*(-1j)
         orientation[ind] = orientation[ind]/abs(orientation[ind])
-
+    if np.isnan(orientation).any():
+        warnings.warn('Did not fill all orientation values')
     return orientation
 
 
 def curveAngularPos(cShape):
     #get the center of mass than the unit vector pointing from here to each point
-    centerOfMass=np.mean(cShape)
+    x, y = get_center_boundary(np.real(cShape), np.imag(cShape))
+    centerOfMass = x + y*1j
     angularPos=cShape-centerOfMass
-    angularPos=angularPos/abs(angularPos)
+    angularPos=angularPos/np.abs(angularPos)
 
     return angularPos
 

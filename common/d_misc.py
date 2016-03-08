@@ -54,10 +54,13 @@ import collections
 #    return sizeof(o)
 
 def list_files(paths):
-    if isinstance(paths, basestring):
+    try:
         paths = sorted(glob(paths))
-    if not paths:
+    except:
         raise IOError('no files to open')
+        warnings.warn('no files')
+        paths = None
+        
     return paths
 
 class OrderedSet(collections.MutableSet):

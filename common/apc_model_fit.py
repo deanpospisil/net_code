@@ -54,17 +54,13 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
     #initialize our distributions
     von_rv = st.vonmises( kappa = model_params_dict['or_sd']**-1 , loc = model_params_dict['or_mean'] )
     norm_rv = st.norm( scale = model_params_dict['cur_sd'] , loc = model_params_dict['cur_mean'] )
-    
-    model_resp = []
+
     #get responses to all points for each axis ap and c then their product, then the max of all those points as the resp
-    for i, apc_points in enumerate(shape_dict_list):#had to break this up per memory issues
-        print(i)
-        model_resp_all_apc_points = von_rv.pdf(apc_points['orientation']) * norm_rv.pdf( apc_points['curvature'])
-        model_resp.append(np.array([np.max(model_resp_all_apc_points, axis=0)]))
+    model_resp_all_apc_points = [von_rv.pdf(apc_points['orientation']) * norm_rv.pdf( apc_points['curvature'] ) for apc_points in shape_dict_list]
+    model_resp = np.array([ np.max( a_shape, axis = 0 ) for a_shape in model_resp_all_apc_points])
 
     #mean subtract
-    model_resp = np.squeeze(np.array(model_resp))
-    model_resp = model_resp - np.mean(model_resp, axis = 0 )
+    model_resp = model_resp - np.mean( model_resp, axis = 0 )
     #scale
     magnitude = np.linalg.norm( model_resp, axis = 0)
     model_resp = model_resp / magnitude

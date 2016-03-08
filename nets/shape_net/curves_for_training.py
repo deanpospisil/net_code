@@ -58,8 +58,9 @@ elif baseImage is baseImageList[3]:
 s = bg.center_boundary(s)
 
 adjust_c = 4 # cuvature values weren't matching files I got so I scaled them
-shape_dict_list = [{'curvature': -((2. / (1 + np.exp(-0.125*dc.curve_curvature(cs)*adjust_c)))-1),
-                    'orientation': (np.angle(dc.curveAngularPos(cs)))%(np.pi*2)}
+downsamp = 6
+shape_dict_list = [{'curvature': -((2. / (1 + np.exp(-0.125*dc.curve_curvature(cs)*adjust_c)))-1)[::downsamp],
+                    'orientation': ((np.angle(dc.curveAngularPos(cs)))%(np.pi*2))[::downsamp]}
                     for cs in
                     map(lambda shape: shape[:, 1]*1j + shape[:, 0], s)]
 
@@ -71,8 +72,9 @@ minCurSD = 0.09
 nMeans = 16
 nSD = 16
 fn = 'apc_models_mycurve.nc'
-dmod = ac.make_apc_models(shape_dict_list, range(370), fn, nMeans, nSD, maxAngSD, minAngSD,
-                      maxCurSD, minCurSD, prov_commit=False)['resp']
+dmod = ac.make_apc_models(shape_dict_list, range(370), fn, nMeans, nSD, 
+                          maxAngSD, minAngSD, maxCurSD, minCurSD, 
+                          prov_commit=False)['resp']
 
 #import pickle
 #ind = -1

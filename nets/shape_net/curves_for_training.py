@@ -58,8 +58,14 @@ elif baseImage is baseImageList[3]:
 s = bg.center_boundary(s)
 
 adjust_c = 4 # cuvature values weren't matching files I got so I scaled them
+<<<<<<< HEAD
+downsamp = 5
+shape_dict_list = [{'curvature': -((2. / (1 + np.exp(-0.125*dc.curve_curvature(cs)*adjust_c)))-1)[::downsamp],
+                    'orientation': ((np.angle(dc.curveAngularPos(cs)))%(np.pi*2))[::downsamp]}
+=======
 shape_dict_list = [{'curvature': -((2. / (1 + np.exp(-0.125*dc.curve_curvature(cs)*adjust_c)))-1),
                     'orientation': (np.angle(dc.curveAngularPos(cs)))%(np.pi*2)}
+>>>>>>> parent of 30347f7... piecemeal model generation for memory issue
                     for cs in
                     map(lambda shape: shape[:, 1]*1j + shape[:, 0], s)]
 
@@ -71,31 +77,38 @@ minCurSD = 0.09
 nMeans = 16
 nSD = 16
 fn = 'apc_models_mycurve.nc'
+<<<<<<< HEAD
+'''
+dmod = ac.make_apc_models(shape_dict_list, range(370), fn, nMeans, nSD, 
+                          maxAngSD, minAngSD, maxCurSD, minCurSD, 
+                          prov_commit=False)['resp']
+'''
+import pickle
+ind = -1
+def key_event(e):
+
+    global ind
+    ind = ind+1
+    print(ind)
+    plt.gca().cla()
+    plt.scatter( np.rad2deg(shape_dict_list[ind]['orientation']), shape_dict_list[ind]['curvature'])
+    plt.scatter( np.rad2deg(shape_dict_list[ind]['orientation'][0]), shape_dict_list[ind]['curvature'][0], color='g')
+    plt.scatter( np.rad2deg(shape_dict_list[ind]['orientation'][20]), shape_dict_list[ind]['curvature'][20], color='y')
+    with open(top_dir + 'net_code/data/models/PC370_params.p', 'rb') as f:
+        shape_dict_list2 = pickle.load(f)
+    plt.scatter( np.rad2deg(shape_dict_list2[ind]['orientation']), shape_dict_list2[ind]['curvature'], color='r')
+    plt.show()
+=======
 dmod = ac.make_apc_models(shape_dict_list, range(370), fn, nMeans, nSD, maxAngSD, minAngSD,
                       maxCurSD, minCurSD, prov_commit=False)['resp']
+>>>>>>> parent of 30347f7... piecemeal model generation for memory issue
 
-#import pickle
-#ind = -1
-#def key_event(e):
 #
-#    global ind
-#    ind = ind+1
-#    print(ind)
-#    plt.gca().cla()
-#    plt.scatter( np.rad2deg(shape_dict_list[ind]['orientation']), shape_dict_list[ind]['curvature'])
-#    plt.scatter( np.rad2deg(shape_dict_list[ind]['orientation'][0]), shape_dict_list[ind]['curvature'][0], color='g')
-#    plt.scatter( np.rad2deg(shape_dict_list[ind]['orientation'][20]), shape_dict_list[ind]['curvature'][20], color='y')
-#    with open(top_dir + 'net_code/data/models/PC370_params.p', 'rb') as f:
-#        shape_dict_list2 = pickle.load(f)
-#    plt.scatter( np.rad2deg(shape_dict_list2[ind]['orientation']), shape_dict_list2[ind]['curvature'], color='r')
-#    plt.show()
-#
-##
-#fig = plt.figure()
-#fig.canvas.mpl_connect('key_press_event', key_event)
-#ax = fig.add_subplot(111)
-#
-#plt.show()
+fig = plt.figure()
+fig.canvas.mpl_connect('key_press_event', key_event)
+ax = fig.add_subplot(111)
+
+plt.show()
 #
 #ind = 155
 #for ind in range(370):

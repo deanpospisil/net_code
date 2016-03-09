@@ -62,10 +62,13 @@ if baseImage is baseImageList[2] or baseImage is baseImageList[0]:
 else:
     adjust_c = 1.
 downsamp = 10
-shape_dict_list = [{'curvature': -((2. / (1 + np.exp(-0.125*dc.curve_curvature(cs)*adjust_c)))-1)[::downsamp],
-                    'orientation': ((np.angle(dc.curveAngularPos(cs)))%(np.pi*2))[::downsamp]}
+shape_dict_list = ({'curvature': -((2. / (1 + np.exp(-0.125 * 
+                    dc.curve_curvature(cs) * adjust_c))) - 1)[::downsamp],
+                    'orientation': ((np.angle(dc.curveAngularPos(cs))) 
+                    % (np.pi * 2))[::downsamp]}
                     for cs in
-                    map(lambda shape: shape[:, 1]*1j + shape[:, 0], s)]
+                    map(lambda shape: shape[:, 1]*1j + shape[:, 0], s))
+
 
 import apc_model_fit as ac
 maxAngSD = np.deg2rad(171)
@@ -76,6 +79,7 @@ nMeans = 5
 nSD = 5
 fn = 'apc_test.nc'
 
+# could I make an indexable generator for apc_model
 dmod_new = ac.make_apc_models(shape_dict_list, range(370), fn, nMeans, nSD, 
                           maxAngSD, minAngSD, maxCurSD, minCurSD, 
                           model_params_dict=None, prov_commit=False, cart=True,

@@ -56,6 +56,7 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
     norm_rv = st.norm( scale = model_params_dict['cur_sd'] , loc = model_params_dict['cur_mean'] )
 
     #get responses to all points for each axis ap and c then their product, then the max of all those points as the resp
+    #might need to loop this to save on memory
     model_resp_all_apc_points = [von_rv.pdf(apc_points['orientation']) * norm_rv.pdf( apc_points['curvature'] ) for apc_points in shape_dict_list]
     model_resp = np.array([ np.max( a_shape, axis = 0 ) for a_shape in model_resp_all_apc_points])
 
@@ -67,8 +68,8 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
 
     return model_resp
 
-def make_apc_models(shape_dict_list, shape_id, fn, nMeans, nSD, maxAngSD, minAngSD, maxCurSD, minCurSD,
-                    prov_commit = False):
+def make_apc_models(shape_dict_list, shape_id, fn, nMeans, nSD, maxAngSD,
+                    minAngSD, maxCurSD, minCurSD, prov_commit = False):
     #make this into a pyramid based on d-prime
     fn = top_dir + 'data/models/' + fn
 
@@ -140,7 +141,7 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None, prov_commit=False):
         sha = dm.provenance_commit(top_dir)
         cor.attrs['analysis'] = sha
         cor.attrs['model'] = ats['model']
-    
+
     return cor
 
 

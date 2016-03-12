@@ -19,12 +19,9 @@ sys.path.append(top_dir +'common')
 import d_misc as dm
 import xarray as xr
 import apc_model_fit as ac
-<<<<<<< HEAD
-quick = False
-=======
-quick = True
 
->>>>>>> 29cc03e9863d5102948a57596afb89a9f783c482
+quick = False
+
 #open those responses, and build apc models for their shapes
 with open(top_dir + 'data/models/PC370_params.p', 'rb') as f:
     shape_dict_list = pickle.load(f)
@@ -73,8 +70,8 @@ for fn in all_iter:
         warnings.warn('Fit  File has Already Been Written.')
         cor = xr.open_dataset(fn)
 
-    cor = ac.cor_resp_to_model(da_c, dmod, fit_over_dims = ('x',))
-    cor.to_dataset(name='r').to_netcdf(top_dir + 'data/an_results/r_apc_models_unique' + str(fn.split('iter')[1]) )
+    #cor = ac.cor_resp_to_model(da_c, dmod, fit_over_dims = ('x',))
+    #cor.to_dataset(name='r').to_netcdf(top_dir + 'data/an_results/r_apc_models_unique' + str(fn.split('iter')[1]) )
 
 
 

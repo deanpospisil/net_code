@@ -37,7 +37,7 @@ if baseImage is baseImageList[0]:
 
 elif baseImage is baseImageList[1]:
     nPts = 1000
-    s = dc.make_n_natural_formlets(n=10,
+    s = dc.make_n_natural_formlets(n=370,
                 nPts=nPts, radius=1, nFormlets=32, meanFormDir=np.pi,
                 stdFormDir=2*np.pi, meanFormDist=1, stdFormDist=0.1,
                 startSigma=3, endSigma=0.1, randseed=1, min_n_pix=64,
@@ -58,8 +58,8 @@ elif baseImage is baseImageList[3]:
 s = bg.center_boundary(s)
 
 adjust_c = 4 # cuvature values weren't matching files I got so I scaled them
-downsamp = 6
-shape_dict_list = [{'curvature': -((2. / (1 + np.exp(-0.125*dc.curve_curvature(cs)*adjust_c)))-1)[::downsamp],
+downsamp = 10
+shape_dict_list = [{'curvature': ((2. / (1 + np.exp(-0.125*dc.curve_curvature(cs)*adjust_c)))-1)[::downsamp],
                     'orientation': ((np.angle(dc.curveAngularPos(cs)))%(np.pi*2))[::downsamp]}
                     for cs in
                     map(lambda shape: shape[:, 1]*1j + shape[:, 0], s)]
@@ -71,7 +71,7 @@ maxCurSD = 0.98
 minCurSD = 0.09
 nMeans = 16
 nSD = 16
-fn = 'apc_models_mycurve.nc'
+fn = 'apc_models_mycurve_formlet.nc'
 dmod = ac.make_apc_models(shape_dict_list, range(370), fn, nMeans, nSD, 
                           maxAngSD, minAngSD, maxCurSD, minCurSD, 
                           prov_commit=False)['resp']

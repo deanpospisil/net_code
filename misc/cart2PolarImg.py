@@ -31,8 +31,8 @@ def fft2Interpolate( x, y, w):
 
     return intrpvals
 
-os.chdir('/Users/dean/Desktop/')
-im=mpimg.imread('dean.jpeg')
+os.chdir('/Users/deanpospisil/Desktop/')
+im=mpimg.imread('soft_on_orig.png')
 im = np.sum(im,2)
 ftl = np.fft.fft2(im)
 ftl = np.fft.rfft2(im)
@@ -50,7 +50,7 @@ w2 = np.imag(tmp)[ :np.size(ftl,0), :np.size(ftl,1) ].ravel()
 npts= 75
 angles = np.linspace( 0, 2*np.pi, npts)
 magnitudes = np.logspace(np.log10(0.1), np.log10(0.5), npts )
-#magnitudes = np.linspace(0,.5, 100 )
+magnitudes = np.linspace(0,.5, npts )
 
 
 angles, magnitudes = np.meshgrid( angles, magnitudes) 

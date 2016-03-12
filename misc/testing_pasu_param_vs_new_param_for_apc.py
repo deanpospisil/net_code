@@ -16,7 +16,6 @@ sys.path.append(top_dir + 'net_code/common')
 sys.path.append(top_dir + 'net_code/img_gen')
 sys.path.append( top_dir + 'xarray/')
 
-import xarray as xr
 import d_curve as dc
 import d_misc as dm
 import base_shape_gen as bg
@@ -64,12 +63,12 @@ else:
     adjust_c = 1.
 
 downsamp = 10
-shape_dict_list = ({'curvature': -((2. / (1 + np.exp(-0.125 * 
+shape_dict_list = [{'curvature': -((2. / (1 + np.exp(-0.125 * 
                     dc.curve_curvature(cs) * adjust_c))) - 1)[::downsamp],
                     'orientation': ((np.angle(dc.curveAngularPos(cs))) 
                     % (np.pi * 2))[::downsamp]}
                     for cs in
-                    map(lambda shape: shape[:, 1]*1j + shape[:, 0], s))
+                    map(lambda shape: shape[:, 1]*1j + shape[:, 0], s)]
 
 
 import apc_model_fit as ac
@@ -80,18 +79,19 @@ minCurSD = 0.09
 nMeans = 10
 nSD = 10
 fn = 'apc_test.nc'
+import pickle
 
-
-dmod_new = ac.make_apc_models(shape_dict_list, range(370), fn, nMeans, nSD,
+if 'dmod_new' in locals():
+    dmod_new = ac.make_apc_models(shape_dict_list, range(370), fn, nMeans, nSD,
                           maxAngSD, minAngSD, maxCurSD, minCurSD,
                           model_params_dict=None, prov_commit=False, cart=True,
                           save=False)
 
-import pickle
-with open(top_dir + 'net_code/data/models/PC370_params.p', 'rb') as f:
-    shape_dict_list2 = pickle.load(f)
 
-dmod_old = ac.make_apc_models(shape_dict_list2, range(370), fn, nMeans, nSD,
+    with open(top_dir + 'net_code/data/models/PC370_params.p', 'rb') as f:
+        shape_dict_list2 = pickle.load(f)
+
+    dmod_old = ac.make_apc_models(shape_dict_list2, range(370), fn, nMeans, nSD,
                           maxAngSD, minAngSD, maxCurSD, minCurSD,
                           model_params_dict=None, prov_commit=False, cart=True,
                           save=False)
@@ -124,46 +124,48 @@ cor = np.dot(dmod_old.values.T, dmod_new.values)
 #plt.imshow(cor)
 plt.close('all')
 ind = 24
-plt.subplot(4,1,1)
-plt.gca().cla()
-plt.scatter(np.rad2deg(shape_dict_list[ind]['orientation']), shape_dict_list[ind]['curvature'])
-plt.scatter(np.rad2deg(shape_dict_list2[ind]['orientation']), shape_dict_list2[ind]['curvature'], color='r')
-plt.xlabel('orientation')
-plt.ylabel('curvature')
-
-
-plt.subplot(4,1,2)
-plt.gca().cla()
-plt.scatter(s[ind][:,0],s[ind][:,1])
-plt.axis('equal')
-
-
-plt.subplot(4,1,3)
+#plt.subplot(4,1,1)
+#plt.gca().cla()
+#plt.scatter(np.rad2deg(shape_dict_list[ind]['orientation']), shape_dict_list[ind]['curvature'])
+#plt.scatter(np.rad2deg(shape_dict_list2[ind]['orientation']), shape_dict_list2[ind]['curvature'], color='r')
+#plt.xlabel('orientation')
+#plt.ylabel('curvature')
+#
+#
+#plt.subplot(4,1,2)
+#plt.gca().cla()
+#plt.scatter(s[ind][:,0],s[ind][:,1])
+#plt.axis('equal')
+#
+#
+#plt.subplot(4,1,3)
 old_new_r = np.array([cor[i,i] for i in range(cor.shape[0])])
 plt.plot(dmod_new.coords['cur_mean'], color='cyan')
-plt.plot(old_new_r)
-plt.legend(('Mean Curvature', 'r dense vs sparse'))
+plt.plot(dmod_new.coords['or_sd'], color='green')
+plt.plot(dmod_new.coords['cur_sd'], color='red')
+plt.plot(old_new_r, color='blue')
+plt.legend(('Mean Curvature', 'ori sd','cur sd', 'r dense vs sparse'))
 plt.xlabel('Model Number')
 plt.tight_layout()
 
 
 
-m = l.loadmat(top_dir + 'net_code/data/responses/V4_370PC2001.mat')
-
-v4=m['resp'][0][0]
-
-v4_da = xr.DataArray(v4, dims=['unit','shapes']).chunk()
-dmod_old = dmod_old.chunk()
-dmod_new = dmod_new.chunk()
-
-cor_old = ac.cor_resp_to_model(v4_da, dmod_old, fit_over_dims=None, prov_commit=False)
-cor_new = ac.cor_resp_to_model(v4_da, dmod_new, fit_over_dims=None, prov_commit=False)
-cor_con = cor_old-cor_new
-plt.subplot(4,1,4)
-cor_con.plot()
-plt.ylabel('r_sparse - r_dense')
-plt.plot(cor_old.coords['cur_mean']/10)
-np.corrcoef(cor_old.coords['or_mean'], cor_con )
+#m = l.loadmat(top_dir + 'net_code/data/responses/V4_370PC2001.mat')
+#
+#v4=m['resp'][0][0]
+#
+#v4_da = xr.DataArray(v4, dims=['unit','shapes']).chunk()
+#dmod_old = dmod_old.chunk()
+#dmod_new = dmod_new.chunk()
+#
+#cor_old = ac.cor_resp_to_model(v4_da, dmod_old, fit_over_dims=None, prov_commit=False)
+#cor_new = ac.cor_resp_to_model(v4_da, dmod_new, fit_over_dims=None, prov_commit=False)
+#cor_con = cor_old-cor_new
+#plt.subplot(4,1,4)
+#cor_con.plot()
+#plt.ylabel('r_sparse - r_dense')
+#plt.plot(cor_old.coords['cur_mean']/10)
+#np.corrcoef(cor_old.coords['or_mean'], cor_con )
 
 #plt.plot(dmod_new.coords['or_sd'])
 #plt.plot(dmod_new.coords['cur_sd'])

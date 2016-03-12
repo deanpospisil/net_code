@@ -194,6 +194,7 @@ def trace_edge(im, scale, radius, npts = 100, maxlen = 1000):
 
     return np.array(line), d
 
+'''
 #first get an imageset
 #img_dir = top_dir + 'images/baseimgs/PC370/'
 #stack, stack_descriptor_dict = imp.load_npy_img_dirs_into_stack(img_dir)
@@ -244,7 +245,7 @@ max_ext = np.max([np.max(np.abs(a_s)) for a_s in s])
 #                         frac_of_image=frac_of_image, use_round=False)
 #
 
-'''
+
 ashape = s[0]
 
 

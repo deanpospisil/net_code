@@ -76,7 +76,7 @@ intrpvals = np.zeros( np.size(x), 'complex')
 #vectorize this later
 
 
-#highwave = fft2Interpolate( coef, x, y , w ) 
+highwave = fft2Interpolate( coef, x, y , w ) 
 
 #put them back into a square, so we can plot it
 highwave.shape = ( newN, newN )

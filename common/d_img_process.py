@@ -39,7 +39,6 @@ def get2dCfIndex(xsamps,ysamps,fs):
     return C
 
 def fft2Interpolate(coef, points, w):
-
     basis = np.exp( 1j * 2 * pi * ( points[0,0] * w[0] + points[0,0] * w[1] ))
     nPoints = np.size(points)/2
     intrpvals = np.zeros( nPoints, 'complex')
@@ -71,7 +70,6 @@ def translateByPixels(img,x,y):
     return newImg
 
 #def FT
-
 def FTcutToNPixels(dR,dC,mat):
     nRows = np.size( mat, 0)
     nCols = np.size( mat, 1 )

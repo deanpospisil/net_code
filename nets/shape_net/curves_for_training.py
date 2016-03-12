@@ -4,78 +4,94 @@ Created on Fri Mar  4 15:51:58 2016
 
 @author: dean
 """
-import sys
+import sys, os
 import numpy as np
 import scipy.io as  l
 import matplotlib.pyplot as plt
-import os
+import pickle
 
 top_dir = os.getcwd().split('net_code')[0]
 sys.path.append(top_dir + 'net_code/common')
 sys.path.append(top_dir + 'net_code/img_gen')
+sys.path.append(top_dir + 'net_code/nets')
 sys.path.append( top_dir + 'xarray/')
 
+import caffe_net_response as cf
 import d_curve as dc
 import d_misc as dm
 import base_shape_gen as bg
-
-saveDir = top_dir + 'net_code/images/baseimgs/'
-dm.ifNoDirMakeDir(saveDir)
-
-baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
-baseImage = baseImageList[0]
+import apc_model_fit as ac
 
 frac_of_image = 0.25
-dm.ifNoDirMakeDir(saveDir + baseImage +'/')
+dm.ifNoDirMakeDir(top_dir + 'net_code/train_img/')
 
-if baseImage is baseImageList[0]:
+mat = l.loadmat(top_dir + 'net_code' + '/img_gen/'+ 'PC3702001ShapeVerts.mat')
+shapes = bg.center_boundary([the_shape[:-1,:] for the_shape in np.array(mat['shapes'][0])])
 
-#    os.chdir( saveDir + baseImageList[0])
-    mat = l.loadmat(top_dir + 'net_code/img_gen/'+ 'PC3702001ShapeVerts.mat')
-    s = np.array(mat['shapes'][0])
-    s = [shape[:-1,:] for shape in s]
+with open(top_dir + 'net_code/data/models/PC370_params.p', 'rb') as f:
+    shape_dict_list = pickle.load(f)
 
-elif baseImage is baseImageList[1]:
-    nPts = 1000
-    s = dc.make_n_natural_formlets(n=10,
-                nPts=nPts, radius=1, nFormlets=32, meanFormDir=np.pi,
-                stdFormDir=2*np.pi, meanFormDist=1, stdFormDist=0.1,
-                startSigma=3, endSigma=0.1, randseed=1, min_n_pix=64,
-                frac_image=frac_of_image)
-elif baseImage is baseImageList[2]:
-    #    os.chdir( saveDir + baseImageList[0])
-    mat = l.loadmat(top_dir + 'net_code' + '/img_gen/'+ 'PC3702001ShapeVerts.mat')
-    s = np.array(mat['shapes'][0])
-    #adjustment for repeats [ 14, 15, 16,17, 318, 319, 320, 321]
-    a = np.hstack((range(14), range(18,318)))
-    a = np.hstack((a, range(322, 370)))
-    s = s[a]
-    s = [shape[:-1,:] for shape in s]
+#now create the transformations
+stim_trans_cart_dict, stim_trans_dict = cf.stim_trans_generator(shapes=range(370),
+                                                             blur=None,
+                                                             scale = (0.5, 1.5, 3),
+                                                             x = (-50, 50, 16),
+                                                             y = (-50, 50, 16),
+                                                             rotation = (0, np.pi, 16))
 
-elif baseImage is baseImageList[3]:
-    print('to do')
 
-s = bg.center_boundary(s)
+def boundary_transform(transform_dict, boundary_set, apc_set):
 
-adjust_c = 4 # cuvature values weren't matching files I got so I scaled them
-downsamp = 5
-shape_dict_list = [{'curvature': -((2. / (1 + np.exp(-0.125*dc.curve_curvature(cs)*adjust_c)))-1)[::downsamp],
-                    'orientation': ((np.angle(dc.curveAngularPos(cs)))%(np.pi*2))[::downsamp]}
-                    for cs in
-                    map(lambda shape: shape[:, 1]*1j + shape[:, 0], s)]
+    the_cboundary = np.sum(boundary_set[int(transform_dict['shapes'])] * [1, 1j], 1)
+    the_apc_params = apc_set[int(transform_dict['shapes'])]
 
-import apc_model_fit as ac
-maxAngSD = np.deg2rad(171)
-minAngSD = np.deg2rad(23)
-maxCurSD = 0.98
-minCurSD = 0.09
-nMeans = 16
-nSD = 16
-fn = 'apc_models_mycurve.nc'
-'''
-dmod = ac.make_apc_models(shape_dict_list, range(370), fn, nMeans, nSD, 
-                          maxAngSD, minAngSD, maxCurSD, minCurSD, 
-                          prov_commit=False)['resp']
+    if 'rotation' in transform_dict:
+        the_cboundary = the_cboundary * np.exp(1j * transform_dict['rotation'])
+        the_apc_params['orientation'] = (transform_dict['rotation'] +
+                                        the_apc_params['orientation'])%(2*np.pi)
+    if 'scale' in transform_dict:
+        the_cboundary= the_cboundary * transform_dict['scale']
+
+
+
+    if 'x'  in transform_dict:
+        the_cboundary = transform_dict['x'] + the_cboundary
+
+    if 'y'  in transform_dict:
+        the_cboundary = transform_dict['y'] + 1j*the_cboundary
+
+    transformed_boundary = np.array([np.real(the_cboundary), np.imag(the_cboundary)]).T
+    return transformed_boundary
+
+transform_dict = {key: stim_trans_cart_dict[key][1000000] for key in stim_trans_cart_dict.keys() }
+
+transform_dict ={'shapes': 369, 'x': 0, 'rotation': 0, 'scale': 1.0, 'y': 0}
+boundary_set = shapes
+apc_set = shape_dict_list
+
+ts = boundary_transform(transform_dict, boundary_set, apc_set)
+plt.plot(ts[:,0], ts[:,1])
+plt.axis('equal')
+
+#shape_dict_list = [{'curvature': -((2. / (1 + np.exp(-0.125*dc.curve_curvature(cs)*adjust_c)))-1)[::downsamp],
+#                    'orientation': ((np.angle(dc.curveAngularPos(cs)))%(np.pi*2))[::downsamp]}
+#                    for cs in
+#                    map(lambda shape: shape[:, 1]*1j + shape[:, 0], s)]
+
+#
+#maxAngSD = np.deg2rad(171)
+#minAngSD = np.deg2rad(23)
+#maxCurSD = 0.98
+#minCurSD = 0.09
+#nMeans = 16
+#nSD = 16
+#fn = 'apc_models_mycurve.nc'
+#
+#dmod = ac.make_apc_models(shape_dict_list, range(370), fn, nMeans, nSD,
+#                          maxAngSD, minAngSD, maxCurSD, minCurSD,
+#                          prov_commit=False)['resp']
+#
+
 '''
 import pickle
 ind = -1
@@ -110,8 +126,6 @@ plt.show()
 #    plt.scatter( np.rad2deg(shape_dict_list[ind]['orientation'][20]), shape_dict_list[ind]['curvature'][20], color='y')
 #    import pickle
 #    #open those responses, and build apc models for their shapes
-#    with open(top_dir + 'net_code/data/models/PC370_params.p', 'rb') as f:
-#        shape_dict_list2 = pickle.load(f)
 #
 #    plt.scatter( np.rad2deg(shape_dict_list2[ind]['orientation']), shape_dict_list2[ind]['curvature'], color='r')
 #
@@ -140,3 +154,4 @@ plt.show()
 #bg.save_boundaries_as_image(s, saveDir + baseImage + '/', top_dir, max_ext,
 #                         n_pix_per_side=227, fill=True, require_provenance=False,
 #                         frac_of_image=frac_of_image, use_round=False)
+'''

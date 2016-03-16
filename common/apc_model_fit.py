@@ -36,8 +36,11 @@ def get_2d_dims_right(vec, dims_order=(1, 0)):
     return right_dims
 
 #takes a set of points in apc plane and makes prediction based on different receptive fields
-def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
-                                   model_params_dict={'or_sd': [3.14], 'or_mean':[3.14], 'cur_mean':[1], 'cur_sd':[0.1]}):
+def apc_models(shape_dict_list=[{'curvature': None, 'orientation': None} ],
+                                model_params_dict={'or_sd': [3.14], 
+                                                   'or_mean':[3.14], 
+                                                   'cur_mean':[1], 
+                                                   'cur_sd':[0.1]}):
      # make sure everything has the right dimensionality for broadcating
     for key in model_params_dict:
         vec = np.array(model_params_dict[key])
@@ -54,9 +57,10 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
     #initialize our distributions
     von_rv = st.vonmises( kappa = model_params_dict['or_sd']**-1 , loc = model_params_dict['or_mean'] )
     norm_rv = st.norm( scale = model_params_dict['cur_sd'] , loc = model_params_dict['cur_mean'] )
-    
+
     model_resp = []
     #get responses to all points for each axis ap and c then their product, then the max of all those points as the resp
+
     for i, apc_points in enumerate(shape_dict_list):#had to break this up per memory issues
         print(i)
         model_resp_all_apc_points = von_rv.pdf(apc_points['orientation']) * norm_rv.pdf( apc_points['curvature'])
@@ -71,21 +75,21 @@ def apc_models( shape_dict_list = [{'curvature': None, 'orientation': None} ],
 
     return model_resp
 
-def make_apc_models(shape_dict_list, shape_id, fn, nMeans, nSD, maxAngSD, minAngSD, maxCurSD, minCurSD,
-                    prov_commit = False):
+def make_apc_models(shape_dict_list, shape_id, fn, nMeans, nSD,
+                          maxAngSD, minAngSD, maxCurSD, minCurSD,
+                          model_params_dict=None, prov_commit=False, cart=True,
+                          save=False):
     #make this into a pyramid based on d-prime
     fn = top_dir + 'data/models/' + fn
 
-    orMeans = np.linspace(0, 2*np.pi - 2*np.pi / nMeans, nMeans)
-    orSDs = np.logspace(np.log10( minAngSD ), np.log10( maxAngSD ), nSD )
-    curvMeans = np.linspace( -0.5, 1, nMeans )
-    curvSDs = np.logspace( np.log10(minCurSD), np.log10(maxCurSD), nSD )
-
-
-    model_params_dict = ord_d({'or_sd': orSDs, 'or_mean':orMeans,
-                         'cur_mean' :curvMeans, 'cur_sd':curvSDs})
-
-    model_params_dict = dm.cartesian_prod_dicts_lists( model_params_dict )
+    if cart:
+        orMeans = np.linspace(0, 2*np.pi - 2*np.pi / nMeans, nMeans)
+        orSDs = np.logspace(np.log10( minAngSD ), np.log10( maxAngSD ), nSD )
+        curvMeans = np.linspace( -0.5, 1, nMeans )
+        curvSDs = np.logspace( np.log10(minCurSD), np.log10(maxCurSD), nSD )
+        model_params_dict = ord_d({'or_sd': orSDs, 'or_mean':orMeans,
+                             'cur_mean' :curvMeans, 'cur_sd':curvSDs})
+        model_params_dict = dm.cartesian_prod_dicts_lists( model_params_dict )
 
     if not os.path.isfile(fn):
         model_resp = apc_models(shape_dict_list=shape_dict_list,
@@ -98,9 +102,11 @@ def make_apc_models(shape_dict_list, shape_id, fn, nMeans, nSD, maxAngSD, minAng
         if prov_commit:
             sha = dm.provenance_commit(top_dir)
             dam.attrs['model'] = sha
-        ds = xr.Dataset({'resp': dam})
-        ds.to_netcdf(fn)
-        return ds
+        if save:
+            ds = xr.Dataset({'resp': dam})
+            ds.to_netcdf(fn)
+
+        return dam
     else:
         warnings.warn('Model File has Already Been Written.')
         return xr.open_dataset(fn)
@@ -144,7 +150,7 @@ def cor_resp_to_model(da, dmod, fit_over_dims=None, prov_commit=False):
         sha = dm.provenance_commit(top_dir)
         cor.attrs['analysis'] = sha
         cor.attrs['model'] = ats['model']
-    
+
     return cor
 
 

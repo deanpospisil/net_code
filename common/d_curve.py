@@ -27,10 +27,10 @@ def curveDists(cShape):
 def curve_curvature(cShape):
 
     nPts=np.size(cShape)
-    curvature=np.ones([nPts])*np.nan
+    curvature = np.ones([nPts])*np.nan
     for ind in range(nPts):
         oldDir = (cShape[(ind-1)]) - (cShape[(ind-2)])
-        newDir = (cShape[ind]) - (cShape[(ind-1) ])
+        newDir = (cShape[ind]) - (cShape[(ind-1)])
         curvature[ind] = np.angle(newDir * np.conj(oldDir))/(abs(newDir))
     if np.isnan(curvature).any():
         warnings.warn('Did not fill all orientation values')

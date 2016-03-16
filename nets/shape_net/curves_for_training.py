@@ -25,34 +25,34 @@ from scipy import ndimage
 
 #takes a set of points in apc plane and makes prediction based on different receptive fields
 def apc_models(shape_dict={'curvature': None, 'orientation': None},
-                                model_params_dict={'or_sd': [3.14], 
-                                                   'or_mean':[3.14], 
-                                                   'cur_mean':[1], 
+                                model_params_dict={'or_sd': [3.14],
+                                                   'or_mean':[3.14],
+                                                   'cur_mean':[1],
                                                    'cur_sd':[0.1]}):
 
     #initialize our distributions
-    von_rv = st.vonmises( kappa=np.expand_dims(model_params_dict['or_sd']**-1, 1) , 
+    von_rv = st.vonmises( kappa=np.expand_dims(model_params_dict['or_sd']**-1, 1) ,
                          loc = np.expand_dims(model_params_dict['or_mean'],1 ))
-    norm_rv = st.norm( scale = np.expand_dims(model_params_dict['cur_sd'],1) , 
+    norm_rv = st.norm( scale = np.expand_dims(model_params_dict['cur_sd'],1) ,
                       loc = np.expand_dims(model_params_dict['cur_mean'], 1))
 
-    model_resp_all_apc_points = (von_rv.pdf(np.expand_dims(shape_dict['orientation'], 0)) * 
+    model_resp_all_apc_points = (von_rv.pdf(np.expand_dims(shape_dict['orientation'], 0)) *
                                            norm_rv.pdf(np.expand_dims(shape_dict['curvature'],0)))
     model_resp = np.max(model_resp_all_apc_points, axis=1)
 
     return model_resp
-    
-    
+
+
 def boundary_transform(transform_dict, boundary_set, apc_set):
     shape_id = int(transform_dict['shapes'])
     the_cboundary = cboundary_set[shape_id]
     curv = apc_set[int(transform_dict['shapes'])]['curvature']
     ori = apc_set[int(transform_dict['shapes'])]['orientation']
-    
+
     if 'rotation' in transform_dict:
         the_cboundary = the_cboundary * np.exp(1j * transform_dict['rotation'])
         ori = (transform_dict['rotation'] + ori)%(2*np.pi)
-    
+
     if 'scale' in transform_dict:
         the_cboundary= the_cboundary * transform_dict['scale']
 
@@ -63,7 +63,7 @@ def boundary_transform(transform_dict, boundary_set, apc_set):
         the_cboundary = transform_dict['y']*1j + the_cboundary
 
     transformed_boundary = np.hstack((np.real(the_cboundary), np.imag(the_cboundary)))
-    
+
     return transformed_boundary, ori, curv
 
 
@@ -71,7 +71,7 @@ def boundary_to_mat_by_round(s, n_pix_per_side, fill=True):
     im = np.zeros((n_pix_per_side, n_pix_per_side))
     #tr = scale_center_boundary_for_mat(s, n_pix_per_side, frac_of_image, max_ext)
     tr = s.astype(int)
-        
+
     #conversion of x, y to row, col
     im[(n_pix_per_side-1)-tr[:, 1], tr[:, 0]] = 1
 
@@ -106,6 +106,13 @@ stim_trans_cart_dict, stim_trans_dict = cf.stim_trans_generator(shapes=range(370
                                                              rotation=(0, np.pi/2, 2))
 
 cboundary_set= [np.expand_dims(np.sum(a_shape * [1, 1j], 1), 1) for a_shape in boundary_set]
+from collections import OrderedDict as ord_d
+#make the models to be fit
+model_params_dict = ord_d({'or_sd': np.linspace(np.deg2rad(27), np.deg2rad(180), 5),
+                    'or_mean':np.linspace(np.deg2rad(0), np.deg2rad(360-360/5.), 5),
+                    'cur_mean':np.linspace(-0.5, 1, 5),
+                    'cur_sd':np.linspace(0.1, 1, 5)})
+cart_params_dict = dm.cartesian_prod_dicts_lists( model_params_dict )
 
 m=[]
 im=[]
@@ -118,18 +125,15 @@ for ind in range(len(stim_trans_cart_dict['shapes'])):
     ts, ori, curv = boundary_transform(transform_dict, cboundary_set, apc_set)
     shape_dict_list_trans['curvature'] = curv
     shape_dict_list_trans['orientation'] = ori
-    
+
     #choose some models
     m.append(apc_models(shape_dict=shape_dict_list_trans,
-                                model_params_dict={'or_sd': np.array([3.14, 1]), 
-                                                   'or_mean':np.array([3.14,2]), 
-                                                   'cur_mean':np.array([1, 0.5]), 
-                                                   'cur_sd':np.array([0.1, 1])}))
-    #get the image    
+                        model_params_dict=cart_params_dict))
+    #get the image
     im.append(boundary_to_mat_by_round(ts, n_pix_per_side=n_pix_per_side, fill=True))
-    
-    
-    
+
+
+
 data_dir = 'data/train_img/'
 
 #data = np.zeros((n_imgs, 1, img_width, img_width))
@@ -148,14 +152,14 @@ with h5py.File(top_dir + 'net_code/' + data_dir + 'train_data.h5', 'w') as f:
 
 with open(top_dir + 'net_code/nets/shape_net/train_data_list.txt', 'w') as f:
     f.write(top_dir + 'net_code/' + data_dir + 'train_data.h5')
-    
-    
+
+
 with h5py.File(top_dir+ 'net_code/' + data_dir + 'test_data.h5', 'w') as f:
     f['data'] = data
     f['label'] = targets
 
 with open(top_dir + 'net_code/nets/shape_net/test_data_list.txt', 'w') as f:
     f.write(top_dir+ 'net_code/' + data_dir + 'test_data.h5' )
-    
-    
-   
+
+
+

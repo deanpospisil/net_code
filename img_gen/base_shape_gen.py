@@ -44,17 +44,20 @@ def center_boundary(s):
 def scale_center_boundary_for_mat(s, n_pix_per_side, frac_of_image, max_ext):
     scale = (n_pix_per_side*frac_of_image)/(max_ext*2.)
     tr = np.round(s*scale)
-    cx, cy = get_center_boundary(tr[:,1], tr[:,0])
-    tr[:,0] = tr[:,0] + n_pix_per_side/2.- cy + 1
-    tr[:,1] = tr[:,1] + n_pix_per_side/2.- cx + 1
-
+    
+    cx, cy = get_center_boundary(tr[:, 0], tr[:, 1])
+    tr[:, 0] = tr[:, 0] + n_pix_per_side/2.- cx + 1
+    tr[:, 1] = tr[:, 1] + n_pix_per_side/2.- cy + 1
+    
     return tr
 
 def boundary_to_mat_by_round(s, n_pix_per_side, frac_of_image, max_ext, fill=True):
     im = np.zeros((n_pix_per_side, n_pix_per_side))
     tr = scale_center_boundary_for_mat(s, n_pix_per_side, frac_of_image, max_ext)
-    tr = tr.astype(int)
-    im[tr[:,1], tr[:,0]] = 1
+    tr = s.astype(int)
+        
+    #conversion of x, y to row, col
+    im[(n_pix_per_side-1)-tr[:, 1], tr[:, 0]] = 1
 
     if fill:
         im = ndimage.binary_fill_holes(im).astype(int)
@@ -194,27 +197,27 @@ def trace_edge(im, scale, radius, npts = 100, maxlen = 1000):
 
     return np.array(line), d
 
-'''
+
 #first get an imageset
 #img_dir = top_dir + 'images/baseimgs/PC370/'
 #stack, stack_descriptor_dict = imp.load_npy_img_dirs_into_stack(img_dir)
 #im = stack[0,:,:]
 
 #generate base images
-
+'''
 saveDir = top_dir + 'net_code/images/baseimgs/'
 dm.ifNoDirMakeDir(saveDir)
 
 baseImageList = [ 'PC370', 'formlet', 'PCunique', 'natShapes']
-baseImage = baseImageList[1]
+baseImage = baseImageList[0]
 
-frac_of_image = 0.25
+frac_of_image = 1
 dm.ifNoDirMakeDir(saveDir + baseImage +'/')
 
 if baseImage is baseImageList[0]:
 
 #    os.chdir( saveDir + baseImageList[0])
-    mat = l.loadmat(cwd + '/img_gen/'+ 'PC3702001ShapeVerts.mat')
+    mat = l.loadmat(top_dir + 'net_code/img_gen/'+ 'PC3702001ShapeVerts.mat')
     s = np.array(mat['shapes'][0])
 
 elif baseImage is baseImageList[1]:
@@ -239,11 +242,11 @@ elif baseImage is baseImageList[3]:
 
 s = center_boundary(s)
 max_ext = np.max([np.max(np.abs(a_s)) for a_s in s])
-#
-#save_boundaries_as_image(s, saveDir + baseImage + '/', top_dir, max_ext,
-#                         n_pix_per_side=227, fill=True, require_provenance=False,
-#                         frac_of_image=frac_of_image, use_round=False)
-#
+
+save_boundaries_as_image(s, saveDir + baseImage + '/', top_dir, max_ext,
+                         n_pix_per_side=227, fill=True, require_provenance=False,
+                         frac_of_image=frac_of_image, use_round=True)
+
 
 
 ashape = s[0]

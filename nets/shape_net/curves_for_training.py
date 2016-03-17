@@ -83,12 +83,18 @@ def boundary_to_mat_by_round(s, n_pix_per_side, fill=True):
     return im
 
 dm.ifNoDirMakeDir(top_dir + 'net_code/data/train_img/')
-
+unique_over_rot_scale = [1, 2, 10, 16, 18, 30, 34, 42, 50, 58, 66, 74, 82, 90, 98,
+                    106, 114, 122, 130, 138,  146, 154, 162, 170, 178, 186, 194,
+                    202, 210, 218, 226, 228, 236, 240, 248, 256, 258, 266, 274,
+                    282, 290, 298, 306, 314, 322, 330, 338, 346, 354, 362]
 mat = l.loadmat(top_dir + 'net_code/img_gen/'+ 'PC3702001ShapeVerts.mat')
 boundary_set = bg.center_boundary([the_shape[:-1,:] for the_shape in np.array(mat['shapes'][0])])
 
+
 with open(top_dir + 'net_code/data/models/PC370_params.p', 'rb') as f:
     apc_set = pickle.load(f)
+
+
 
 #now create the transformations
 frac_img = 0.5
@@ -99,11 +105,11 @@ max_scale = (frac_img*n_pix_per_side)/max_ext
 min_pos = (max_ext * max_scale)/2. + 1
 max_pos = n_pix_per_side - min_pos - 1
 
-stim_trans_cart_dict, stim_trans_dict = cf.stim_trans_generator(shapes=range(370),
-                                                             scale=(max_scale/1.5, max_scale, 2),
-                                                             x=(min_pos, max_pos, 2),
-                                                             y=(min_pos, max_pos, 2),
-                                                             rotation=(0, np.pi/2, 2))
+stim_trans_cart_dict, _ = cf.stim_trans_generator(shapes=unique_over_rot_scale,
+                                                  scale=(max_scale/1.5, max_scale, 2),
+                                                  x=(min_pos, max_pos, 16),
+                                                  y=(min_pos, max_pos, 16),
+                                                  rotation=(0, 2*np.pi-(2*np.pi/16), 16))
 
 cboundary_set= [np.expand_dims(np.sum(a_shape * [1, 1j], 1), 1) for a_shape in boundary_set]
 from collections import OrderedDict as ord_d
@@ -121,7 +127,7 @@ shape_dict_list_trans['orientation'] = []
 shape_dict_list_trans['curvature'] = []
 for ind in range(len(stim_trans_cart_dict['shapes'])):
     print(np.double(ind)/len(stim_trans_cart_dict['shapes']))
-    transform_dict = {key: stim_trans_cart_dict[key][ind] for key in stim_trans_dict.keys() }
+    transform_dict = {key: stim_trans_cart_dict[key][ind] for key in stim_trans_cart_dict.keys() }
     ts, ori, curv = boundary_transform(transform_dict, cboundary_set, apc_set)
     shape_dict_list_trans['curvature'] = curv
     shape_dict_list_trans['orientation'] = ori

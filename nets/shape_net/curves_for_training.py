@@ -21,7 +21,7 @@ import d_misc as dm
 import base_shape_gen as bg
 import scipy.stats as st
 from scipy import ndimage
-
+from collections import OrderedDict as ord_d
 
 #takes a set of points in apc plane and makes prediction based on different receptive fields
 def apc_models(shape_dict={'curvature': None, 'orientation': None},
@@ -104,22 +104,36 @@ center_im = round(n_pix_per_side/2.)
 max_scale = (frac_img*n_pix_per_side)/max_ext
 min_pos = (max_ext * max_scale)/2. + 1
 max_pos = n_pix_per_side - min_pos - 1
+cboundary_set= [np.expand_dims(np.sum(a_shape * [1, 1j], 1), 1) for a_shape in boundary_set]
 
+'''
 stim_trans_cart_dict, _ = cf.stim_trans_generator(shapes=unique_over_rot_scale,
                                                   scale=(max_scale/1.5, max_scale, 2),
                                                   x=(min_pos, max_pos, 16),
                                                   y=(min_pos, max_pos, 16),
                                                   rotation=(0, 2*np.pi-(2*np.pi/16), 16))
 
-cboundary_set= [np.expand_dims(np.sum(a_shape * [1, 1j], 1), 1) for a_shape in boundary_set]
-from collections import OrderedDict as ord_d
+
+
 #make the models to be fit
+
+
 model_params_dict = ord_d({'or_sd': np.linspace(np.deg2rad(27), np.deg2rad(180), 5),
-                    'or_mean':np.linspace(np.deg2rad(0), np.deg2rad(360-360/5.), 5),
+                    'or_mean':np.linse(np.deg2rad(0), np.deg2rad(360-360/5.), 5),
                     'cur_mean':np.linspace(-0.5, 1, 5),
                     'cur_sd':np.linspace(0.1, 1, 5)})
 cart_params_dict = dm.cartesian_prod_dicts_lists( model_params_dict )
+'''
+stim_trans_cart_dict, _ = cf.stim_trans_generator(shapes=unique_over_rot_scale,
+                                                  scale=(max_scale/1.5, max_scale, 1),
+                                                  x=(min_pos, max_pos, 1),
+                                                  y=(min_pos, max_pos, 1),
+                                                  rotation=(0, 2*np.pi-(2*np.pi/16), 16))
 
+cart_params_dict = ord_d({'or_sd':np.array([0.2]),
+                    'or_mean':np.array([0]),
+                    'cur_mean':np.array([1]),
+                    'cur_sd':np.array([0.2])})
 m=[]
 im=[]
 shape_dict_list_trans = {}

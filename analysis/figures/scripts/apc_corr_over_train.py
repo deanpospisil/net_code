@@ -19,7 +19,8 @@ sys.path.append(top_dir +'common')
 import d_misc as dm
 import xarray as xr
 import apc_model_fit as ac
-quick = True
+
+quick = False
 
 #open those responses, and build apc models for their shapes
 with open(top_dir + 'data/models/PC370_params.p', 'rb') as f:
@@ -49,28 +50,29 @@ all_iter = [all_iter[ind] for ind in  np.argsort(it_num)]
 all_iter = [all_iter[ind.astype(int)] for ind in dm.grad_aprx_ind(len(it_num))]
 #da_c = xr.open_dataset(all_iter[0], chunks = {'unit':100, 'shapes': 370})['resp']
 
-if not quick:
-    for fn in all_iter:
 
-        da_c = da_c.drop(set(range(370)) - set(shape_id) , dim='shapes')
-    
-        if quick:
-    
-            dmod = dmod.sel(models=range(10), method='nearest')
-            da_c = da_c.sel(unit=range(30),  method='nearest')
-            da_c = da_c.sel(x=[0, 2],  method='nearest')
-        print(fn)
-        fn = top_dir + 'data/an_results/r_apc_models_unique' + str(fn.split('iter')[1])
-        if not os.path.isfile(fn):
-            cor = ac.cor_resp_to_model(da_c, dmod, fit_over_dims = ('x',), prov_commit=True)
-            cor.to_dataset(name='r').to_netcdf(fn)
-        else:
-            print('already written')
-            warnings.warn('Fit  File has Already Been Written.')
-            cor = xr.open_dataset(fn)
-    
-        cor = ac.cor_resp_to_model(da_c, dmod, fit_over_dims = ('x',))
-        cor.to_dataset(name='r').to_netcdf(top_dir + 'data/an_results/r_apc_models_unique' + str(fn.split('iter')[1]) )
+for fn in all_iter:
+    da_c = xr.open_dataset(fn, chunks = {'unit':100})['resp']
+    da_c = da_c.drop(set(range(370)) - set(shape_id) , dim='shapes')
+
+    if quick:
+
+        dmod = dmod.sel(models=range(10), method='nearest')
+        da_c = da_c.sel(unit=range(30),  method='nearest')
+        da_c = da_c.sel(x=[0, 2],  method='nearest')
+    print(fn)
+    fn = top_dir + 'data/an_results/r_apc_models_unique' + str(fn.split('iter')[1])
+    if not os.path.isfile(fn):
+        cor = ac.cor_resp_to_model(da_c, dmod, fit_over_dims = ('x',), prov_commit=True)
+        cor.to_dataset(name='r').to_netcdf(fn)
+    else:
+        print('already written')
+        warnings.warn('Fit  File has Already Been Written.')
+        cor = xr.open_dataset(fn)
+
+    #cor = ac.cor_resp_to_model(da_c, dmod, fit_over_dims = ('x',))
+    #cor.to_dataset(name='r').to_netcdf(top_dir + 'data/an_results/r_apc_models_unique' + str(fn.split('iter')[1]) )
+
 
 
 #ds = xr.open_mfdataset(top_dir + 'data/an_results/r_over_train/r_*.nc', concat_dim = 'niter')

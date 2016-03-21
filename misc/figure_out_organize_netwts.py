@@ -22,7 +22,8 @@ import xarray as xr
 
 
 with open(top_dir + 'nets/netwts.p', 'rb') as f:
-    a = pickle.load(f)
+    
+    a = pickle.load(f, encoding='latin1')
 
 def cart_to_polar_2d_lin(im, sample_rate_mult):
 
@@ -78,14 +79,23 @@ p4 = np.fft.ifft(p3)
 p4 = np.sum(p4, axis = (2, 3))
 cormat=np.real(np.max(abs(p4), 2))
 #plt.plot(np.diag(cormat))
-
+plt.figure()
 plt.imshow(np.real(np.max(abs(p4), 2)), interpolation='None', cmap=cm.Greys_r)
 plt.colorbar()
 plt.title('rotational correlation, AlexNet Kernels Layer 1')
 plt.xlabel('unit #')
 plt.ylabel('unit #')
-'''
+
+
+w, v =np.linalg.eig(cormat)
+data = ims
+n = int(np.ceil(np.sqrt(data.shape[0])))
+data = (data - data.min()) / (data.max() - data.min())
+
 for ind in range(len(pol_ims)):
-    plt.subplot(10,10,ind+1)
-    plt.imshow(pol_ims[ind][0],interpolation='None', cmap=cm.Greys_r)
-    '''
+    plt.subplot(10, 10,ind+1)
+    plt.imshow( np.swapaxes(data[ind],0,2), interpolation='None')
+    plt.gca().set_xticks([])
+    plt.gca().set_yticks([])
+    plt.title(str(ind))
+plt.tight_layout()

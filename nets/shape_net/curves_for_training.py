@@ -150,7 +150,11 @@ for ind in range(len(stim_trans_cart_dict['shapes'])):
     m.append(apc_models(shape_dict=shape_dict_list_trans,
                         model_params_dict=cart_params_dict))
     #get the image
-    im.append(boundary_to_mat_by_round(ts, n_pix_per_side=n_pix_per_side, fill=True))
+    _ =  boundary_to_mat_by_round(ts, n_pix_per_side=n_pix_per_side, fill=True)
+    _ = _-np.mean(_)
+    _ = _ / np.linalg.norm(_)
+    im.append(_)
+    
 
 
 

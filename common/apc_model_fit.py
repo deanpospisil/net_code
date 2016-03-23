@@ -37,9 +37,9 @@ def get_2d_dims_right(vec, dims_order=(1, 0)):
 
 #takes a set of points in apc plane and makes prediction based on different receptive fields
 def apc_models(shape_dict_list=[{'curvature': None, 'orientation': None} ],
-                                model_params_dict={'or_sd': [3.14], 
-                                                   'or_mean':[3.14], 
-                                                   'cur_mean':[1], 
+                                model_params_dict={'or_sd': [3.14],
+                                                   'or_mean':[3.14],
+                                                   'cur_mean':[1],
                                                    'cur_sd':[0.1]}):
      # make sure everything has the right dimensionality for broadcating
     for key in model_params_dict:
@@ -56,6 +56,8 @@ def apc_models(shape_dict_list=[{'curvature': None, 'orientation': None} ],
 
     #initialize our distributions
     von_rv = st.vonmises( kappa = model_params_dict['or_sd']**-1 , loc = model_params_dict['or_mean'] )
+    #von_rv = st.norm( scale = model_params_dict['or_sd'] , loc = model_params_dict['or_mean'] )
+
     norm_rv = st.norm( scale = model_params_dict['cur_sd'] , loc = model_params_dict['cur_mean'] )
 
     model_resp = []

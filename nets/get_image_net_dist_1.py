@@ -6,7 +6,6 @@ Created on Wed Mar 23 13:43:31 2016
 """
 import os
 import sys
-import warnings
 import numpy as np
 
 #make the working directory two above this one
@@ -20,18 +19,21 @@ caffe_root = '/home/dean/caffe/'
 sys.path.insert(0, caffe_root + 'python')
 
 import d_misc as dm
+import xarray as xr
+import caffe_net_response as cf
 
-img_dir= top_dir +'data/image_net/ILSVRC2012_img_train_t3/'
+img_dir= top_dir +'data/image_net/'
 img_names = [name for name in os.listdir(img_dir) if 'JPEG' in name]
-
 #takes stim_trans_cart_dict, pulls from img_stack and transform accordingly,
     #gets nets responses.
 
-nimgs_per_pass = 100
-n_imgs = 102
+nimgs_per_pass = 260
+n_imgs = 2000
+
 if n_imgs>len(img_names):
     n_imgs = len(img_names)
-stack_indices, remainder = dm.sectStrideInds(nimgs_per_pass, n_imgs )
+rand_img_inds = np.random.choice(len(img_names), n_imgs)
+stack_indices, remainder = dm.sectStrideInds(nimgs_per_pass, n_imgs)
 
 import caffe
 model_def = caffe_root + 'models/bvlc_reference_caffenet/deploy.prototxt'
@@ -51,7 +53,7 @@ transformer.set_transpose('data', (2,0,1))  # move image channels to outermost d
 transformer.set_mean('data', mu)            # subtract the dataset-mean value in each channel
 transformer.set_raw_scale('data', 255)      # rescale from [0, 1] to [0, 255]
 transformer.set_channel_swap('data', (2,1,0))  # swap channels from RGB to BGR
-images = [caffe.io.load_image(img_dir + name) for name in img_names]
+images = [caffe.io.load_image(img_dir + name) for name in [img_names[ind] for ind in rand_img_inds]]
 transformed_images = [transformer.preprocess('data', image) for image in images]
 
 
@@ -61,7 +63,7 @@ transformed_images = [transformer.preprocess('data', image) for image in images]
 all_net_resp = []
 layer_names = [k for k in net.blobs.keys()]
 for stack_ind in stack_indices:
-    stack = np.array(transformed_images[stack_indices[0]:stack_indices[1]])
+    stack = np.array(transformed_images[stack_ind[0]:stack_ind[1]])
     #shape the data layer, (first layer) to the input
     net.blobs[ layer_names[0]].reshape(*tuple([stack.shape[0],]) + net.blobs['data'].data.shape[1:])
     net.blobs[ layer_names[0]].data[...]= stack
@@ -84,8 +86,19 @@ for stack_ind in stack_indices:
 
 #stack up all these responses
 response = np.vstack(all_net_resp)
+indices_for_net_unit_vec = cf.get_indices_for_net_unit_vec(net)
+da = xr.DataArray(response, dims=['img', 'unit'])
 
-print(img_names)
+# adding extra coordinates using indices_for_net_unit_vec
+d = indices_for_net_unit_vec
+da['layer'] = ('unit', d['layer_ind'])
+da['layer_unit'] = ('unit', d['layer_unit_ind'])
+layer_label = [d['layer_names'][int(layer_num)] for layer_num in d['layer_ind']]
+da['layer_label'] = ('unit', layer_label)
+ds = xr.Dataset({'r':da})
+ds.to_netcdf(top_dir + 'data/an_results/alex_net_nat_image_dist2000.nc')
+
+
 
 #randomly select n images in you image dir
 #

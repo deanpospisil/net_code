@@ -13,9 +13,16 @@ pi=np.pi
 import scipy as sc
 from scipy import interpolate
 
+def cart_to_polar_2d_angles(imsize, sample_rate_mult):
 
+    #get polar resampling coordinates
+    n_pix = int(imsize/2.)
+    npts_angle = int(np.pi * 2 * n_pix) * sample_rate_mult
+    angles_vec = np.linspace(0, 2*np.pi, npts_angle)
+    return angles_vec
+    
 def cart_to_polar_2d_lin(im, sample_rate_mult):
-
+    #take an image, im, and unwrap it into polar coords
     x = np.arange(im.shape[1])
     y = np.arange(im.shape[0])
     f = interpolate.interp2d(x, y, im, kind='linear')
@@ -39,6 +46,7 @@ def cart_to_polar_2d_lin(im, sample_rate_mult):
     return im_pol
 
 def cart_to_polar_2d_lin_broad(im, sample_rate_mult):
+    #take a stack of images, image index first, and do it to all of them
     cut = [cart_to_polar_2d_lin(im_cut, sample_rate_mult) for im_cut in  im]
     return cut
 

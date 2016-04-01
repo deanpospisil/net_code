@@ -91,15 +91,15 @@ plt.xlabel('unit #')
 plt.ylabel('unit #')
 
 
-#w, v =np.linalg.eig(cormat)
-#data = ims
-#n = int(np.ceil(np.sqrt(data.shape[0])))
-#data = (data - data.min()) / (data.max() - data.min())
-#
-#for ind in range(len(pol_ims)):
-#    plt.subplot(10, 10,ind+1)
-#    plt.imshow( np.swapaxes(data[ind],0,2), interpolation='None')
-#    plt.gca().set_xticks([])
-#    plt.gca().set_yticks([])
-#    plt.title(str(ind))
-#plt.tight_layout()
+w, v =np.linalg.eig(cormat)
+data = ims
+n = int(np.ceil(np.sqrt(data.shape[0])))
+data = (data - data.min()) / (data.max() - data.min())
+
+for ind in range(50):
+    plt.subplot(10, 10,ind+1)
+    plt.imshow( np.swapaxes(data[ind],0,2), interpolation='None')
+    plt.gca().set_xticks([])
+    plt.gca().set_yticks([])
+    plt.title(str(ind))
+plt.tight_layout()

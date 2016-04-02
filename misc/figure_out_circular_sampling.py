@@ -22,7 +22,7 @@ import matplotlib.cm as cm
 from scipy import interpolate
 
 
-def get2dCfIndex(xsamps,ysamps,fs):
+def get2dCfIndex(xsamps, ysamps,fs):
     fx, fy = np.meshgrid(np.fft.fftfreq(int(xsamps),1./fs),
                          np.fft.fftfreq(int(ysamps),1./fs) )
     c = fx + 1j * fy

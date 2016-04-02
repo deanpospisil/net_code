@@ -23,50 +23,88 @@ import d_misc as dm
 import d_img_process as imp
 
 
+def get2dCfIndex(xsamps, ysamps,fs):
+    fx, fy = np.meshgrid(np.fft.fftfreq(int(xsamps),1./fs),
+                         np.fft.fftfreq(int(ysamps),1./fs) )
+    c = fx + 1j * fy
+    return c
 
-
-if 'a' not in locals():
+if 'afile' not in locals():
     with open(top_dir + 'nets/netwts.p', 'rb') as f:
 
         try:
-            a = pickle.load(f, encoding='latin1')
+            afile = pickle.load(f, encoding='latin1')
         except:
-            a = pickle.load(f) 
+            afile = pickle.load(f) 
+plt.close('all')
 layer = 0
-sample_rate_mult = 2
-ims = a[layer][1]
+sample_rate_mult = 5
+ims = afile[layer][1]
 
 ims = np.array([im for im in ims])
 ims = np.sum(ims, 1)
-fims = np.abs(np.fft.fft2(ims))
-pims = imp.cart_to_polar_2d_lin_broad(fims, sample_rate_mult)
-angles = imp.cart_to_polar_2d_angles(11, sample_rate_mult)
+ims = ims - np.mean(ims,axis =(1,2), keepdims=True)
+fims = np.abs(np.fft.fft2(ims, s=np.array(np.shape(ims)[1:])*sample_rate_mult))
+fims = fims.reshape(96, (11*sample_rate_mult)**2)
+c = get2dCfIndex(11*sample_rate_mult, 11*sample_rate_mult, 11*sample_rate_mult)
+mag = np.abs(c).ravel()
+ang = np.angle(c)
+ang = ang.ravel()
+fims=fims[:, ang>0]
+ang = ang[ang>0]
+ors = (ang[np.argmax(fims, axis=1)] - np.pi/2)%np.pi
 
-ors = (angles[np.argmax(
-      np.sum(pims, axis=1, keepdims=True), axis=2)]
-      + np.pi/2)%2*np.pi
+#plt.figure()
+#plt.imshow(np.rad2deg(np.fft.fftshift(ang)), interpolation='nearest', cmap=cm.Greys_r)
+
+
+plt.figure()
+data = ims
+n = int(np.ceil(np.sqrt(data.shape[0])))
+data = (data - data.min()) / (data.max() - data.min())
+
+#for ind in range(len(data)):
+#    plt.subplot(10, 10,ind+1)
+#    _ = (data[ind] - data[ind].min()) / (data[ind].max() - data[ind].min())
+#    plt.imshow(_, interpolation='None',cmap=cm.Greys_r )
+#    plt.gca().set_xticks([])
+#    plt.gca().set_yticks([])
+#    plt.title(str(ind) + ': ' + str(np.round(np.rad2deg(ors[ind]))))
+#plt.tight_layout()
+
+
 ors = np.squeeze(ors)[:48]
-predictor = np.array([np.ones(np.shape(ors)), np.cos(ors), np.sin(ors)])
-predictor = np.array([ np.cos(ors), np.sin(ors)])
+predictor = np.array([ np.cos(2*ors), np.sin(2*ors)])
 
-predictor = predictor / np.sum(predictor**2,0, keepdims=True)
-ims_2 = a[layer+1][1]
+predictor = predictor / np.sum(predictor**2, 0, keepdims=True)
+ims_2 = afile[layer+1][1]
 resper = []
 xs=[]
-for ind in range(48):
-    b = ims_2[ind,:, 2,2]
-    
+
+for ind in range(128):
+    b = ims_2[ind,:, 2, 2]
     x,res,ran,s = np.linalg.lstsq(predictor.T, b)
     xs.append(x)
     resper.append(res/(np.linalg.norm(b)**2))
+    
 resper = np.sqrt(1-np.array(resper))
-plt.close('all')
+plt.figure()
 plt.subplot(211)
 plt.plot(resper)
+plt.ylabel('r')
+plt.xlabel('Second Layer Kernel Ind')
+plt.tight_layout()
 
 bf = np.argmax(resper)
 sorsi = np.argsort(ors)
 plt.subplot(212)
 
-plt.scatter(ors[sorsi], ims_2[bf,sorsi,3,3])
-plt.plot(ors[sorsi], (np.dot(np.expand_dims(xs[bf],0), predictor)).T[sorsi], color='r')
+
+plt.scatter(np.rad2deg(ors[sorsi]), ims_2[bf,sorsi,2,2])
+plt.plot(np.rad2deg(ors[sorsi]), (np.dot(np.expand_dims(xs[bf],0), predictor)).T[sorsi], color='r')
+plt.ylabel('kernel weight')
+plt.xlabel('Orientation (degrees)')
+plt.xlim(0,180)
+plt.title('best fit kernel: ' + str(bf))
+plt.tight_layout()
+

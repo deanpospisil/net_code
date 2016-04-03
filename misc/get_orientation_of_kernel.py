@@ -41,7 +41,7 @@ if 'afile' not in locals():
 
 
 layer = 0
-sample_rate_mult = 5
+sample_rate_mult = 10
 ims = afile[layer][1]
 
 ims = np.array([im for im in ims])
@@ -60,7 +60,24 @@ ors = (ang[np.argmax(fims, axis=1)] - np.pi/2)%np.pi
 #plt.figure()
 #plt.imshow(np.rad2deg(np.fft.fftshift(ang)), interpolation='nearest', cmap=cm.Greys_r)
 ims_2 = afile[layer+1][1]
+ims_2 = np.swapaxes(ims_2, 1, 3)
+unrav_over_last = (np.product(np.shape(ims_2)[:-1]), np.shape(ims_2)[-1])
+b = np.reshape(ims_2, unrav_over_last)
 
+
+ors = np.squeeze(ors)[:48]
+sorsi = np.argsort(ors)
+ors = ors[ sorsi]
+b = b[:, sorsi]
+
+
+predictor = np.array([ np.cos(2*ors), np.sin(2*ors)]).T
+x,res,ran,s = np.linalg.lstsq(predictor, b.T)
+
+recon = np.dot(predictor, x).T
+
+plt.scatter(b[100,:], recon[100,:])
+recon = recon.reshape(np.shape(ims_2))
 
 '''
 plt.figure()

@@ -21,17 +21,17 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import d_img_process as di
 import d_misc as dm
 
-if 'a' not in locals():
+if 'afile' not in locals():
     with open(top_dir + 'nets/netwts.p', 'rb') as f:
 
         try:
-            a = pickle.load(f, encoding='latin1')
+            afile = pickle.load(f, encoding='latin1')
         except:
-            a = pickle.load(f)
+            afile = pickle.load(f)
 layer = 1  
 
 for plot_ind, ind in enumerate([0,]):  
-    ims = a[layer][1][ind:ind+64]
+    ims = afile[layer][1][ind:ind+64]
     
     
     kernstack = ims[0]

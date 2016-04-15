@@ -9,7 +9,6 @@ import pickle
 import os, sys
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 
 top_dir = os.getcwd().split('net_code')[0]
 sys.path.append(top_dir + 'xarray')

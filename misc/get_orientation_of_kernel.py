@@ -9,6 +9,7 @@ import sys, os
 import numpy as np
 import scipy.io as  l
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import pickle
 
 top_dir = os.getcwd().split('net_code')[0]
@@ -19,10 +20,30 @@ sys.path.append(top_dir + 'img_gen')
 sys.path.append(top_dir + 'nets')
 plt.close('all')
 
-import d_misc as dm
-import d_img_process as imp
-import pandas as pd
 
+
+
+def my_cor(a, b):
+    a = a / np.linalg.norm(a)
+    b = b / np.linalg.norm(b)
+    r = np.dot(a, b)
+    return r
+def vis_square(data, padsize=0, padval=0):
+
+    # force the number of filters to be square
+    n = int(np.ceil(np.sqrt(data.shape[0])))
+    padding = ((0, n ** 2 - data.shape[0]), (0, padsize), (0, padsize)) + ((0, 0),) * (data.ndim - 3)
+    data = np.pad(data, padding, mode='constant', constant_values=(padval, padval))
+
+    # tile the filters into an image
+    data = data.reshape((n, n) + data.shape[1:]).transpose((0, 2, 1, 3) + tuple(range(4, data.ndim + 1)))
+    data = data.reshape((n * data.shape[1], n * data.shape[3]) + data.shape[4:])
+
+    plt.imshow(data, interpolation='nearest', cmap = cm.hot, vmin=0, vmax=1)
+    plt.colorbar()
+
+    plt.tight_layout()
+    return data
 
 
 def get2dCfIndex(xsamps, ysamps,fs):
@@ -45,10 +66,15 @@ sample_rate_mult = 10
 ims = afile[layer][1]
 
 ims = np.array([im for im in ims])
-ims = np.sum(ims, 1)
+ims = np.sum(ims, 1)[:48, ...]
 ims = ims - np.mean(ims,axis =(1,2), keepdims=True)
 fims = np.abs(np.fft.fft2(ims, s=np.array(np.shape(ims)[1:])*sample_rate_mult))
-fims = fims.reshape(96, (11*sample_rate_mult)**2)
+fims_or_index = np.max(fims, axis=(1,2))/np.sum(fims, axis=(1,2))
+oriented_index = fims_or_index>np.percentile(fims_or_index, 20)
+fims = fims[oriented_index, ...]
+
+
+fims = fims.reshape(np.shape(fims)[0], (11*sample_rate_mult)**2)
 c = get2dCfIndex(11*sample_rate_mult, 11*sample_rate_mult, 11*sample_rate_mult)
 mag = np.abs(c).ravel()
 ang = np.angle(c)
@@ -59,25 +85,76 @@ ors = (ang[np.argmax(fims, axis=1)] - np.pi/2)%np.pi
 
 #plt.figure()
 #plt.imshow(np.rad2deg(np.fft.fftshift(ang)), interpolation='nearest', cmap=cm.Greys_r)
-ims_2 = afile[layer+1][1]
+ims_2 = afile[layer+1][1][:128, oriented_index,...]
 ims_2 = np.swapaxes(ims_2, 1, 3)
 unrav_over_last = (np.product(np.shape(ims_2)[:-1]), np.shape(ims_2)[-1])
 b = np.reshape(ims_2, unrav_over_last)
 
 
-ors = np.squeeze(ors)[:48]
+ors = np.squeeze(ors)
 sorsi = np.argsort(ors)
 ors = ors[ sorsi]
 b = b[:, sorsi]
 
+freq=2
+freq=2
+predictor = np.array([np.cos(freq*ors), np.sin(freq*ors)]).T
+predictor = predictor / np.sqrt(np.sum(predictor**2, axis=0, keepdims=True))
 
-predictor = np.array([ np.cos(2*ors), np.sin(2*ors)]).T
-x,res,ran,s = np.linalg.lstsq(predictor, b.T)
+x, res, ran, s = np.linalg.lstsq(predictor, b.T)
+per_var = res/np.sum(b**2, axis=1)
+res = res.reshape(ims_2.shape[:-1])
+per_var_kern = np.sum(res, axis=(1,2)) / np.sum(ims_2**2, axis=(1,2,3))
 
+cor = np.sqrt(1-per_var)
 recon = np.dot(predictor, x).T
 
-plt.scatter(b[100,:], recon[100,:])
-recon = recon.reshape(np.shape(ims_2))
+plt.subplot(311)
+plt.stem(np.sqrt(1-per_var_kern))
+plt.title('2nd layer fits (fitting only '+ str(ims_2.shape[-1]) +
+                ' top oriented 1st layer kernels)')
+
+plt.ylabel('r')
+plt.xlabel('Second Layer Kernel')
+plt.ylim(0,1)
+plt.tight_layout()
+plt.subplot(312)
+bf = np.argmax(cor)
+loc = np.unravel_index(bf, ims_2.shape[:-1]) 
+plt.plot(np.rad2deg(ors), recon[bf,:])
+plt.scatter(np.rad2deg(ors), b[bf,:])
+plt.ylabel('kernel weight')
+plt.xlabel('Orientation (degrees)')
+plt.xlim(0,180)
+plt.title('best fit kernel pixel r = ' +str(np.round(cor[bf], decimals=2)))
+plt.tight_layout()
+
+plt.subplot(313)
+recon_orig = np.reshape(recon, ims_2.shape[:])
+recon_orig = recon_orig[31,...].reshape(25, 38)
+
+b_orig = np.reshape(b, ims_2.shape[:])
+b_orig = b_orig[31,...].reshape(25, 38)
+
+for ind in range(1):
+    plt.plot(np.rad2deg(ors), recon_orig[ind,:])
+    plt.scatter(np.rad2deg(ors), b_orig[ind,:])
+
+
+print(loc)
+print(cor[bf])
+print(my_cor(recon[bf,:], b[bf,:]))
+
+cor_im = np.reshape(cor, ims_2.shape[:-1])
+plt.figure()
+data = vis_square(cor_im, padsize=2, padval=0)
+plt.xticks([])
+plt.yticks([])
+plt.title('Plaid-Preference Model r Map')
+
+x, res, ran, s = map(np.array, zip(*[np.linalg.lstsq(predictor, b.T) 
+                for ind in range(10)]))
+
 
 '''
 plt.figure()

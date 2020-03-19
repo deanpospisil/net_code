@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Tue Jun 28 21:09:52 2016
+
+@author: deanpospisil
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Thu Mar 31 11:45:44 2016
 
 @author: deanpospisil
@@ -20,8 +27,7 @@ sys.path.append(top_dir + 'img_gen')
 sys.path.append(top_dir + 'nets')
 plt.close('all')
 
-
-
+import xarray as xr
 
 def my_cor(a, b):
     a = a / np.linalg.norm(a)
@@ -73,7 +79,7 @@ fims_or_index = np.max(fims, axis=(1,2))/np.sum(fims, axis=(1,2))
 oriented_index = fims_or_index>np.percentile(fims_or_index, 20)
 fims = fims[oriented_index, ...]
 
-
+'''
 fims = fims.reshape(np.shape(fims)[0], (11*sample_rate_mult)**2)
 c = get2dCfIndex(11*sample_rate_mult, 11*sample_rate_mult, 11*sample_rate_mult)
 mag = np.abs(c).ravel()
@@ -81,12 +87,19 @@ ang = np.angle(c)
 ang = ang.ravel()
 fims=fims[:, ang>0]
 ang = ang[ang>0]
-ors = (ang[np.argmax(fims, axis=1)] - np.pi/2)%np.pi
+ors = np.squeeze((ang[np.argmax(fims, axis=1)] - np.pi/2)%np.pi)
 
 #plt.figure()
 #plt.imshow(np.rad2deg(np.fft.fftshift(ang)), interpolation='nearest', cmap=cm.Greys_r)
 ims_2 = afile[layer+1][1][:128, oriented_index,...]
 ims_2 = np.swapaxes(ims_2, 1, 3)
+layer2weights = xr.DataArray(ims_2, dims=['l2', 'r', 'c', 'l1'])
+layer2predictors = xr.DataArray([np.cos(ors) + 1j*np.sin(ors)], dims=['p','l1'])
+layer2predictors = layer2predictors / (layer2predictors**2).sum('l1')**0.5
+fits = (layer2predictors*layer2weights).sum('l1')/((layer2weights**2).sum('l1')**0.5)
+
+
+
 unrav_over_last = (np.product(np.shape(ims_2)[:-1]), np.shape(ims_2)[-1])
 b = np.reshape(ims_2, unrav_over_last)
 
@@ -108,7 +121,7 @@ per_var_kern = np.sum(res, axis=(1,2)) / np.sum(ims_2**2, axis=(1,2,3))
 cor = np.sqrt(1-per_var)
 recon = np.dot(predictor, x).T
 
-plt.subplot(311)
+plt.subplot(211)
 plt.stem(np.sqrt(1-per_var_kern))
 plt.title('2nd layer fits (fitting only '+ str(ims_2.shape[-1]) +
                 ' top oriented 1st layer kernels)')
@@ -117,7 +130,9 @@ plt.ylabel('r')
 plt.xlabel('Second Layer Kernel')
 plt.ylim(0,1)
 plt.tight_layout()
-plt.subplot(312)
+
+
+plt.subplot(212)
 bf = np.argmax(cor)
 loc = np.unravel_index(bf, ims_2.shape[:-1]) 
 plt.plot(np.rad2deg(ors), recon[bf,:])
@@ -128,16 +143,18 @@ plt.xlim(0,180)
 plt.title('best fit kernel pixel r = ' +str(np.round(cor[bf], decimals=2)))
 plt.tight_layout()
 
-plt.subplot(313)
-recon_orig = np.reshape(recon, ims_2.shape[:])
-recon_orig = recon_orig[31,...].reshape(25, 38)
-
-b_orig = np.reshape(b, ims_2.shape[:])
-b_orig = b_orig[31,...].reshape(25, 38)
-
-for ind in range(1):
-    plt.plot(np.rad2deg(ors), recon_orig[ind,:])
-    plt.scatter(np.rad2deg(ors), b_orig[ind,:])
+#plt.subplot(313)
+#recon_orig = np.reshape(recon, ims_2.shape[:])
+#recon_orig = recon_orig[31,...].reshape(25, 38)
+#
+#b_orig = np.reshape(b, ims_2.shape[:])
+#b_orig = b_orig[31,...].reshape(25, 38)
+#
+#for ind in range(1):
+#    plt.plot(np.rad2deg(ors), recon_orig[ind,:])
+#    plt.scatter(np.rad2deg(ors), b_orig[ind,:])
+    
+    
 
 
 print(loc)
@@ -155,7 +172,6 @@ x, res, ran, s = map(np.array, zip(*[np.linalg.lstsq(predictor, b.T)
                 for ind in range(10)]))
 
 
-'''
 plt.figure()
 data = ims
 n = int(np.ceil(np.sqrt(data.shape[0])))

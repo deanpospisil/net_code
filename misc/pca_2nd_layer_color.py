@@ -114,7 +114,7 @@ ors = ors[sorsi]
 
 ims_2 = afile[layer+1][1][:128, oriented_index,...]
 #ims_2 = ims_2.reshape( np.shape(ims_2)[:-2] + (np.shape(ims_2)[-1]**2,))
-ims_2 = ims_2[:,sorsi,:]
+#ims_2 = ims_2[:,sorsi,:]
 
 #ims_2 = ims_2.swapaxes(1,2)
 
@@ -126,12 +126,18 @@ ims_2_unrav=unrav_over_last_n(ims_2)
 u, s, v = np.linalg.svd(ims_2_unrav, full_matrices=False)
 s_var = s**2
 var_explained = np.cumsum(s_var / np.sum(s_var, 1, keepdims=True), axis=1)
+
+
 plt.figure()
-plt.plot(var_explained[:,:5].T)
-plt.title('2nd Layer Cumulative Sum (Singular Value)**2')
-plt.xlabel('Singular value index')
-plt.ylabel('Fraction Variance Explained')
-plt.xticks(list(range(5)))
+plt.plot(np.arange(5)+1, var_explained[:,:5].T)
+plt.title('2nd Layer Filter Weights Fraction Variance Explained by PCA')
+plt.xlabel('Principal Components', fontsize='large')
+plt.ylabel('Fraction Variance Explained', fontsize='large')
+plt.ylim(0,1)
+plt.xlim(1,5)
+plt.xticks(list(np.arange(5)+1))
+plt.gca().xaxis.set_ticks_position('none') 
+plt.gca().yaxis.set_ticks_position('none') 
 
 import husl
 def cart2angle(a):
@@ -188,9 +194,10 @@ coeffs_pol_rgb_img = np.reshape(coeffs_pol_rgb, (128, 3, 5, 5)).swapaxes(-1, 1)
 plt.figure()
 plt.subplot(133)
 vis_square_rgb(coeffs_pol_rgb_img, padsize=1, padval=0)
+plt.xticks([])
+plt.yticks([])
 
-
-plt.subplot(131)
+plt.subplot(121)
 nx, ny = (100, 100)
 x = np.linspace(-1, 1, nx)
 y = np.linspace(-1, 1, ny)
@@ -200,23 +207,31 @@ pol = (np.rad2deg(np.angle(cart)))%360
 mag = abs(cart)
 rgb = np.apply_along_axis(ziphusl, 2, np.dstack((pol, sat_scale*np.ones_like(mag), cor_scale*mag)))
 plt.imshow(rgb, interpolation='nearest')
+plt.xticks([])
+plt.yticks([])
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
 #now plot on top of it.
 unit = -6 #plot the sinusoidal unit with its weights organized by orientation
+unit = 122 #plot the sinusoidal unit with its weights organized by orientation
+
 scale = 100/np.max(np.sum(coeffs[unit, :, :]**2)**0.5)
 shift = 50 
-
-
 plt.scatter((scale*np.squeeze(coeffs[unit, 0, :]))+shift, 
                             (scale*np.squeeze(coeffs[unit, 1, :]))+shift,
-                            color=coeffs_pol_rgb[unit, ...].swapaxes(0, 1))
+                            color=coeffs_pol_rgb[unit, ...].swapaxes(0, 1), edgecolors='black')
+
+
 plt.xticks([])
 plt.yticks([])
 
-
-plt.subplot(132)
+plt.subplot(122)
 plt.imshow(coeffs_pol_rgb_img[unit, ...], interpolation='nearest')
+plt.xticks([])
+plt.yticks([])
+plt.title('Kernel: '+str(unit))
 
-
+plt.tight_layout()
 #
 #rgb = np.array([husl.huslp_to_rgb(hsv_sec[0], hsv_sec[1], hsv_sec[2]) 
 #                for hsv_sec in x_pol_sc_unrv.T]).T

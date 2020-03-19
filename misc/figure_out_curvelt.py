@@ -62,19 +62,12 @@ for key in curv_dict.keys():
 norm_r = st.norm(scale=curv_dict['r_sd'], loc=curv_dict['r_mean'])
 norm_theta = st.norm(scale=curv_dict['theta_sd'], loc=curv_dict['theta_mean'])
 filts = (norm_r.pdf(r)*norm_theta.pdf(theta)).reshape((np.size(curv_dict['r_mean']),) + np.shape(im))
-<<<<<<< HEAD
+
 
 norm_r = st.norm(scale=0.09, loc=0.25)
 norm_theta = st.norm(scale=0.05, loc=np.pi/2.)
 
 filts = (norm_r.pdf(r)*norm_theta.pdf(theta)).reshape((np.shape(im)))
-=======
-#
-#norm_r = st.norm(scale=0.09, loc=0.25)
-#norm_theta = st.norm(scale=0.12, loc=np.pi/2.)
-#
-#filts = (norm_r.pdf(r)*norm_theta.pdf(theta)).reshape((np.shape(im)))
->>>>>>> 87cedd21897d1da1f5d426956623a511dbed1890
 
 
 print(np.hstack([curv_dict['r_mean'], curv_dict['r_sd'],
@@ -88,7 +81,7 @@ for ind in range(1,np.size(filts,0)):
     plt.imshow(np.fft.fftshift(abs(filts[ind,:,:])), interpolation ='none')
 
 
-<<<<<<< HEAD
+
 plt.subplot(2,1,2)
 plt.imshow(np.fft.fftshift(abs(filts)), interpolation ='none')
 
@@ -105,25 +98,9 @@ plt.imshow(np.fft.fftshift(kern), interpolation ='none')
 plt.subplot(1,2, 2)
 allfilts = np.sum(filts,axis=0)
 plt.imshow(np.fft.fftshift(abs(allfilts)), interpolation ='none')
-=======
-#
-#plt.subplot(2,1,1)
-#kern = np.real(np.fft.ifft2(filts[:,:]))
-#plt.imshow(np.fft.fftshift(kern), interpolation ='none')
-#
-#plt.subplot(2,1,2)
-#plt.imshow(np.fft.fftshift(abs(filts)), interpolation ='none')
-#
-#
-#plt.subplot(1, 2,1)
-#kern = np.real(np.fft.ifft2(filts[0,:,:]))
-#plt.imshow(np.fft.fftshift(kern), interpolation ='none')
-#
-#plt.subplot(1,2, 2)
-#allfilts = np.sum(filts,axis=0)
-#plt.imshow(np.fft.fftshift(abs(allfilts)), interpolation ='none')
->>>>>>> 87cedd21897d1da1f5d426956623a511dbed1890
+
 
 #plt.imshow(np.fft.fftshift(np.squeeze(abs(theta_wind[1,0,:,:]))))
 
 #
+'''
